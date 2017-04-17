@@ -13,35 +13,35 @@
     <GROUP id="{14C5E2CD-5D51-3FD3-5677-28BECA29E95E}" name="Source">
       <GROUP id="{EB72C69D-9DB4-93A0-1BB7-AECD0E7666DA}" name="OOPS">
         <GROUP id="{29B01C83-29B3-5242-4C87-3BA9889475B6}" name="Src">
-          <FILE id="UD7CGh" name="OOPS.cpp" compile="1" resource="0" file="../OOPS_V1.0/Src_cpp/OOPS.cpp"/>
-          <FILE id="OuOuQK" name="OOPSDelay.cpp" compile="1" resource="0" file="../OOPS_V1.0/Src_cpp/OOPSDelay.cpp"/>
-          <FILE id="o34tK0" name="OOPSFilter.cpp" compile="1" resource="0" file="../OOPS_V1.0/Src_cpp/OOPSFilter.cpp"/>
-          <FILE id="K3XRqf" name="OOPSInstrument.cpp" compile="1" resource="0"
-                file="../OOPS_V1.0/Src_cpp/OOPSInstrument.cpp"/>
-          <FILE id="oPLIMJ" name="OOPSMath.cpp" compile="1" resource="0" file="../OOPS_V1.0/Src_cpp/OOPSMath.cpp"/>
-          <FILE id="OgZT9T" name="OOPSOscillator.cpp" compile="1" resource="0"
-                file="../OOPS_V1.0/Src_cpp/OOPSOscillator.cpp"/>
-          <FILE id="q0iKwo" name="OOPSReverb.cpp" compile="1" resource="0" file="../OOPS_V1.0/Src_cpp/OOPSReverb.cpp"/>
-          <FILE id="DMUq02" name="OOPSUtilities.cpp" compile="1" resource="0"
-                file="../OOPS_V1.0/Src_cpp/OOPSUtilities.cpp"/>
-          <FILE id="Qzg4KD" name="OOPSWavetables.cpp" compile="1" resource="0"
-                file="../OOPS_V1.0/Src_cpp/OOPSWavetables.cpp"/>
+          <FILE id="Mw0Vgn" name="OOPS.cpp" compile="1" resource="0" file="../OOPS/Src_cpp/OOPS.cpp"/>
+          <FILE id="L8exGK" name="OOPSDelay.cpp" compile="1" resource="0" file="../OOPS/Src_cpp/OOPSDelay.cpp"/>
+          <FILE id="iSPD0S" name="OOPSFilter.cpp" compile="1" resource="0" file="../OOPS/Src_cpp/OOPSFilter.cpp"/>
+          <FILE id="HQcGVP" name="OOPSInstrument.cpp" compile="1" resource="0"
+                file="../OOPS/Src_cpp/OOPSInstrument.cpp"/>
+          <FILE id="D2BOGL" name="OOPSMath.cpp" compile="1" resource="0" file="../OOPS/Src_cpp/OOPSMath.cpp"/>
+          <FILE id="y1znAc" name="OOPSOscillator.cpp" compile="1" resource="0"
+                file="../OOPS/Src_cpp/OOPSOscillator.cpp"/>
+          <FILE id="iXT7GE" name="OOPSReverb.cpp" compile="1" resource="0" file="../OOPS/Src_cpp/OOPSReverb.cpp"/>
+          <FILE id="p7o9C2" name="OOPSUtilities.cpp" compile="1" resource="0"
+                file="../OOPS/Src_cpp/OOPSUtilities.cpp"/>
+          <FILE id="qlUea8" name="OOPSWavetables.cpp" compile="1" resource="0"
+                file="../OOPS/Src_cpp/OOPSWavetables.cpp"/>
         </GROUP>
         <GROUP id="{E3B57AA8-B2E2-6A2D-65F8-786CDD511BF5}" name="Inc">
-          <FILE id="cebSmc" name="OOPS.h" compile="0" resource="0" file="../OOPS_V1.0/Inc/OOPS.h"/>
-          <FILE id="NYin1g" name="OOPSCore.h" compile="0" resource="0" file="../OOPS_V1.0/Inc/OOPSCore.h"/>
-          <FILE id="KrkjM8" name="OOPSDelay.h" compile="0" resource="0" file="../OOPS_V1.0/Inc/OOPSDelay.h"/>
-          <FILE id="IPdRhU" name="OOPSFilter.h" compile="0" resource="0" file="../OOPS_V1.0/Inc/OOPSFilter.h"/>
-          <FILE id="KX6NCh" name="OOPSInstrument.h" compile="0" resource="0"
-                file="../OOPS_V1.0/Inc/OOPSInstrument.h"/>
-          <FILE id="z0a7G2" name="OOPSMath.h" compile="0" resource="0" file="../OOPS_V1.0/Inc/OOPSMath.h"/>
-          <FILE id="cpf9w6" name="OOPSMemConfig.h" compile="0" resource="0" file="../OOPS_V1.0/Inc/OOPSMemConfig.h"/>
-          <FILE id="hzcIhJ" name="OOPSOscillator.h" compile="0" resource="0"
-                file="../OOPS_V1.0/Inc/OOPSOscillator.h"/>
-          <FILE id="oRTAr9" name="OOPSReverb.h" compile="0" resource="0" file="../OOPS_V1.0/Inc/OOPSReverb.h"/>
-          <FILE id="W0GoaT" name="OOPSUtilities.h" compile="0" resource="0" file="../OOPS_V1.0/Inc/OOPSUtilities.h"/>
-          <FILE id="pzstuH" name="OOPSWavetables.h" compile="0" resource="0"
-                file="../OOPS_V1.0/Inc/OOPSWavetables.h"/>
+          <FILE id="ZKFRdn" name="OOPS.h" compile="0" resource="0" file="../OOPS/Inc/OOPS.h"/>
+          <FILE id="MQDun9" name="OOPSCore.h" compile="0" resource="0" file="../OOPS/Inc/OOPSCore.h"/>
+          <FILE id="YPIZAN" name="OOPSDelay.h" compile="0" resource="0" file="../OOPS/Inc/OOPSDelay.h"/>
+          <FILE id="bp7ZNR" name="OOPSFilter.h" compile="0" resource="0" file="../OOPS/Inc/OOPSFilter.h"/>
+          <FILE id="casr4C" name="OOPSInstrument.h" compile="0" resource="0"
+                file="../OOPS/Inc/OOPSInstrument.h"/>
+          <FILE id="zMtZ6Z" name="OOPSMath.h" compile="0" resource="0" file="../OOPS/Inc/OOPSMath.h"/>
+          <FILE id="nV8wyz" name="OOPSMemConfig.h" compile="0" resource="0" file="../OOPS/Inc/OOPSMemConfig.h"/>
+          <FILE id="pPaiB1" name="OOPSOscillator.h" compile="0" resource="0"
+                file="../OOPS/Inc/OOPSOscillator.h"/>
+          <FILE id="AbO5Zv" name="OOPSReverb.h" compile="0" resource="0" file="../OOPS/Inc/OOPSReverb.h"/>
+          <FILE id="aUAeas" name="OOPSUtilities.h" compile="0" resource="0" file="../OOPS/Inc/OOPSUtilities.h"/>
+          <FILE id="vS4Z0p" name="OOPSWavetables.h" compile="0" resource="0"
+                file="../OOPS/Inc/OOPSWavetables.h"/>
         </GROUP>
       </GROUP>
       <GROUP id="{FFA9F0EC-F45A-74FC-5A10-9B3CAA731E7C}" name="External">

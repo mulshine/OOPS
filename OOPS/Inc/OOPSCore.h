@@ -16,6 +16,9 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 
 #include "OOPSMath.h"
+
+
+
 typedef struct _tCompressor
 {
     int tauAttack, tauRelease;
@@ -428,6 +431,63 @@ typedef struct _tNeuron
     
 } tNeuron;
 
+typedef struct _t808Cowbell {
+    
+    tSquare* p[2];
+    tNoise* stick;
+    tSVF* bandpassOsc;
+    tSVF* bandpassStick;
+    tEnvelope* envGain;
+    tEnvelope* envStick;
+    tEnvelope* envFilter;
+    tHighpass* highpass;
+    float oscMix;
+    float filterCutoff;
+    
+} t808Cowbell;
+
+typedef struct _t808Hihat {
+    
+    // 6 Square waves
+    tSquare* p[6];
+    tNoise* n;
+    tSVF* bandpassOsc;
+    tSVF* bandpassStick;
+    tEnvelope* envGain;
+    tEnvelope* envStick;
+    tHighpass* highpass;
+    tNoise* stick;
+    
+    float oscNoiseMix;
+    
+    
+} t808Hihat;
+
+typedef struct _t808Snare {
+    
+    // Tone 1, Tone 2, Noise
+    tTriangle* tone[2]; // Tri (not yet antialiased or wavetabled)
+    tNoise* noiseOsc;
+    tSVF* toneLowpass[2];
+    tSVF* noiseLowpass; // Lowpass from SVF filter
+    tEnvelope* toneEnvOsc[2];
+    tEnvelope* toneEnvGain[2];
+    tEnvelope* noiseEnvGain;
+    tEnvelope* toneEnvFilter[2];
+    tEnvelope* noiseEnvFilter;
+    
+    float toneGain[2];
+    float noiseGain;
+    
+    float toneNoiseMix;
+    
+    float tone1Freq, tone2Freq;
+    
+    float noiseFilterFreq;
+    
+    
+} t808Snare;
+
 
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
 void     tPhasorSampleRateChanged (tPhasor *p);
@@ -448,6 +508,11 @@ void     tStifKarpSampleRateChanged (tStifKarp *c);
 
 void     tNeuronSampleRateChanged(tNeuron* n);
 void     tCompressorSampleRateChanged(tCompressor* n);
+
+
+void     t808SnareSampleRateChanged(t808Snare* n);
+void     t808HihatSampleRateChanged(t808Hihat* n);
+void     t808CowbellSampleRateChanged(t808Cowbell* n);
 
 typedef enum OOPSRegistryIndex
 {
@@ -479,6 +544,9 @@ typedef enum OOPSRegistryIndex
     T_STIFKARP,
     T_NEURON,
     T_COMPRESSOR,
+    T_808SNARE,
+    T_808HIHAT,
+    T_808COWBELL,
     T_INDEXCNT
 }OOPSRegistryIndex;
 
@@ -598,8 +666,20 @@ typedef struct _OOPS
     tNeuron            tNeuronRegistry          [N_NEURON];
 #endif
     
-#if N_COMPRESSOR    
+#if N_COMPRESSOR
     tCompressor        tCompressorRegistry      [N_COMPRESSOR];
+#endif
+    
+#if N_808SNARE
+    t808Snare        t808SnareRegistry      [N_808SNARE];
+#endif
+    
+#if N_808HIHAT
+    t808Hihat         t808HihatRegistry      [N_808HIHAT];
+#endif
+    
+#if N_808COWBELL
+    t808Cowbell       t808CowbellRegistry      [N_808COWBELL];
 #endif
     
     

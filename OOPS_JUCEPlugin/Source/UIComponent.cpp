@@ -138,7 +138,7 @@ void UIComponent::resized()
     for (int i = 0; i < cButtonNames.size(); i++)
     {
         buttons[i]      ->setBounds(cLeftOffset + ((cButtonWidth + cXSpacing) * i),
-                                    sliderLabels[i]->getBottom() + 2 * cYSpacing,
+                                    500,
                                     cButtonWidth,
                                     cButtonHeight);
     }

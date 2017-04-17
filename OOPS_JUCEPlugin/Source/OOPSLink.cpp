@@ -15,17 +15,13 @@
 
 std::vector<std::string> cButtonNames =
 {
-
+    "Snare",
+    "Hihat",
+    "Cowbell"
 };
 
 std::vector<std::string> cSliderNames =
 {
-    "Threshold",
-    "Ratio",
-    "Width",
-    "Makeup",
-    "Attack",
-    "Release"
     
 };
 

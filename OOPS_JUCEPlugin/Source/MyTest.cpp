@@ -17,17 +17,21 @@ void    OOPSTest_init            (float sampleRate)
     OOPSInit(sampleRate, &randomNumberGenerator);
 
     rampOut = tRampInit(5, 1);
-    myCompressor = tCompressorInit();
-    
-    rampOut = tRampInit(10.0f, 1);
     tRampSetDest(rampOut, 1.0f);
+    
+    snare = t808SnareInit();
+    hihat = t808HihatInit();
+    cowbell = t808CowbellInit();
+    
 }
 
 float   OOPSTest_tick            (float input)
 {
     float sample = 0.0f;
     
-    sample = tCompressorTick(myCompressor, input);
+    sample = t808SnareTick(snare) + t808HihatTick(hihat) + t808CowbellTick(cowbell);
+    
+    sample *= 0.5f;
     
     return sample;
 }
@@ -35,72 +39,32 @@ float   OOPSTest_tick            (float input)
 void    OOPSTest_block           (void)
 {
     
+    bool buttonState = getButtonState("Snare");
     
-    float val = getSliderValue("Threshold");
-    
-    if (myT != val)
+    if (buttonState)
     {
-        myT = val;
-        
-        myCompressor->T = -60.0f + 60.0f * val;
-        
-        setSliderModelValue("Threshold", myCompressor->T);
+        setButtonState("Snare", false);
+        t808SnareOn(snare, 0.95f);
     }
     
-    val = getSliderValue("Ratio");
+    buttonState = getButtonState("Hihat");
     
-    if (myR != val)
+    if (buttonState)
     {
-        myR = val;
-    
-        myCompressor->R = 1.0f + val * 23.0f;
-        
-        setSliderModelValue("Ratio", myCompressor->R);
+        setButtonState("Hihat", false);
+        t808HihatOn(hihat, 0.95f);
     }
     
-    val = getSliderValue("Width");
     
-    if (myW != val)
+    buttonState = getButtonState("Cowbell");
+    
+    if (buttonState)
     {
-        myW = val;
-        
-        myCompressor->W = 24.0f * val;
-        
-        setSliderModelValue("Width", myCompressor->W);
+        setButtonState("Cowbell", false);
+        t808CowbellOn(cowbell, 0.95f);
     }
     
-    val = getSliderValue("Makeup");
     
-    if (myM != val)
-    {
-        myM = val;
-        
-        myCompressor->M = -24.0f + 48.0f * val;
-        
-       setSliderModelValue("Makeup", myCompressor->M);
-    }
-    
-    val = getSliderValue("Attack");
-    
-    if (myAtt != val)
-    {
-        myAtt = val;
-        
-        myCompressor->tauAttack = 1.0f + 5000.0f * val;
-        
-        setSliderModelValue("Attack", myCompressor->tauAttack);
-    }
-    
-    val = getSliderValue("Release");
-    
-    if (myRel != val)
-    {
-        myRel = val;
-    
-        myCompressor->tauRelease = 1.0f + 5000.0f * val;
-    
-        setSliderModelValue("Release", myCompressor->tauRelease);
-    }
     
 
 

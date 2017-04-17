@@ -17,6 +17,8 @@ float myGain, myT, myR, myW, myM, myAtt, myRel;
 
 tRamp* rampOut;
 
-tCompressor* myCompressor;
+t808Snare* snare;
+t808Hihat* hihat;
+t808Cowbell* cowbell;
 
 #endif  // FM_H_INCLUDED

@@ -44,8 +44,8 @@
       allowLocationSimulation = "YES">
       <PathRunnable
          runnableDebuggingMode = "0"
-         BundleIdentifier = "com.cockos.reaper"
-         FilePath = "/Applications/REAPER64.app">
+         BundleIdentifier = "com.roli.pluginhost"
+         FilePath = "/Users/mrmulshine/JUCE/examples/audio plugin host/Builds/MacOSX/build/Debug/Plugin Host.app">
       </PathRunnable>
       <MacroExpansion>
          <BuildableReference
