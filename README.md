@@ -15,7 +15,7 @@ Other interesting projects to check out that similarly target embedded applicato
 
 Documentation: 
 
-[embed]http://plork.princeton.edu/OOPS_documentation.pdf[/embed]
+http://plork.princeton.edu/OOPS_documentation.pdf
 
 Usage:
 
