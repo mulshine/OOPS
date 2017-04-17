@@ -13,6 +13,10 @@ Other interesting projects to check out that similarly target embedded applicato
 
 (2) The template features an easily reconfigurable UI and simple block and tick setup to test the library components. Of course, if you intend to use the provided JUCE plugin project, you need to get JUCE and the Projucer ( https://www.juce.com/get-juce ). Check out the first tutorial to get started - it's fun an easy! If you intend to include the OOPS framework in your own C++ project using JUCE or other platforms, you will probably need to rename each source file from .c to .cpp. This should be straightforward. Contact the developer if you have any troubles (mrmulshine@gmail.com).
 
+Documentation: 
+
+[embed]http://plork.princeton.edu/OOPS_documentation.pdf[/embed]
+
 Usage:
 
 To begin using OOPS, the developer should add the library source to their project and include OOPS.h in a convenient header  file.   The  OOPS  core  needs  to  be  initialized  with a  call  to  OOPSInit(),  which  takes  as  arguments  the  desired system sample rate and a pointer to a random number generating function.  Developers using OOPS should create pointers to audio components and assign to them the return value  of  their  associated  initialization  functions.   At  that point, they may begin setting parameters of their components and ticking them to process and refill the audio buffer in the main audio callback. The developer can reconfigure the number of statically allocated components by redefining a number of macros in OOPSMemConfig.h. The macros define the number of each component to allocate during compilation. 
