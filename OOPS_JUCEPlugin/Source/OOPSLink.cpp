@@ -13,24 +13,24 @@
 #define MYTEST 0
 #define FM     1
 
-std::vector<std::string> cButtonNames =
+std::vector<std::string> cButtonNames =  std::vector<std::string>
 {
     "Snare",
     "Hihat",
     "Cowbell"
 };
 
-std::vector<std::string> cSliderNames =
+std::vector<std::string> cSliderNames =  std::vector<std::string>
 {
     
 };
 
-std::vector<std::string> cComboBoxNames =
+std::vector<std::string> cComboBoxNames =  std::vector<std::string>
 {
     
 };
 
-std::vector<std::string> cWaveformTypes =
+std::vector<std::string> cWaveformTypes =  std::vector<std::string>
 {
     
 };
