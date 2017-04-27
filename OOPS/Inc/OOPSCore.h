@@ -15,8 +15,6 @@
 
 #include "OOPSMath.h"
 
-
-
 typedef struct _tCompressor
 {
     int tauAttack, tauRelease;

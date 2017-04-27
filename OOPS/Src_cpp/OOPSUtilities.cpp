@@ -35,6 +35,7 @@ tCompressor*    tCompressorInit(int tauAttack, int tauRelease)
     return c;
 }
 
+/*
 tCompressor*    tCompressorInit(void)
 {
     tCompressor* c = &oops.tCompressorRegistry[oops.registryIndex[T_COMPRESSOR]++];
@@ -49,6 +50,7 @@ tCompressor*    tCompressorInit(void)
     
     return c;
 }
+ */
 int ccount = 0;
 float tCompressorTick(tCompressor* c, float in)
 {
@@ -86,16 +88,6 @@ float tCompressorTick(tCompressor* c, float in)
     
     float attenuation = powf(10.0f, ((c->M - c->y_T[0])/20.0f));
     
-    /*
-    if (++ccount > 5000)
-    {
-        
-        ccount = 0;
-        DBG(".5width: " + String(c->W * 0.5f));
-        DBG("slope: " + String(slope) + " overshoot: " + String(overshoot));
-        DBG("attenuation: " + String(attenuation));
-    }
-    */
     return attenuation * in;
     
 
