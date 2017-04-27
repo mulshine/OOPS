@@ -13,8 +13,6 @@
 
 #include "OOPSMemConfig.h"
 
-#include "../JuceLibraryCode/JuceHeader.h"
-
 #include "OOPSMath.h"
 
 
@@ -435,8 +433,8 @@ typedef struct _t808Cowbell {
     
     tSquare* p[2];
     tNoise* stick;
-    tSVF* bandpassOsc;
-    tSVF* bandpassStick;
+    tSVFE* bandpassOsc;
+    tSVFE* bandpassStick;
     tEnvelope* envGain;
     tEnvelope* envStick;
     tEnvelope* envFilter;
@@ -451,8 +449,8 @@ typedef struct _t808Hihat {
     // 6 Square waves
     tSquare* p[6];
     tNoise* n;
-    tSVF* bandpassOsc;
-    tSVF* bandpassStick;
+    tSVFE* bandpassOsc;
+    tSVFE* bandpassStick;
     tEnvelope* envGain;
     tEnvelope* envStick;
     tHighpass* highpass;
@@ -468,8 +466,8 @@ typedef struct _t808Snare {
     // Tone 1, Tone 2, Noise
     tTriangle* tone[2]; // Tri (not yet antialiased or wavetabled)
     tNoise* noiseOsc;
-    tSVF* toneLowpass[2];
-    tSVF* noiseLowpass; // Lowpass from SVF filter
+    tSVFE* toneLowpass[2];
+    tSVFE* noiseLowpass; // Lowpass from SVF filter
     tEnvelope* toneEnvOsc[2];
     tEnvelope* toneEnvGain[2];
     tEnvelope* noiseEnvGain;
