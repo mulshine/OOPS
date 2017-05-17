@@ -8,7 +8,9 @@
               pluginIsSynth="0" pluginWantsMidiIn="1" pluginProducesMidiOut="0"
               pluginIsMidiEffectPlugin="0" pluginEditorRequiresKeys="0" pluginAUExportPrefix="OOPSAU"
               pluginRTASCategory="" aaxIdentifier="com.mrmulshine.OOPS" pluginAAXCategory="AAX_ePlugInCategory_Dynamics"
-              jucerVersion="4.3.1" companyName="mrmulshine" companyEmail="mrmulshine@gmail.com">
+              jucerVersion="5.0.1" companyName="mrmulshine" companyEmail="mrmulshine@gmail.com"
+              displaySplashScreen="1" reportAppUsage="1" splashScreenColour="Dark"
+              buildStandalone="0" enableIAA="0">
   <MAINGROUP id="F7Bywq" name="OOPS">
     <GROUP id="{14C5E2CD-5D51-3FD3-5677-28BECA29E95E}" name="Source">
       <GROUP id="{EB72C69D-9DB4-93A0-1BB7-AECD0E7666DA}" name="OOPS">

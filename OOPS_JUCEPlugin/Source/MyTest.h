@@ -11,14 +11,8 @@
 #ifndef FM_H_INCLUDED
 #define FM_H_INCLUDED
 
-float sampleRate;
+tCycle* carrier;
 
-float myGain, myT, myR, myW, myM, myAtt, myRel;
-
-tRamp* rampOut;
-
-t808Snare* snare;
-t808Hihat* hihat;
-t808Cowbell* cowbell;
+tCycle* modulator;
 
 #endif  // FM_H_INCLUDED

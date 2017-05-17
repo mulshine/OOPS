@@ -11,63 +11,46 @@
 #include "OOPSTest.h"
 #include "MyTest.h"
 
+float carrierGain, modulatorGain, carrierFreq, modulatorFreq;
+
 
 void    OOPSTest_init            (float sampleRate)
 {
     OOPSInit(sampleRate, &randomNumberGenerator);
 
-    rampOut = tRampInit(5, 1);
-    tRampSetDest(rampOut, 1.0f);
-    
-    snare = t808SnareInit();
-    hihat = t808HihatInit();
-    cowbell = t808CowbellInit();
-    
+    carrier = tCycleInit();
+    modulator = tCycleInit();
 }
 
 float   OOPSTest_tick            (float input)
 {
     float sample = 0.0f;
     
-    sample = t808SnareTick(snare) + t808HihatTick(hihat) + t808CowbellTick(cowbell);
+    tCycleSetFreq(carrier, carrierFreq + modulatorGain * tCycleTick(modulator));
     
-    sample *= 0.5f;
-    
+    sample = carrierGain * tCycleTick(carrier);
+
     return sample;
 }
+
 
 void    OOPSTest_block           (void)
 {
     
-    bool buttonState = getButtonState("Snare");
     
-    if (buttonState)
-    {
-        setButtonState("Snare", false);
-        t808SnareOn(snare, 0.95f);
-    }
+    carrierGain = getSliderValue("CarrierGain");
     
-    buttonState = getButtonState("Hihat");
+    carrierFreq = 1000.0f * getSliderValue("CarrierFreq");
     
-    if (buttonState)
-    {
-        setButtonState("Hihat", false);
-        t808HihatOn(hihat, 0.95f);
-    }
+    modulatorGain = 1000.0f * getSliderValue("ModulatorGain");
     
+    modulatorFreq = 1000.0f * getSliderValue("ModulatorFreq");
+    tCycleSetFreq(modulator, modulatorFreq);
     
-    buttonState = getButtonState("Cowbell");
-    
-    if (buttonState)
-    {
-        setButtonState("Cowbell", false);
-        t808CowbellOn(cowbell, 0.95f);
-    }
-    
-    
-    
-
-
+    setSliderModelValue("CarrierGain", carrierGain);
+    setSliderModelValue("CarrierFreq", carrierFreq);
+    setSliderModelValue("ModulatorGain", modulatorGain);
+    setSliderModelValue("ModulatorFreq", modulatorFreq);
 }
 
 void    OOPSTest_controllerInput (int controller, float value)
@@ -78,12 +61,11 @@ void    OOPSTest_controllerInput (int controller, float value)
 
 void    OOPSTest_pitchBendInput  (int pitchBend)
 {
-    DBG("pitchBend: " + String(pitchBend));
+
 }
 
 void    OOPSTest_noteOn          (int midiNoteNumber, float velocity)
 {
-    DBG("noteOn: " + String(midiNoteNumber) + " " +String(velocity));
 
 }
 
@@ -91,7 +73,6 @@ void    OOPSTest_noteOn          (int midiNoteNumber, float velocity)
 
 void    OOPSTest_noteOff         (int midiNoteNumber)
 {
-    DBG("noteOff: " + String(midiNoteNumber));
 
 }
 

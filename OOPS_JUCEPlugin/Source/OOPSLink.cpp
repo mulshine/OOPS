@@ -15,14 +15,15 @@
 
 std::vector<std::string> cButtonNames =  std::vector<std::string>
 {
-    "Snare",
-    "Hihat",
-    "Cowbell"
+
 };
 
 std::vector<std::string> cSliderNames =  std::vector<std::string>
 {
-    
+    "CarrierFreq",
+    "CarrierGain",
+    "ModulatorFreq",
+    "ModulatorGain"
 };
 
 std::vector<std::string> cComboBoxNames =  std::vector<std::string>
@@ -43,12 +44,7 @@ std::vector<std::string> cButtonNames =
 
 std::vector<std::string> cSliderNames =
 {
-    "OscPitch",
-    "Attack",
-    "Decay",
-    "RevTime",
-    "RevMix",
-    "Gain"
+
 };
 
 std::vector<std::string> cComboBoxNames =
