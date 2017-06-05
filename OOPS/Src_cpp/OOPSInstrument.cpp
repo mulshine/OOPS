@@ -113,7 +113,7 @@ void tPluckSampleRateChanged(tPluck* const p)
 
 #if N_STIFKARP
 /* ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ tStifKarp ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ */
-tStifKarp*    tStifKarpInit          (float lowestFrequency, float delayBuff[2][DELAY_LENGTH])
+tStifKarp*    tStifKarpInit          (float lowestFrequency)
 {
     tStifKarp* p = &oops.tStifKarpRegistry[oops.registryIndex[T_STIFKARP]++];
     

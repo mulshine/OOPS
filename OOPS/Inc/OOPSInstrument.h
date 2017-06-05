@@ -45,7 +45,7 @@ typedef enum SKControlType
     SKControlTypeNil
 } SKControlType;
 
-tStifKarp*  tStifKarpInit               (float lowestFrequency, float delayBuff[2][DELAY_LENGTH]);
+tStifKarp*  tStifKarpInit               (float lowestFrequency);
 float       tStifKarpTick               (tStifKarp*  const);
 
 // Pluck the string.
