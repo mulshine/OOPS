@@ -585,7 +585,7 @@ typedef struct _OOPS
 #endif
         
 #if N_ONEZERO
-    tOneZero           tOneZeroRegistry         [N_ONEPOLE];
+    tOneZero           tOneZeroRegistry         [N_ONEZERO];
 #endif
         
 #if N_TWOZERO
