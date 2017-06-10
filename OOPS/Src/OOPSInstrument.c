@@ -56,7 +56,7 @@ void    tPluckPluck         (tPluck* const p, float amplitude)
     if ( amplitude < 0.0f)      amplitude = 0.0f;
     else if (amplitude > 1.0f)  amplitude = 1.0f;
     
-    tOnePoleSetPole(p->pickFilter, 0.999f - (amplitude * 0.15));
+    tOnePoleSetPole(p->pickFilter, 0.999f - (amplitude * 0.15f));
     tOnePoleSetGain(p->pickFilter, amplitude * 0.5f );
     
     // Fill delay with noise additively with current contents.

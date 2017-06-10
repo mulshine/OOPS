@@ -25,7 +25,7 @@ typedef enum oBool
 
 
 #define PI              (3.14159265358979f)
-#define TWO_PI          (2 * PI)
+#define TWO_PI          (2.0f * PI)
 
 
 
@@ -35,7 +35,7 @@ typedef enum oBool
 #define INV_128         (1.0f / 128.0f)
 
 #define INV_20         0.05f
-#define INV_40         0.025
+#define INV_40         0.025f
 #define INV_80         0.0125f
 #define INV_160        0.00625f
 #define INV_320        0.003125f

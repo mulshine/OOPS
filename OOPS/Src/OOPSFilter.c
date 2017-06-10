@@ -68,7 +68,7 @@ void    tOneZeroSetGain(tOneZero *f, float gain)
 
 float   tOneZeroGetPhaseDelay(tOneZero* const f, float frequency )
 {
-    if ( frequency <= 0.0) frequency = 0.05f;
+    if ( frequency <= 0.0f) frequency = 0.05f;
     
     f->frequency = frequency;
     

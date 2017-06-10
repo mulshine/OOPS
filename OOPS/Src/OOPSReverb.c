@@ -17,7 +17,7 @@ tPRCRev*    tPRCRevInit(float t60)
 {
     tPRCRev* r = &oops.tPRCRevRegistry[oops.registryIndex[T_PRCREV]++];
     
-    if (t60 <= 0.0) t60 = 0.001f;
+    if (t60 <= 0.0f) t60 = 0.001f;
     
     r->inv_441 = 1.0f/44100.0f;
     
@@ -56,7 +56,7 @@ tPRCRev*    tPRCRevInit(float t60)
 
 void    tPRCRevSetT60(tPRCRev* const r, float t60)
 {
-    if ( t60 <= 0.0 ) t60 = 0.001f;
+    if ( t60 <= 0.0f ) t60 = 0.001f;
     
     r->t60 = t60;
     
@@ -92,7 +92,7 @@ float   tPRCRevTick(tPRCRev* const r, float input)
     
     out = r->mix * tDelayTick(r->combDelay, temp2);
     
-    temp = (1.0 - r->mix) * input;
+    temp = (1.0f - r->mix) * input;
     
     out += temp;
     
@@ -114,7 +114,7 @@ tNRev*    tNRevInit(float t60)
 {
     tNRev* r = &oops.tNRevRegistry[oops.registryIndex[T_NREV]++];
     
-    if (t60 <= 0.0) t60 = 0.001f;
+    if (t60 <= 0.0f) t60 = 0.001f;
     
     r->inv_441 = 1.0f/44100.0f;
     
@@ -161,7 +161,7 @@ tNRev*    tNRevInit(float t60)
 
 void    tNRevSetT60(tNRev* const r, float t60)
 {
-    if (t60 <= 0.0)           t60 = 0.001f;
+    if (t60 <= 0.0f)           t60 = 0.001f;
     
     r->t60 = t60;
     

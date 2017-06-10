@@ -52,7 +52,7 @@ tCompressor*    tCompressorInit(void)
 int ccount = 0;
 float tCompressorTick(tCompressor* c, float in)
 {
-    float slope, overshoot, c_dB;
+    float slope, overshoot;
     float alphaAtt, alphaRel;
     
     float in_db = 20.0f * log10f( fmaxf( fabsf( in), 0.000001f)), out_db = 0.0f;
@@ -115,26 +115,19 @@ tEnvelope*    tEnvelopeInit(float attack, float decay, oBool loop)
     
     env->loop = loop;
     
-    if (attack > 8192.0f)
-        attack = 8192.0f;
-    if (attack < 0.0f)
-        attack = 0.0f;
+    if (attack > 8191.0f)
+        attack = 8191.0f;
+    if (attack < 1.0f)
+        attack = 1.0f;
     
-    if (decay > 8192.0f)
-        decay = 8192.0f;
-    if (decay < 0.0f)
-        decay = 0.0f;
+    if (decay > 8191.0f)
+        decay = 8191.0f;
+    if (decay < 1.0f)
+        decay = 1.0f;
     
-    int16_t attackIndex = ((int16_t)(attack * 8.0f))-1;
-    int16_t decayIndex = ((int16_t)(decay * 8.0f))-1;
-    int16_t rampIndex = ((int16_t)(2.0f * 8.0f))-1;
-    
-    if (attackIndex < 0)
-        attackIndex = 0;
-    if (decayIndex < 0)
-        decayIndex = 0;
-    if (rampIndex < 0)
-        rampIndex = 0;
+    uint16_t attackIndex = ((uint16_t)(attack * 8.0f))-1;
+    uint16_t decayIndex = ((uint16_t)(decay * 8.0f))-1;
+    uint16_t rampIndex = ((uint16_t)(2.0f * 8.0f))-1;
     
     env->inRamp = OFALSE;
     env->inAttack = OFALSE;
@@ -150,14 +143,14 @@ tEnvelope*    tEnvelopeInit(float attack, float decay, oBool loop)
 
 int     tEnvelopeSetAttack(tEnvelope* const env, float attack)
 {
-    int16_t attackIndex;
+    uint16_t attackIndex;
     
     if (attack < 0.0f) {
         attackIndex = 0.0f;
     } else if (attack < 8192.0f) {
-        attackIndex = ((int16_t)(attack * 8.0f))-1;
+        attackIndex = ((uint16_t)(attack * 8.0f))-1;
     } else {
-        attackIndex = ((int16_t)(8192.0f * 8.0f))-1;
+        attackIndex = ((uint16_t)(8191.0f * 8.0f))-1;
     }
     
     env->attackInc = env->inc_buff[attackIndex];
@@ -167,14 +160,14 @@ int     tEnvelopeSetAttack(tEnvelope* const env, float attack)
 
 int     tEnvelopeSetDecay(tEnvelope* const env, float decay)
 {
-    int16_t decayIndex;
+    uint16_t decayIndex;
     
     if (decay < 0.0f) {
         decayIndex = 0.0f;
     } else if (decay < 8192.0f) {
-        decayIndex = ((int16_t)(decay * 8.0f))-1;
+        decayIndex = ((uint16_t)(decay * 8.0f))-1;
     } else {
-        decayIndex = ((int16_t)(8192.0f * 8.0f))-1;
+        decayIndex = ((uint16_t)(8191.0f * 8.0f))-1;
     }
     
     env->decayInc = env->inc_buff[decayIndex]; 

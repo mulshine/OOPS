@@ -163,22 +163,22 @@ float   tNeuronTick(tNeuron* const n)
         
         float w, c, xc, xc2, xc4;
 
-        float sqrt8 = 2.82842712475;
+        float sqrt8 = 2.82842712475f;
 
-        float wscale = 1.30612244898;
+        float wscale = 1.30612244898f;
         float m_drive = 1.0f;
 
         xc = OOPS_clip(-sqrt8, shapeVoltage, sqrt8);
 
         xc2 = xc*xc;
 
-        c = 0.5 * shapeVoltage * (3.0 - (xc2));
+        c = 0.5f * shapeVoltage * (3.0f - (xc2));
 
         xc4 = xc2 * xc2;
 
-        w = (1.0 - xc2 * 0.25 + xc4 * 0.015625) * wscale;
+        w = (1.0f - xc2 * 0.25f + xc4 * 0.015625f) * wscale;
 
-        shapeVoltage = w * (c + 0.05 * xc2) * (m_drive + 0.75);
+        shapeVoltage = w * (c + 0.05f * xc2) * (m_drive + 0.75f);
         
         n->voltage = 100.0f * shapeVoltage;
     }
@@ -384,7 +384,7 @@ float   tSawtoothTick(tSawtooth* const c)
     }
     else if (c->freq <= 10240.0f)
     {
-        w = ((10240.0 - c->freq) * INV_5120);
+        w = ((10240.0f - c->freq) * INV_5120);
         out = (sawtooth[T5120][idx] * w) + (sawtooth[T10240][idx] * (1.0f - w));
     }
     else if (c->freq <= 20480.0f)
@@ -497,7 +497,7 @@ float   tTriangleTick(tTriangle* const c)
     }
     else if (c->freq <= 10240.0f)
     {
-        w = ((10240.0 - c->freq) * INV_5120);
+        w = ((10240.0f - c->freq) * INV_5120);
         out = (triangle[T5120][idx] * w) + (triangle[T10240][idx] * (1.0f - w));
     }
     else if (c->freq <= 20480.0f)
@@ -602,7 +602,7 @@ float   tSquareTick(tSquare* const c)
     }
     else if (c->freq <= 10240.0f)
     {
-        w = ((10240.0 - c->freq) * INV_5120);
+        w = ((10240.0f - c->freq) * INV_5120);
         out = (squarewave[T5120][idx] * w) + (squarewave[T10240][idx] * (1.0f - w));
     }
     else if (c->freq <= 20480.0f)
