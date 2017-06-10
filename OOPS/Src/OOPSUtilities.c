@@ -15,7 +15,7 @@
 #if N_COMPRESSOR
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ Compressor ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
 
-tCompressor*    tCompressorInit(int tauAttack, int tauRelease)
+tCompressor*    tCompressorInit(float tauAttack, float tauRelease)
 {
     tCompressor* c = &oops.tCompressorRegistry[oops.registryIndex[T_COMPRESSOR]++];
     
@@ -27,28 +27,15 @@ tCompressor*    tCompressorInit(int tauAttack, int tauRelease)
     c->x_T[0] = 0.0f, c->x_T[1] = 0.0f,
     c->y_T[0] = 0.0f, c->y_T[1] = 0.0f;
     
-    c->T = 0.0f; // Threshold
-    c->R = 1.0f; // compression Ratio
-    c->M = 0.0f; // decibel Make-up gain
-    c->W = 0.0f; // decibel Width of knee transition
+    c->T = -6.0f; // Threshold
+    c->R = 3.0f; // compression Ratio
+    c->M = 2.0f; // decibel Make-up gain
+    c->W = 3.0f; // decibel Width of knee transition
     
     return c;
 }
 
-tCompressor*    tCompressorInit(void)
-{
-    tCompressor* c = &oops.tCompressorRegistry[oops.registryIndex[T_COMPRESSOR]++];
-    
-    c->tauAttack = 100;
-    c->tauRelease = 100;
-    
-    c->T = 0.0f; // Threshold
-    c->R = 0.5f; // compression Ratio
-    c->M = 3.0f; // decibel Width of knee transition
-    c->W = 1.0f; // decibel Make-up gain
-    
-    return c;
-}
+
 int ccount = 0;
 float tCompressorTick(tCompressor* c, float in)
 {
@@ -100,6 +87,48 @@ float tCompressorTick(tCompressor* c, float in)
     
 
 }
+
+
+int     tCompressorSetAttack(tCompressor* const comp, float attack)
+{
+    c->tauAttack = attack;
+    return 0;
+}
+
+int     tCompressorSetRelease(tCompressor* const comp, float release)
+{
+    c->tauRelease = release;
+    return 0;
+}
+
+//threshold is in negative decibels (like -12.0f)
+int     tCompressorSetThreshold(tCompressor* const comp, float thresh)
+{
+    comp->T = thresh; // Threshold
+    return 0;
+}
+
+//ratio is in positive numbers (like 1.0f to 20.0f) representing the reduction -- 3.0f is 3/1
+int     tCompressorSetRatio(tCompressor* const comp, float ratio)
+{
+    comp->R = ratio; // Threshold
+    return 0;
+}
+
+//makeup gain is in decibels (like 2.0f)
+int     tCompressorSetMakeupGain(tCompressor* const comp, float gain)
+{
+    comp->M = gain; // Threshold
+    return 0;
+}
+
+//knee width is also in decibels (like 3.0f)
+int     tCompressorSetKneeWidth(tCompressor* const comp, float knee)
+{
+    comp->W = knee; // Threshold
+    return 0;
+}
+
 
 
 #endif
