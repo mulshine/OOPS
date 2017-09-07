@@ -56,6 +56,10 @@ void OOPSSetSampleRate(float sampleRate)
 #if N_TWOPOLE 
 		for (int i = 0; i < oops.registryIndex[T_TWOPOLE]; i++)        OOPSSampleRateChanged(tTwoPoleRegistry[i]);
 #endif
+
+#if N_BUTTERWORTH 
+		for (int i = 0; i < oops.registryIndex[T_BUTTERWORTH]; i++)    OOPSSampleRateChanged(tButterworthRegistry[i]);
+#endif
     
 #if N_TWOZERO 
 		for (int i = 0; i < oops.registryIndex[T_TWOZERO]; i++)        OOPSSampleRateChanged(tTwoZeroRegistry[i]);

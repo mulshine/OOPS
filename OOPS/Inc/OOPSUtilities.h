@@ -14,8 +14,8 @@
 #include "OOPSCore.h"
 /* Compressor */
 
-tCompressor*            tCompressorInit    (float tauAttack, float tauRelease);
-//tCompressor*            tCompressorInit    (void);
+//tCompressor*            tCompressorInit    (float tauAttack, float tauRelease);
+tCompressor*            tCompressorInit    (void);
 float                   tCompressorTick    (tCompressor* const, float input);
 
 

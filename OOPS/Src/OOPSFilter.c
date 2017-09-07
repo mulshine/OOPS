@@ -12,6 +12,59 @@
 #include "OOPSWavetables.h"
 #include "OOPS.h"
 
+#if N_BUTTERWORTH
+tButterworth* tButterworthInit(int N, float f1, float f2)
+{
+	tButterworth* f = &oops.tButterworthRegistry[oops.registryIndex[T_BUTTERWORTH]++];
+	
+	f->f1 = f1;
+	f->f2 = f2;
+	f->gain = 1.0f;
+	f->N = N;
+
+	for(int i = 0; i < N/2; ++i)
+	{
+			f->low[i] = tSVFInit(SVFTypeHighpass, f1, 0.5f/cosf((1.0f+2.0f*i)*PI/(2*N)));
+			f->high[i] = tSVFInit(SVFTypeLowpass, f2, 0.5f/cosf((1.0f+2.0f*i)*PI/(2*N)));
+	}
+	return f;
+}
+
+float tButterworthTick(tButterworth* const f, float samp)
+{
+	for(int i = 0; i < ((f->N)/2); ++i)
+	{
+		samp = tSVFTick(f->low[i],samp);
+		samp = tSVFTick(f->high[i],samp);
+	}
+	return samp;
+}
+
+void tButterworthSetF1(tButterworth* const f, float f1)
+{
+	f->f1 = f1;
+	for(int i = 0; i < ((f->N)/2); ++i)		tSVFSetFreq(f->low[i], f1);
+}
+
+void tButterworthSetF2(tButterworth* const f, float f2)
+{
+	f->f2 = f2;
+	for(int i = 0; i < ((f->N)/2); ++i)		tSVFSetFreq(f->high[i], f2);
+}
+
+void tButterworthSetFreqs(tButterworth* const f, float f1, float f2)
+{
+	f->f1 = f1;
+	f->f2 = f2;
+	for(int i = 0; i < ((f->N)/2); ++i)
+	{
+		tSVFSetFreq(f->low[i], f1);
+		tSVFSetFreq(f->high[i], f2);
+	}
+}
+
+#endif
+
 #if N_ONEZERO
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ OneZero Filter ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
 tOneZero*    tOneZeroInit(float theZero)

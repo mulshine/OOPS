@@ -24,10 +24,10 @@ typedef enum oBool
 
 
 
+#define SQRT8 2.82842712475
+#define WSCALE 1.30612244898
 #define PI              (3.14159265358979f)
 #define TWO_PI          (2 * PI)
-
-
 
 #define VSF             1.0e-38f
 
@@ -45,6 +45,10 @@ typedef enum oBool
 #define INV_5120       0.0001953125f
 #define INV_10240      0.00009765625f
 #define INV_20480      0.000048828125f
+
+// Erbe shaper
+float OOPS_shaper(float input, float m_drive);
+float OOPS_reedTable(float input, float offset, float slope);
 
 float       OOPS_clip               (float min, float val, float max);
 oBool       OOPS_isPrime            (uint64_t number );

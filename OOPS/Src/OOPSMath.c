@@ -16,7 +16,29 @@
 
 #define EXPONENTIAL_TABLE_SIZE 65536
 
+// Erbe shaper
+float OOPS_shaper(float input, float m_drive) 
+{
+    float fx = input * 2.0;    // prescale
+    float w, c, xc, xc2, xc4;
 
+    xc = OOPS_clip(-SQRT8, fx, SQRT8);
+    xc2 = xc*xc;
+    c = 0.5*fx*(3. - (xc2));
+    xc4 = xc2 * xc2;
+    w = (1. - xc2*0.25 + xc4*0.015625) * WSCALE;
+    float shaperOut = w*(c+ 0.05*xc2)*(m_drive + 0.75);
+    shaperOut *= 0.5;    // post_scale
+    return shaperOut;
+}
+
+float OOPS_reedTable(float input, float offset, float slope) 
+{
+    float output = offset + (slope * input);
+    if ( output > 1.0) output = 1.0;
+    if ( output < -1.0) output = -1.0;
+    return output;
+}
 
 float   OOPS_clip(float min, float val, float max) {
     
