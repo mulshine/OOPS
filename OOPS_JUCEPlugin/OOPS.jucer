@@ -4,46 +4,46 @@
               bundleIdentifier="com.mrmulshine.OOPS" includeBinaryInAppConfig="1"
               buildVST="1" buildVST3="0" buildAU="1" buildAUv3="0" buildRTAS="0"
               buildAAX="0" pluginName="OOPS" pluginDesc="OOPS" pluginManufacturer="mrmulshine"
-              pluginManufacturerCode="Manu" pluginCode="Arqe" pluginChannelConfigs="{1,1},{2,2}"
+              pluginManufacturerCode="Manu" pluginCode="Arqe" pluginChannelConfigs="{2,2}"
               pluginIsSynth="0" pluginWantsMidiIn="1" pluginProducesMidiOut="0"
               pluginIsMidiEffectPlugin="0" pluginEditorRequiresKeys="0" pluginAUExportPrefix="OOPSAU"
               pluginRTASCategory="" aaxIdentifier="com.mrmulshine.OOPS" pluginAAXCategory="AAX_ePlugInCategory_Dynamics"
-              jucerVersion="5.0.1" companyName="mrmulshine" companyEmail="mrmulshine@gmail.com"
+              jucerVersion="5.1.2" companyName="mrmulshine" companyEmail="mrmulshine@gmail.com"
               displaySplashScreen="1" reportAppUsage="1" splashScreenColour="Dark"
-              buildStandalone="0" enableIAA="0">
+              buildStandalone="1" enableIAA="0" cppLanguageStandard="11">
   <MAINGROUP id="F7Bywq" name="OOPS">
     <GROUP id="{14C5E2CD-5D51-3FD3-5677-28BECA29E95E}" name="Source">
       <GROUP id="{EB72C69D-9DB4-93A0-1BB7-AECD0E7666DA}" name="OOPS">
-        <GROUP id="{29B01C83-29B3-5242-4C87-3BA9889475B6}" name="Src">
-          <FILE id="Mw0Vgn" name="OOPS.cpp" compile="1" resource="0" file="../OOPS/Src_cpp/OOPS.cpp"/>
-          <FILE id="L8exGK" name="OOPSDelay.cpp" compile="1" resource="0" file="../OOPS/Src_cpp/OOPSDelay.cpp"/>
-          <FILE id="iSPD0S" name="OOPSFilter.cpp" compile="1" resource="0" file="../OOPS/Src_cpp/OOPSFilter.cpp"/>
-          <FILE id="HQcGVP" name="OOPSInstrument.cpp" compile="1" resource="0"
-                file="../OOPS/Src_cpp/OOPSInstrument.cpp"/>
-          <FILE id="D2BOGL" name="OOPSMath.cpp" compile="1" resource="0" file="../OOPS/Src_cpp/OOPSMath.cpp"/>
-          <FILE id="y1znAc" name="OOPSOscillator.cpp" compile="1" resource="0"
-                file="../OOPS/Src_cpp/OOPSOscillator.cpp"/>
-          <FILE id="iXT7GE" name="OOPSReverb.cpp" compile="1" resource="0" file="../OOPS/Src_cpp/OOPSReverb.cpp"/>
-          <FILE id="p7o9C2" name="OOPSUtilities.cpp" compile="1" resource="0"
-                file="../OOPS/Src_cpp/OOPSUtilities.cpp"/>
-          <FILE id="qlUea8" name="OOPSWavetables.cpp" compile="1" resource="0"
-                file="../OOPS/Src_cpp/OOPSWavetables.cpp"/>
-        </GROUP>
-        <GROUP id="{E3B57AA8-B2E2-6A2D-65F8-786CDD511BF5}" name="Inc">
-          <FILE id="ZKFRdn" name="OOPS.h" compile="0" resource="0" file="../OOPS/Inc/OOPS.h"/>
-          <FILE id="MQDun9" name="OOPSCore.h" compile="0" resource="0" file="../OOPS/Inc/OOPSCore.h"/>
-          <FILE id="YPIZAN" name="OOPSDelay.h" compile="0" resource="0" file="../OOPS/Inc/OOPSDelay.h"/>
-          <FILE id="bp7ZNR" name="OOPSFilter.h" compile="0" resource="0" file="../OOPS/Inc/OOPSFilter.h"/>
-          <FILE id="casr4C" name="OOPSInstrument.h" compile="0" resource="0"
+        <GROUP id="{694B3407-585A-447D-9843-F414A9411E1A}" name="Inc">
+          <FILE id="dpuqNA" name="OOPS.h" compile="0" resource="0" file="../OOPS/Inc/OOPS.h"/>
+          <FILE id="bL0JCC" name="OOPSCore.h" compile="0" resource="0" file="../OOPS/Inc/OOPSCore.h"/>
+          <FILE id="IW2qxo" name="OOPSDelay.h" compile="0" resource="0" file="../OOPS/Inc/OOPSDelay.h"/>
+          <FILE id="E0OJxA" name="OOPSFilter.h" compile="0" resource="0" file="../OOPS/Inc/OOPSFilter.h"/>
+          <FILE id="QUsYhR" name="OOPSInstrument.h" compile="0" resource="0"
                 file="../OOPS/Inc/OOPSInstrument.h"/>
-          <FILE id="zMtZ6Z" name="OOPSMath.h" compile="0" resource="0" file="../OOPS/Inc/OOPSMath.h"/>
-          <FILE id="nV8wyz" name="OOPSMemConfig.h" compile="0" resource="0" file="../OOPS/Inc/OOPSMemConfig.h"/>
-          <FILE id="pPaiB1" name="OOPSOscillator.h" compile="0" resource="0"
+          <FILE id="Ms2GjM" name="OOPSMath.h" compile="0" resource="0" file="../OOPS/Inc/OOPSMath.h"/>
+          <FILE id="R8cTu9" name="OOPSMemConfig.h" compile="0" resource="0" file="../OOPS/Inc/OOPSMemConfig.h"/>
+          <FILE id="ZFwlq2" name="OOPSOscillator.h" compile="0" resource="0"
                 file="../OOPS/Inc/OOPSOscillator.h"/>
-          <FILE id="AbO5Zv" name="OOPSReverb.h" compile="0" resource="0" file="../OOPS/Inc/OOPSReverb.h"/>
-          <FILE id="aUAeas" name="OOPSUtilities.h" compile="0" resource="0" file="../OOPS/Inc/OOPSUtilities.h"/>
-          <FILE id="vS4Z0p" name="OOPSWavetables.h" compile="0" resource="0"
+          <FILE id="HD0oSm" name="OOPSReverb.h" compile="0" resource="0" file="../OOPS/Inc/OOPSReverb.h"/>
+          <FILE id="jeKhpA" name="OOPSUtilities.h" compile="0" resource="0" file="../OOPS/Inc/OOPSUtilities.h"/>
+          <FILE id="A1qa7l" name="OOPSWavetables.h" compile="0" resource="0"
                 file="../OOPS/Inc/OOPSWavetables.h"/>
+        </GROUP>
+        <GROUP id="{C42BE49F-75A6-00EC-CF55-2AD80B09B3E0}" name="Src_cpp">
+          <FILE id="iECWGD" name="OOPS.cpp" compile="1" resource="0" file="../OOPS/Src_cpp/OOPS.cpp"/>
+          <FILE id="XQIOWn" name="OOPSDelay.cpp" compile="1" resource="0" file="../OOPS/Src_cpp/OOPSDelay.cpp"/>
+          <FILE id="HUdPCI" name="OOPSFilter.cpp" compile="1" resource="0" file="../OOPS/Src_cpp/OOPSFilter.cpp"/>
+          <FILE id="z5u0Vd" name="OOPSInstrument.cpp" compile="1" resource="0"
+                file="../OOPS/Src_cpp/OOPSInstrument.cpp"/>
+          <FILE id="VqeaUH" name="OOPSMath.cpp" compile="1" resource="0" file="../OOPS/Src_cpp/OOPSMath.cpp"/>
+          <FILE id="vWE3wO" name="OOPSOscillator.cpp" compile="1" resource="0"
+                file="../OOPS/Src_cpp/OOPSOscillator.cpp"/>
+          <FILE id="kbWj8X" name="OOPSReverb.cpp" compile="1" resource="0" file="../OOPS/Src_cpp/OOPSReverb.cpp"/>
+          <FILE id="Jjk4i5" name="OOPSUtilities.cpp" compile="1" resource="0"
+                file="../OOPS/Src_cpp/OOPSUtilities.cpp"/>
+          <FILE id="QvxXPQ" name="OOPSWavetables.cpp" compile="1" resource="0"
+                file="../OOPS/Src_cpp/OOPSWavetables.cpp"/>
         </GROUP>
       </GROUP>
       <GROUP id="{FFA9F0EC-F45A-74FC-5A10-9B3CAA731E7C}" name="External">
@@ -79,20 +79,21 @@
         <CONFIGURATION name="Release" isDebug="0" optimisation="3" targetName="OOPS"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
-        <MODULEPATH id="juce_core" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_events" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_graphics" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_data_structures" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_gui_basics" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_gui_extra" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_cryptography" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_video" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_opengl" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_audio_basics" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_audio_devices" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_audio_formats" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_audio_processors" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_audio_plugin_client" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_cryptography" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_video" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_opengl" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_basics" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_plugin_client" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="../../JUCE/modules"/>
       </MODULEPATHS>
     </XCODE_MAC>
     <XCODE_IPHONE targetFolder="Builds/iOS" iosScreenOrientation="portraitlandscape">
@@ -101,20 +102,21 @@
         <CONFIGURATION name="Release" isDebug="0" optimisation="3" targetName="OOPS"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
-        <MODULEPATH id="juce_core" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_events" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_graphics" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_data_structures" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_gui_basics" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_gui_extra" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_cryptography" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_video" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_opengl" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_audio_basics" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_audio_devices" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_audio_formats" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_audio_processors" path="../../../JUCE/modules"/>
-        <MODULEPATH id="juce_audio_plugin_client" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_cryptography" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_video" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_opengl" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_basics" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_plugin_client" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="../../JUCE/modules"/>
       </MODULEPATHS>
     </XCODE_IPHONE>
   </EXPORTFORMATS>
@@ -124,6 +126,7 @@
     <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="0"/>
     <MODULE id="juce_audio_plugin_client" showAllCode="1" useLocalCopy="0"/>
     <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="0"/>
+    <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
     <MODULE id="juce_core" showAllCode="1" useLocalCopy="0"/>
     <MODULE id="juce_cryptography" showAllCode="1" useLocalCopy="0"/>
     <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0"/>

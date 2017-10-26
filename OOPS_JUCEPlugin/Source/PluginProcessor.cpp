@@ -23,11 +23,7 @@ OopsAudioProcessorEditor::OopsAudioProcessorEditor (OopsAudioProcessor& p)
     // editor's size to whatever you need it to be.
     setSize (750, 600);
     
-    UIComponent *component = new UIComponent();
-    
-    component->setBounds(getBounds());
-    
-    addAndMakeVisible(component);
+    addAndMakeVisible(uicomponent);
 }
 
 OopsAudioProcessorEditor::~OopsAudioProcessorEditor()
@@ -42,7 +38,7 @@ void OopsAudioProcessorEditor::paint (Graphics& g)
 
 void OopsAudioProcessorEditor::resized()
 {
-    
+    uicomponent.setBounds(getBounds());
 }
 //==============================================================================
 void OopsAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
@@ -91,6 +87,7 @@ void OopsAudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuffer& mi
         }
     }
     
+
     const float* inPointerL = buffer.getReadPointer (0);
     const float* inPointerR = buffer.getReadPointer (1);
     

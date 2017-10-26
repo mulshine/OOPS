@@ -8,14 +8,14 @@
   ==============================================================================
 */
 
-#include "OOPSUtilities.h"
-#include "OOPSWavetables.h"
-#include "OOPS.h"
+#include "../Inc/OOPSUtilities.h"
+#include "../Inc/OOPSWavetables.h"
+#include "../Inc/OOPS.h"
 
 #if N_COMPRESSOR
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ Compressor ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
 
-tCompressor*    tCompressorInit(float tauAttack, float tauRelease)
+tCompressor*    tCompressorInit(int tauAttack, int tauRelease)
 {
     tCompressor* c = &oops.tCompressorRegistry[oops.registryIndex[T_COMPRESSOR]++];
     
@@ -27,19 +27,34 @@ tCompressor*    tCompressorInit(float tauAttack, float tauRelease)
     c->x_T[0] = 0.0f, c->x_T[1] = 0.0f,
     c->y_T[0] = 0.0f, c->y_T[1] = 0.0f;
     
-    c->T = -6.0f; // Threshold
-    c->R = 3.0f; // compression Ratio
-    c->M = 2.0f; // decibel Make-up gain
-    c->W = 3.0f; // decibel Width of knee transition
+    c->T = 0.0f; // Threshold
+    c->R = 1.0f; // compression Ratio
+    c->M = 0.0f; // decibel Make-up gain
+    c->W = 0.0f; // decibel Width of knee transition
     
     return c;
 }
 
-
+/*
+tCompressor*    tCompressorInit(void)
+{
+    tCompressor* c = &oops.tCompressorRegistry[oops.registryIndex[T_COMPRESSOR]++];
+    
+    c->tauAttack = 100;
+    c->tauRelease = 100;
+    
+    c->T = 0.0f; // Threshold
+    c->R = 0.5f; // compression Ratio
+    c->M = 3.0f; // decibel Width of knee transition
+    c->W = 1.0f; // decibel Make-up gain
+    
+    return c;
+}
+ */
 int ccount = 0;
 float tCompressorTick(tCompressor* c, float in)
 {
-    float slope, overshoot;
+    float slope, overshoot, c_dB;
     float alphaAtt, alphaRel;
     
     float in_db = 20.0f * log10f( fmaxf( fabsf( in), 0.000001f)), out_db = 0.0f;
@@ -73,62 +88,10 @@ float tCompressorTick(tCompressor* c, float in)
     
     float attenuation = powf(10.0f, ((c->M - c->y_T[0])/20.0f));
     
-    /*
-    if (++ccount > 5000)
-    {
-        
-        ccount = 0;
-        DBG(".5width: " + String(c->W * 0.5f));
-        DBG("slope: " + String(slope) + " overshoot: " + String(overshoot));
-        DBG("attenuation: " + String(attenuation));
-    }
-    */
     return attenuation * in;
     
 
 }
-
-
-int     tCompressorSetAttack(tCompressor* const comp, float attack)
-{
-    c->tauAttack = attack;
-    return 0;
-}
-
-int     tCompressorSetRelease(tCompressor* const comp, float release)
-{
-    c->tauRelease = release;
-    return 0;
-}
-
-//threshold is in negative decibels (like -12.0f)
-int     tCompressorSetThreshold(tCompressor* const comp, float thresh)
-{
-    comp->T = thresh; // Threshold
-    return 0;
-}
-
-//ratio is in positive numbers (like 1.0f to 20.0f) representing the reduction -- 3.0f is 3/1
-int     tCompressorSetRatio(tCompressor* const comp, float ratio)
-{
-    comp->R = ratio; // Threshold
-    return 0;
-}
-
-//makeup gain is in decibels (like 2.0f)
-int     tCompressorSetMakeupGain(tCompressor* const comp, float gain)
-{
-    comp->M = gain; // Threshold
-    return 0;
-}
-
-//knee width is also in decibels (like 3.0f)
-int     tCompressorSetKneeWidth(tCompressor* const comp, float knee)
-{
-    comp->W = knee; // Threshold
-    return 0;
-}
-
 
 
 #endif
@@ -144,19 +107,26 @@ tEnvelope*    tEnvelopeInit(float attack, float decay, oBool loop)
     
     env->loop = loop;
     
-    if (attack > 8191.0f)
-        attack = 8191.0f;
-    if (attack < 1.0f)
-        attack = 1.0f;
+    if (attack > 8192.0f)
+        attack = 8192.0f;
+    if (attack < 0.0f)
+        attack = 0.0f;
     
-    if (decay > 8191.0f)
-        decay = 8191.0f;
-    if (decay < 1.0f)
-        decay = 1.0f;
+    if (decay > 8192.0f)
+        decay = 8192.0f;
+    if (decay < 0.0f)
+        decay = 0.0f;
     
-    uint16_t attackIndex = ((uint16_t)(attack * 8.0f))-1;
-    uint16_t decayIndex = ((uint16_t)(decay * 8.0f))-1;
-    uint16_t rampIndex = ((uint16_t)(2.0f * 8.0f))-1;
+    int16_t attackIndex = ((int16_t)(attack * 8.0f))-1;
+    int16_t decayIndex = ((int16_t)(decay * 8.0f))-1;
+    int16_t rampIndex = ((int16_t)(2.0f * 8.0f))-1;
+    
+    if (attackIndex < 0)
+        attackIndex = 0;
+    if (decayIndex < 0)
+        decayIndex = 0;
+    if (rampIndex < 0)
+        rampIndex = 0;
     
     env->inRamp = OFALSE;
     env->inAttack = OFALSE;
@@ -172,14 +142,14 @@ tEnvelope*    tEnvelopeInit(float attack, float decay, oBool loop)
 
 int     tEnvelopeSetAttack(tEnvelope* const env, float attack)
 {
-    uint16_t attackIndex;
+    int16_t attackIndex;
     
     if (attack < 0.0f) {
         attackIndex = 0.0f;
     } else if (attack < 8192.0f) {
-        attackIndex = ((uint16_t)(attack * 8.0f))-1;
+        attackIndex = ((int16_t)(attack * 8.0f))-1;
     } else {
-        attackIndex = ((uint16_t)(8191.0f * 8.0f))-1;
+        attackIndex = ((int16_t)(8192.0f * 8.0f))-1;
     }
     
     env->attackInc = env->inc_buff[attackIndex];
@@ -189,14 +159,14 @@ int     tEnvelopeSetAttack(tEnvelope* const env, float attack)
 
 int     tEnvelopeSetDecay(tEnvelope* const env, float decay)
 {
-    uint16_t decayIndex;
+    int16_t decayIndex;
     
     if (decay < 0.0f) {
         decayIndex = 0.0f;
     } else if (decay < 8192.0f) {
-        decayIndex = ((uint16_t)(decay * 8.0f))-1;
+        decayIndex = ((int16_t)(decay * 8.0f))-1;
     } else {
-        decayIndex = ((uint16_t)(8191.0f * 8.0f))-1;
+        decayIndex = ((int16_t)(8192.0f * 8.0f))-1;
     }
     
     env->decayInc = env->inc_buff[decayIndex]; 

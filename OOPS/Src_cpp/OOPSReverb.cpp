@@ -8,8 +8,8 @@
   ==============================================================================
 */
 
-#include "OOPSReverb.h"
-#include "OOPS.h"
+#include "../Inc/OOPSReverb.h"
+#include "../Inc/OOPS.h"
 
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ PRCRev ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
 #if N_PRCREV

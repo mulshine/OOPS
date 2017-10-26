@@ -8,9 +8,9 @@
   ==============================================================================
 */
 
-#include "OOPSFilter.h"
-#include "OOPSWavetables.h"
-#include "OOPS.h"
+#include "../Inc/OOPSFilter.h"
+#include "../Inc/OOPSWavetables.h"
+#include "../Inc/OOPS.h"
 
 #if N_ONEZERO
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ OneZero Filter ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
@@ -68,7 +68,7 @@ void    tOneZeroSetGain(tOneZero *f, float gain)
 
 float   tOneZeroGetPhaseDelay(tOneZero* const f, float frequency )
 {
-    if ( frequency <= 0.0f) frequency = 0.05f;
+    if ( frequency <= 0.0) frequency = 0.05f;
     
     f->frequency = frequency;
     

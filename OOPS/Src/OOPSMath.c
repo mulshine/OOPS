@@ -8,8 +8,8 @@
   ==============================================================================
 */
 
-#include "OOPSMath.h"
-#include "OOPSWavetables.h"
+#include "../Inc/OOPSMath.h"
+#include "../Inc/OOPSWavetables.h"
 
 // The C-embedded Audio Library.
 #define TWO_TO_16 65536.f

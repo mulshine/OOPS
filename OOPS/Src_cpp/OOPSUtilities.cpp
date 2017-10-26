@@ -8,9 +8,9 @@
   ==============================================================================
 */
 
-#include "OOPSUtilities.h"
-#include "OOPSWavetables.h"
-#include "OOPS.h"
+#include "../Inc/OOPSUtilities.h"
+#include "../Inc/OOPSWavetables.h"
+#include "../Inc/OOPS.h"
 
 #if N_COMPRESSOR
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ Compressor ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //

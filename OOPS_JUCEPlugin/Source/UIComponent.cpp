@@ -15,20 +15,6 @@
 UIComponent::UIComponent()
 
 {
-    // In your constructor, you should add any child components, and
-    // initialise any special settings that your component needs.
-    sliders = OwnedArray<Slider>();
-    sliders.ensureStorageAllocated(cSliderNames.size());
-    
-    buttons = OwnedArray<TextButton>();
-    buttons.ensureStorageAllocated(cButtonNames.size());
-    
-    comboBoxes = OwnedArray<ComboBox>();
-    comboBoxes.ensureStorageAllocated(cComboBoxNames.size());
-    
-    textFields = OwnedArray<TextEditor>();
-    textFields.ensureStorageAllocated(cSliderNames.size());
-    
     for (int i = 0; i < cSliderNames.size(); i++)
     {
         

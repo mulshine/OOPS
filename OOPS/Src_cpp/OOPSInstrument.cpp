@@ -8,9 +8,9 @@
  ==============================================================================
  */
 
-#include "OOPSUtilities.h"
-#include "OOPSInstrument.h"
-#include "OOPS.h"
+#include "../Inc/OOPSUtilities.h"
+#include "../Inc/OOPSInstrument.h"
+#include "../Inc/OOPS.h"
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *

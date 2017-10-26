@@ -1,8 +1,8 @@
 /* sine wave table ripped from http://aquaticus.info/pwm-sine-wave */
 
-#include "OOPSWavetables.h"
+#include "../Inc/OOPSWavetables.h"
 
-#include "OOPSMemConfig.h"
+#include "../Inc/OOPSMemConfig.h"
 
 #include "stdlib.h"
 

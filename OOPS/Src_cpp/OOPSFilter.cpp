@@ -8,9 +8,9 @@
   ==============================================================================
 */
 
-#include "OOPSFilter.h"
-#include "OOPSWavetables.h"
-#include "OOPS.h"
+#include "../Inc/OOPSFilter.h"
+#include "../Inc/OOPSWavetables.h"
+#include "../Inc/OOPS.h"
 
 #if N_ONEZERO
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ OneZero Filter ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
@@ -73,7 +73,7 @@ float   tOneZeroGetPhaseDelay(tOneZero* const f, float frequency )
     f->frequency = frequency;
     
     float omegaT = 2 * PI * frequency * oops.invSampleRate;
-    float real = 0.0, imag = 0.0;
+    float real = 0.0f, imag = 0.0f;
     
     real += f->b0;
     
@@ -85,7 +85,7 @@ float   tOneZeroGetPhaseDelay(tOneZero* const f, float frequency )
     
     float phase = atan2f( imag, real );
     
-    real = 0.0, imag = 0.0;
+    real = 0.0f, imag = 0.0f;
     
     phase -= atan2f( imag, real );
     
@@ -243,8 +243,8 @@ tTwoPole*    tTwoPoleInit(void)
     tTwoPole* f = &oops.tTwoPoleRegistry[oops.registryIndex[T_TWOPOLE]++];
     
     f->gain = 1.0f;
-    f->a0 = 1.0;
-    f->b0 = 1.0;
+    f->a0 = 1.0f;
+    f->b0 = 1.0f;
     
     f->lastOut[0] = 0.0f;
     f->lastOut[1] = 0.0f;
@@ -338,8 +338,8 @@ tPoleZero*    tPoleZeroInit(void)
     tPoleZero* f = &oops.tPoleZeroRegistry[oops.registryIndex[T_POLEZERO]++];
     
     f->gain = 1.0f;
-    f->b0 = 1.0;
-    f->a0 = 1.0;
+    f->b0 = 1.0f;
+    f->a0 = 1.0f;
     
     f->lastIn = 0.0f;
     f->lastOut = 0.0f;

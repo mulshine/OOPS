@@ -8,9 +8,9 @@
   ==============================================================================
 */
 
-#include "OOPSWavetables.h"
-#include "OOPSOscillator.h"
-#include "OOPS.h"
+#include "../Inc/OOPSWavetables.h"
+#include "../Inc/OOPSOscillator.h"
+#include "../Inc/OOPS.h"
 
 #if N_NEURON
 

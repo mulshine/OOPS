@@ -63,14 +63,11 @@ private:
     static const int cBoxHeight = 20;
     static const int cBoxWidth  =  100;
     
-    OwnedArray<Slider> sliders;
-    OwnedArray<Label>  sliderLabels;
-    
-    OwnedArray<TextButton> buttons;
-    
-    OwnedArray<TextEditor> textFields;
-    
-    OwnedArray<ComboBox> comboBoxes;
+    OwnedArray<Slider>      sliders;
+    OwnedArray<Label>       sliderLabels;
+    OwnedArray<TextButton>  buttons;
+    OwnedArray<TextEditor>  textFields;
+    OwnedArray<ComboBox>    comboBoxes;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (UIComponent)
 };
