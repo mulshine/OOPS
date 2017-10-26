@@ -12,6 +12,59 @@
 #include "../Inc/OOPSWavetables.h"
 #include "../Inc/OOPS.h"
 
+#if N_BUTTERWORTH
+tButterworth* tButterworthInit(int N, float f1, float f2)
+{
+	tButterworth* f = &oops.tButterworthRegistry[oops.registryIndex[T_BUTTERWORTH]++];
+	
+	f->f1 = f1;
+	f->f2 = f2;
+	f->gain = 1.0f;
+	f->N = N;
+
+	for(int i = 0; i < N/2; ++i)
+	{
+			f->low[i] = tSVFInit(SVFTypeHighpass, f1, 0.5f/cosf((1.0f+2.0f*i)*PI/(2*N)));
+			f->high[i] = tSVFInit(SVFTypeLowpass, f2, 0.5f/cosf((1.0f+2.0f*i)*PI/(2*N)));
+	}
+	return f;
+}
+
+float tButterworthTick(tButterworth* const f, float samp)
+{
+	for(int i = 0; i < ((f->N)/2); ++i)
+	{
+		samp = tSVFTick(f->low[i],samp);
+		samp = tSVFTick(f->high[i],samp);
+	}
+	return samp;
+}
+
+void tButterworthSetF1(tButterworth* const f, float f1)
+{
+	f->f1 = f1;
+	for(int i = 0; i < ((f->N)/2); ++i)		tSVFSetFreq(f->low[i], f1);
+}
+
+void tButterworthSetF2(tButterworth* const f, float f2)
+{
+	f->f2 = f2;
+	for(int i = 0; i < ((f->N)/2); ++i)		tSVFSetFreq(f->high[i], f2);
+}
+
+void tButterworthSetFreqs(tButterworth* const f, float f1, float f2)
+{
+	f->f1 = f1;
+	f->f2 = f2;
+	for(int i = 0; i < ((f->N)/2); ++i)
+	{
+		tSVFSetFreq(f->low[i], f1);
+		tSVFSetFreq(f->high[i], f2);
+	}
+}
+
+#endif
+
 #if N_ONEZERO
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ OneZero Filter ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
 tOneZero*    tOneZeroInit(float theZero)
@@ -68,12 +121,12 @@ void    tOneZeroSetGain(tOneZero *f, float gain)
 
 float   tOneZeroGetPhaseDelay(tOneZero* const f, float frequency )
 {
-    if ( frequency <= 0.0) frequency = 0.05f;
+    if ( frequency <= 0.0f) frequency = 0.05f;
     
     f->frequency = frequency;
     
     float omegaT = 2 * PI * frequency * oops.invSampleRate;
-    float real = 0.0f, imag = 0.0f;
+    float real = 0.0, imag = 0.0;
     
     real += f->b0;
     
@@ -85,7 +138,7 @@ float   tOneZeroGetPhaseDelay(tOneZero* const f, float frequency )
     
     float phase = atan2f( imag, real );
     
-    real = 0.0f, imag = 0.0f;
+    real = 0.0, imag = 0.0;
     
     phase -= atan2f( imag, real );
     
@@ -243,8 +296,8 @@ tTwoPole*    tTwoPoleInit(void)
     tTwoPole* f = &oops.tTwoPoleRegistry[oops.registryIndex[T_TWOPOLE]++];
     
     f->gain = 1.0f;
-    f->a0 = 1.0f;
-    f->b0 = 1.0f;
+    f->a0 = 1.0;
+    f->b0 = 1.0;
     
     f->lastOut[0] = 0.0f;
     f->lastOut[1] = 0.0f;
@@ -338,8 +391,8 @@ tPoleZero*    tPoleZeroInit(void)
     tPoleZero* f = &oops.tPoleZeroRegistry[oops.registryIndex[T_POLEZERO]++];
     
     f->gain = 1.0f;
-    f->b0 = 1.0f;
-    f->a0 = 1.0f;
+    f->b0 = 1.0;
+    f->a0 = 1.0;
     
     f->lastIn = 0.0f;
     f->lastOut = 0.0f;
