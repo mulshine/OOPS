@@ -8,17 +8,87 @@
   ==============================================================================
 */
 
-#include "../Inc/OOPSMath.h"
-#include "../Inc/OOPSWavetables.h"
+#include "OOPSMath.h"
+#include "OOPSWavetables.h"
 
 // The C-embedded Audio Library.
 #define TWO_TO_16 65536.f
 
 #define EXPONENTIAL_TABLE_SIZE 65536
 
+// dope af
+float OOPS_chebyshevT(float in, int n){
+	if (n == 0) return 1;
+	else if (n == 1) return in;
+	else return 2.0f * in * OOPS_chebyshevT(in, n-1) - OOPS_chebyshevT(in, n-2);
+}
 
+float OOPS_CompoundChebyshevT(float in, int n, float* amps){
+	float T[n+1];
+	T[0] = 1.0f;
+	T[1] = in;
+	for (int i = 2; i <= n; ++i)
+		T[i] = 2*in*T[i-1] - T[i-2];
+	float out = 0;
+	float amp = 0;
+	for (int i = 0; i < n; ++i){
+		out += amps[i]*T[i+1];
+		amp += amps[i];
+	}
+	return out / amp ;
+}
 
-float   OOPS_clip(float min, float val, float max) {
+float OOPS_frequencyToMidi(float f)
+{
+	return (69.0f + 12.0f * log2(f * INV_440));
+}
+
+// Erbe shaper
+float OOPS_shaper(float input, float m_drive) 
+{
+    float fx = input * 2.0f;    // prescale
+    float w, c, xc, xc2, xc4;
+
+    xc = OOPS_clip(-SQRT8, fx, SQRT8);
+    xc2 = xc*xc;
+    c = 0.5f*fx*(3.0f - (xc2));
+    xc4 = xc2 * xc2;
+    w = (1.0f - xc2*0.25f + xc4*0.015625f) * WSCALE;
+    float shaperOut = w*(c+ 0.05f*xc2)*(m_drive + 0.75f);
+    shaperOut *= 0.5f;    // post_scale
+    return shaperOut;
+}
+
+float OOPS_reedTable(float input, float offset, float slope) 
+{
+    float output = offset + (slope * input);
+    if ( output > 1.0f) output = 1.0f;
+    if ( output < -1.0f) output = -1.0f;
+    return output;
+}
+
+float   OOPS_softClip(float val, float thresh) 
+{
+	float x;
+	
+	if(val > thresh)
+	{
+			x = thresh / val;
+			return (1.0f - x) * (1.0f - thresh) + thresh;
+	}
+	else if(val < -thresh)
+	{
+			x = -thresh / val;
+			return -((1.0f - x) * (1.0f - thresh) + thresh);
+	}
+	else
+	{
+		return val;
+	}
+}
+
+float   OOPS_clip(float min, float val, float max) 
+	{
     
     if (val < min) {
         return min;

@@ -13,6 +13,13 @@
 
 #include "OOPSCore.h"
 
+tButterworth* tButterworthInit(int N, float f1, float f2);
+float tButterworthTick(tButterworth* const, float input);
+
+void tButterworthSetF1(tButterworth* const, float in);
+void tButterworthSetF2(tButterworth* const, float in);
+void tButterworthSetFreqs(tButterworth* const, float f1, float f2);
+
 /* tOnePole: OnePole filter, reimplemented from STK (Cook and Scavone). */
 tOnePole*   tOnePoleInit           (float thePole);
 float       tOnePoleTick           (tOnePole*  const, float input);

@@ -8,13 +8,14 @@
   ==============================================================================
 */
 
-#include "../Inc/OOPSUtilities.h"
-#include "../Inc/OOPSWavetables.h"
-#include "../Inc/OOPS.h"
+#include "OOPSUtilities.h"
+#include "OOPSWavetables.h"
+#include "OOPS.h"
 
 #if N_COMPRESSOR
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ Compressor ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
 
+/*
 tCompressor*    tCompressorInit(int tauAttack, int tauRelease)
 {
     tCompressor* c = &oops.tCompressorRegistry[oops.registryIndex[T_COMPRESSOR]++];
@@ -34,14 +35,15 @@ tCompressor*    tCompressorInit(int tauAttack, int tauRelease)
     
     return c;
 }
-
-/*
+*/
 tCompressor*    tCompressorInit(void)
 {
     tCompressor* c = &oops.tCompressorRegistry[oops.registryIndex[T_COMPRESSOR]++];
     
     c->tauAttack = 100;
     c->tauRelease = 100;
+	
+	  c->isActive = OFALSE;
     
     c->T = 0.0f; // Threshold
     c->R = 0.5f; // compression Ratio
@@ -50,11 +52,11 @@ tCompressor*    tCompressorInit(void)
     
     return c;
 }
- */
+
 int ccount = 0;
 float tCompressorTick(tCompressor* c, float in)
 {
-    float slope, overshoot, c_dB;
+    float slope, overshoot;
     float alphaAtt, alphaRel;
     
     float in_db = 20.0f * log10f( fmaxf( fabsf( in), 0.000001f)), out_db = 0.0f;
@@ -64,15 +66,23 @@ float tCompressorTick(tCompressor* c, float in)
     slope = c->R - 1.0f; // feed-forward topology; was 1/C->R - 1 
     
     overshoot = in_db - c->T;
-    
-    
+
     
     if (overshoot <= -(c->W * 0.5f))
+		{
         out_db = in_db;
+			  c->isActive = OFALSE;
+		}
     else if ((overshoot > -(c->W * 0.5f)) && (overshoot < (c->W * 0.5f)))
+		{
         out_db = in_db + slope * (powf((overshoot + c->W*0.5f),2) / (2.0f * c->W)); // .^ 2 ???
+			  c->isActive = OTRUE;
+		}
     else if (overshoot >= (c->W * 0.5f))
+		{
         out_db = in_db + slope * overshoot;
+			  c->isActive = OTRUE;
+		}
     
     
     
@@ -88,6 +98,16 @@ float tCompressorTick(tCompressor* c, float in)
     
     float attenuation = powf(10.0f, ((c->M - c->y_T[0])/20.0f));
     
+    /*
+    if (++ccount > 5000)
+    {
+        
+        ccount = 0;
+        DBG(".5width: " + String(c->W * 0.5f));
+        DBG("slope: " + String(slope) + " overshoot: " + String(overshoot));
+        DBG("attenuation: " + String(attenuation));
+    }
+    */
     return attenuation * in;
     
 
@@ -142,14 +162,14 @@ tEnvelope*    tEnvelopeInit(float attack, float decay, oBool loop)
 
 int     tEnvelopeSetAttack(tEnvelope* const env, float attack)
 {
-    int16_t attackIndex;
+    int32_t attackIndex;
     
     if (attack < 0.0f) {
         attackIndex = 0.0f;
     } else if (attack < 8192.0f) {
-        attackIndex = ((int16_t)(attack * 8.0f))-1;
+        attackIndex = ((int32_t)(attack * 8.0f))-1;
     } else {
-        attackIndex = ((int16_t)(8192.0f * 8.0f))-1;
+        attackIndex = ((int32_t)(8192.0f * 8.0f))-1;
     }
     
     env->attackInc = env->inc_buff[attackIndex];
@@ -159,14 +179,14 @@ int     tEnvelopeSetAttack(tEnvelope* const env, float attack)
 
 int     tEnvelopeSetDecay(tEnvelope* const env, float decay)
 {
-    int16_t decayIndex;
+    int32_t decayIndex;
     
     if (decay < 0.0f) {
         decayIndex = 0.0f;
     } else if (decay < 8192.0f) {
-        decayIndex = ((int16_t)(decay * 8.0f))-1;
+        decayIndex = ((int32_t)(decay * 8.0f)) - 1;
     } else {
-        decayIndex = ((int16_t)(8192.0f * 8.0f))-1;
+        decayIndex = ((int32_t)(8192.0f * 8.0f)) - 1; 
     }
     
     env->decayInc = env->inc_buff[decayIndex]; 
@@ -323,9 +343,17 @@ tRamp*    tRampInit(float time, int samples_per_tick)
     tRamp* ramp = &oops.tRampRegistry[oops.registryIndex[T_RAMP]];
     
     ramp->inv_sr_ms = 1.0f/(oops.sampleRate*0.001f);
+		ramp->minimum_time = ramp->inv_sr_ms * samples_per_tick;
     ramp->curr = 0.0f;
     ramp->dest = 0.0f;
-    ramp->time = time;
+		if (time < ramp->minimum_time)
+		{
+			ramp->time = ramp->minimum_time;
+		}
+		else
+		{
+			ramp->time = time;
+		}
     ramp->samples_per_tick = samples_per_tick;
     ramp->inc = ((ramp->dest - ramp->curr) / ramp->time * ramp->inv_sr_ms) * (float)ramp->samples_per_tick;
     
@@ -338,15 +366,24 @@ tRamp*    tRampInit(float time, int samples_per_tick)
 
 int     tRampSetTime(tRamp* const r, float time)
 {
-    r->time = time;
-    r->inc = ((r->dest-r->curr)/r->time * r->inv_sr_ms)*((float)r->samples_per_tick);
+		if (time < r->minimum_time)
+		{
+			r->time = r->minimum_time;
+		}
+		else
+		{
+			r->time = time;
+		}
+		
+		r->time = time;
+    r->inc = ((r->dest-r->curr)/r->time * r->inv_sr_ms) * ((float)r->samples_per_tick);
     return 0;
 }
 
 int     tRampSetDest(tRamp* const r, float dest)
 {
     r->dest = dest;
-    r->inc = ((r->dest-r->curr)/r->time * r->inv_sr_ms)*((float)r->samples_per_tick);
+    r->inc = ((r->dest-r->curr)/r->time * r->inv_sr_ms) * ((float)r->samples_per_tick);
     return 0;
 }
 
@@ -356,6 +393,11 @@ float   tRampTick(tRamp* const r) {
     
     if (((r->curr >= r->dest) && (r->inc > 0.0f)) || ((r->curr <= r->dest) && (r->inc < 0.0f))) r->inc = 0.0f;
     
+    return r->curr;
+}
+
+float   tRampSample(tRamp* const r) {
+  
     return r->curr;
 }
 

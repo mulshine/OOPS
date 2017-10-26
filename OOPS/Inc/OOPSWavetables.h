@@ -14,6 +14,10 @@
 #include "OOPSMemConfig.h"
 
 
+
+
+
+
 #define SINE_TABLE_SIZE 2048
 #define SAW_TABLE_SIZE 2048
 #define SQR_TABLE_SIZE 2048

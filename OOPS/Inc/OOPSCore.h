@@ -14,13 +14,14 @@
 #include "OOPSMemConfig.h"
 
 #include "OOPSMath.h"
-
 typedef struct _tCompressor
 {
-    int tauAttack, tauRelease;
+    float tauAttack, tauRelease;
     float T, R, W, M; // Threshold, compression Ratio, decibel Width of knee transition, decibel Make-up gain
     
     float x_G[2], y_G[2], x_T[2], y_T[2];
+	
+	  oBool isActive;
     
     void (*sampleRateChanged)(struct _tCompressor *self);
     
@@ -107,6 +108,8 @@ typedef struct _tOnePole
     float lastIn, lastOut;
     
 } tOnePole;
+
+
 
 // TwoPole filter
 typedef struct _tTwoPole
@@ -203,6 +206,23 @@ typedef struct _tSVFE {
     
 } tSVFE;
 
+// Butterworth Filter
+#define NUM_SVF_BW 8
+typedef struct _tButterworth
+{
+    float gain;
+	
+		float N;
+	
+		tSVF* low[NUM_SVF_BW];
+		tSVF* high[NUM_SVF_BW];
+	
+		float f1,f2;
+	
+		void (*sampleRateChanged)(struct _tButterworth *self);
+    
+} tButterworth;
+
 // Highpass filter
 typedef struct _tHighpass
 {
@@ -217,6 +237,7 @@ typedef struct _tHighpass
 typedef struct _tRamp {
     float inc;
     float inv_sr_ms;
+		float minimum_time;
     float curr,dest;
     float time;
     int samples_per_tick;
@@ -427,63 +448,6 @@ typedef struct _tNeuron
     
 } tNeuron;
 
-typedef struct _t808Cowbell {
-    
-    tSquare* p[2];
-    tNoise* stick;
-    tSVFE* bandpassOsc;
-    tSVFE* bandpassStick;
-    tEnvelope* envGain;
-    tEnvelope* envStick;
-    tEnvelope* envFilter;
-    tHighpass* highpass;
-    float oscMix;
-    float filterCutoff;
-    
-} t808Cowbell;
-
-typedef struct _t808Hihat {
-    
-    // 6 Square waves
-    tSquare* p[6];
-    tNoise* n;
-    tSVFE* bandpassOsc;
-    tSVFE* bandpassStick;
-    tEnvelope* envGain;
-    tEnvelope* envStick;
-    tHighpass* highpass;
-    tNoise* stick;
-    
-    float oscNoiseMix;
-    
-    
-} t808Hihat;
-
-typedef struct _t808Snare {
-    
-    // Tone 1, Tone 2, Noise
-    tTriangle* tone[2]; // Tri (not yet antialiased or wavetabled)
-    tNoise* noiseOsc;
-    tSVFE* toneLowpass[2];
-    tSVFE* noiseLowpass; // Lowpass from SVF filter
-    tEnvelope* toneEnvOsc[2];
-    tEnvelope* toneEnvGain[2];
-    tEnvelope* noiseEnvGain;
-    tEnvelope* toneEnvFilter[2];
-    tEnvelope* noiseEnvFilter;
-    
-    float toneGain[2];
-    float noiseGain;
-    
-    float toneNoiseMix;
-    
-    float tone1Freq, tone2Freq;
-    
-    float noiseFilterFreq;
-    
-    
-} t808Snare;
-
 
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
 void     tPhasorSampleRateChanged (tPhasor *p);
@@ -504,11 +468,7 @@ void     tStifKarpSampleRateChanged (tStifKarp *c);
 
 void     tNeuronSampleRateChanged(tNeuron* n);
 void     tCompressorSampleRateChanged(tCompressor* n);
-
-
-void     t808SnareSampleRateChanged(t808Snare* n);
-void     t808HihatSampleRateChanged(t808Hihat* n);
-void     t808CowbellSampleRateChanged(t808Cowbell* n);
+void     tButterworthSampleRateChanged(tCompressor* n);
 
 typedef enum OOPSRegistryIndex
 {
@@ -540,9 +500,7 @@ typedef enum OOPSRegistryIndex
     T_STIFKARP,
     T_NEURON,
     T_COMPRESSOR,
-    T_808SNARE,
-    T_808HIHAT,
-    T_808COWBELL,
+		T_BUTTERWORTH,
     T_INDEXCNT
 }OOPSRegistryIndex;
 
@@ -579,13 +537,18 @@ typedef struct _OOPS
 #if N_ONEPOLE
     tOnePole           tOnePoleRegistry         [N_ONEPOLE];
 #endif
+
+        
+#if N_BUTTERWORTH
+    tButterworth     	tButterworthRegistry      [N_BUTTERWORTH];
+#endif
         
 #if N_TWOPOLE
     tTwoPole           tTwoPoleRegistry         [N_TWOPOLE];
 #endif
         
 #if N_ONEZERO
-    tOneZero           tOneZeroRegistry         [N_ONEZERO];
+    tOneZero           tOneZeroRegistry         [N_ONEPOLE];
 #endif
         
 #if N_TWOZERO
@@ -662,20 +625,8 @@ typedef struct _OOPS
     tNeuron            tNeuronRegistry          [N_NEURON];
 #endif
     
-#if N_COMPRESSOR
+#if N_COMPRESSOR    
     tCompressor        tCompressorRegistry      [N_COMPRESSOR];
-#endif
-    
-#if N_808SNARE
-    t808Snare        t808SnareRegistry      [N_808SNARE];
-#endif
-    
-#if N_808HIHAT
-    t808Hihat         t808HihatRegistry      [N_808HIHAT];
-#endif
-    
-#if N_808COWBELL
-    t808Cowbell       t808CowbellRegistry      [N_808COWBELL];
 #endif
     
     

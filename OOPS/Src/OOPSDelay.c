@@ -8,8 +8,8 @@
   ==============================================================================
 */
 
-#include "../Inc/OOPSDelay.h"
-#include "../Inc/OOPS.h"
+#include "OOPSDelay.h"
+#include "OOPS.h"
 
 #if N_DELAY
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ Delay ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //

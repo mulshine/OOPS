@@ -24,9 +24,6 @@ void        tPRCRevSetT60    (tPRCRev*  const, float t60);
 // Set mix between dry input and wet output signal.
 void        tPRCRevSetMix    (tPRCRev*  const, float mix);
 
-
-
-
 /* NRev: Reverb, reimplemented from STK (Cook and Scavone). */
 tNRev*      tNRevInit   (float t60);
 float       tNRevTick   (tNRev*  const, float input);
