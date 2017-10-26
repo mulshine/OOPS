@@ -15,15 +15,14 @@
 
 std::vector<std::string> cButtonNames =  std::vector<std::string>
 {
-
+    
 };
 
 std::vector<std::string> cSliderNames =  std::vector<std::string>
 {
-    "CarrierFreq",
-    "CarrierGain",
-    "ModulatorFreq",
-    "ModulatorGain"
+    "Delay",
+    "Freq",
+    "Q"
 };
 
 std::vector<std::string> cComboBoxNames =  std::vector<std::string>

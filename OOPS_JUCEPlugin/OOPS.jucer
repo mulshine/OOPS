@@ -96,7 +96,9 @@
         <MODULEPATH id="juce_audio_utils" path="../../JUCE/modules"/>
       </MODULEPATHS>
     </XCODE_MAC>
-    <XCODE_IPHONE targetFolder="Builds/iOS" iosScreenOrientation="portraitlandscape">
+    <XCODE_IPHONE targetFolder="Builds/iOS" iosScreenOrientation="portraitlandscape"
+                  iosDevelopmentTeamID="QY96HSP2FJ" microphonePermissionNeeded="1"
+                  iosBackgroundAudio="1">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="OOPS"/>
         <CONFIGURATION name="Release" isDebug="0" optimisation="3" targetName="OOPS"/>
