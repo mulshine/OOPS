@@ -8,8 +8,19 @@
   ==============================================================================
 */
 
+#if _WIN32 || _WIN64
+
+#include "..\Inc\OOPSReverb.h"
+#include "..\Inc\OOPS.h"
+
+#else
+
 #include "../Inc/OOPSReverb.h"
 #include "../Inc/OOPS.h"
+
+#endif
+
+
 
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ PRCRev ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
 #if N_PRCREV

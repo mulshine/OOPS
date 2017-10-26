@@ -8,9 +8,20 @@
   ==============================================================================
 */
 
+#if _WIN32 || _WIN64
+
+#include "..\Inc\OOPSWavetables.h"
+#include "..\Inc\OOPSOscillator.h"
+#include "..\Inc\OOPS.h"
+
+#else
+
 #include "../Inc/OOPSWavetables.h"
 #include "../Inc/OOPSOscillator.h"
 #include "../Inc/OOPS.h"
+
+#endif
+
 
 #if N_NEURON
 

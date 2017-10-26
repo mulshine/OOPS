@@ -8,9 +8,19 @@
   ==============================================================================
 */
 
+#if _WIN32 || _WIN64
+
+#include "..\Inc\OOPSFilter.h"
+#include "..\Inc\OOPSWavetables.h"
+#include "..\Inc\OOPS.h"
+
+#else
+
 #include "../Inc/OOPSFilter.h"
 #include "../Inc/OOPSWavetables.h"
 #include "../Inc/OOPS.h"
+
+#endif
 
 #if N_BUTTERWORTH
 tButterworth* tButterworthInit(int N, float f1, float f2)

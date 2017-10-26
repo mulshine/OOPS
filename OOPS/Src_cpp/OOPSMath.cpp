@@ -8,8 +8,17 @@
   ==============================================================================
 */
 
+#if _WIN32 || _WIN64
+
+#include "..\Inc\OOPSMath.h"
+#include "..\Inc\OOPSWavetables.h"
+
+#else
+
 #include "../Inc/OOPSMath.h"
 #include "../Inc/OOPSWavetables.h"
+
+#endif
 
 // The C-embedded Audio Library.
 #define TWO_TO_16 65536.f
@@ -23,6 +32,7 @@ float OOPS_chebyshevT(float in, int n){
 	else return 2.0f * in * OOPS_chebyshevT(in, n-1) - OOPS_chebyshevT(in, n-2);
 }
 
+#if !(_WIN32 || _WIN64)
 float OOPS_CompoundChebyshevT(float in, int n, float* amps){
 	float T[n+1];
 	T[0] = 1.0f;
@@ -37,6 +47,7 @@ float OOPS_CompoundChebyshevT(float in, int n, float* amps){
 	}
 	return out / amp ;
 }
+#endif
 
 float OOPS_frequencyToMidi(float f)
 {
