@@ -110,7 +110,15 @@ void OOPSSetSampleRate(float sampleRate)
 #endif
     
 #if N_COMPRESSOR
-        for (int i = 0; i < oops.registryIndex[T_COMPRESSOR]; i++)         OOPSSampleRateChanged(tCompressorRegistry[i]);
+        for (int i = 0; i < oops.registryIndex[T_COMPRESSOR]; i++)      OOPSSampleRateChanged(tCompressorRegistry[i]);
+#endif
+    
+#if N_VOCODER
+        for (int i = 0; i < oops.registryIndex[T_VOCODER]; i++)         OOPSSampleRateChanged(tVocoderRegistry[i]);
+#endif
+    
+#if N_TALKBOX
+    for (int i = 0; i < oops.registryIndex[T_TALKBOX]; i++)             OOPSSampleRateChanged(tTalkboxRegistry[i]);
 #endif
 }
 

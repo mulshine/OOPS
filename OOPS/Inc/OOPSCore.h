@@ -455,7 +455,6 @@ typedef struct _tVocoder
 {
     float param[NUM_VOCODER_PARAM];
     
-    int32_t  swap;      //input channel swap
     float gain;         //output level
     float thru, high;   //hf thru
     float kout;         //downsampled output
@@ -467,6 +466,26 @@ typedef struct _tVocoder
     
     void (*sampleRateChanged)(struct _tVocoder *self);
 } tVocoder;
+
+#define NUM_TALKBOX_PARAM 4
+
+typedef struct _tTalkbox
+{
+    float param[NUM_TALKBOX_PARAM];
+    
+    ///global internal variables
+    float car0[TALKBOX_BUFFER_LENGTH], car1[TALKBOX_BUFFER_LENGTH];
+    float window[TALKBOX_BUFFER_LENGTH];
+    float buf0[TALKBOX_BUFFER_LENGTH], buf1[TALKBOX_BUFFER_LENGTH];
+    
+    float emphasis;
+    int32_t K, N, O, pos;
+    float wet, dry, FX;
+    float d0, d1, d2, d3, d4;
+    float u0, u1, u2, u3, u4;
+    
+    void (*sampleRateChanged)(struct _tTalkbox *self);
+} tTalkbox;
 
 
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
@@ -524,6 +543,7 @@ typedef enum OOPSRegistryIndex
     T_COMPRESSOR,
     T_BUTTERWORTH,
     T_VOCODER,
+    T_TALKBOX,
     T_INDEXCNT
 }OOPSRegistryIndex;
 
@@ -654,6 +674,10 @@ typedef struct _OOPS
     
 #if N_VOCODER
     tVocoder           tVocoderRegistry      [N_VOCODER];
+#endif
+    
+#if N_TALKBOX
+    tTalkbox           tTalkboxRegistry         [N_TALKBOX];
 #endif
     
     

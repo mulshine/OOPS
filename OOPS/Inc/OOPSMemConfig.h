@@ -56,9 +56,12 @@ extern const float shaper1[SHAPER1_TABLE_SIZE];
 #define     N_RAMP              NI
 #define     N_ENVELOPEFOLLOW    NI
 #define     N_VOCODER           NI
+#define     N_TALKBOX           1
 
 #define     DELAY_LENGTH        16000   // The maximum delay length of all Delay/DelayL/DelayA components.
                                             // Feel free to change to suit memory constraints or desired delay max length / functionality.
+
+#define TALKBOX_BUFFER_LENGTH   1600    // Every talkbox instance introduces 5 buffers of this size
 
 #define     INC_MISC_WT         0     // Set this to 1 if you are interested in the mtof1, adc1, tanh1, and shaper1 wavetables
                                         // and have spare memory.
@@ -69,6 +72,7 @@ extern const float shaper1[SHAPER1_TABLE_SIZE];
 #define INC_FILTER          (N_BUTTERWORTH || N_ONEPOLE || N_TWOPOLE || N_ONEZERO || N_TWOZERO || N_POLEZERO || N_BIQUAD || N_SVF || N_SVFE || N_HIGHPASS)
 #define INC_OSCILLATOR      (N_PHASOR || N_SAWTOOTH || N_CYCLE || N_TRIANGLE || N_SQUARE || N_NOISE)
 #define INC_REVERB          (N_NREV || N_PRCREV)
-#define INC_INSTRUMENT      (N_STIFKARP || N_PLUCK || N_VOCODER)
+#define INC_INSTRUMENT      (N_STIFKARP || N_PLUCK || N_VOCODER || N_TALKBOX)
+
 
 #endif  // OPPSMEMCONFIG_H_INCLUDED

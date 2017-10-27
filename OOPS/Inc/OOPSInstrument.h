@@ -14,9 +14,19 @@
 #include "OOPSMath.h"
 #include "OOPSCore.h"
 
+/* tTalkbox */
+tTalkbox*   tTalkboxInit        (void);
+float       tTalkboxTick        (tTalkbox* const, float synth, float voice);
+void        tTalkboxUpdate      (tTalkbox* const);
+void        tTalkboxSuspend     (tTalkbox* const);
+void        tTalkboxLpcDurbin   (float *r, int p, float *k, float *g);
+void        tTalkboxLpc         (float *buf, float *car, int32_t n, int32_t o);
+
+
+
 /* tVocoder */
 tVocoder*   tVocoderInit        (void);
-float       tVocoderTick        (tVocoder* const, float carrier, float modulator);
+float       tVocoderTick        (tVocoder* const, float synth, float voice);
 void        tVocoderUpdate      (tVocoder* const);
 void        tVocoderSuspend     (tVocoder* const);
 
