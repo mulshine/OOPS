@@ -14,6 +14,12 @@
 #include "OOPSMath.h"
 #include "OOPSCore.h"
 
+/* tVocoder */
+tVocoder*   tVocoderInit        (void);
+float       tVocoderTick        (tVocoder* const, float carrier, float modulator);
+void        tVocoderUpdate      (tVocoder* const);
+void        tVocoderSuspend     (tVocoder* const);
+
 /* tPluck */
 tPluck*     tPluckInit          (float lowestFrequency, float delayBuff[DELAY_LENGTH]);
 float       tPluckTick          (tPluck*  const);

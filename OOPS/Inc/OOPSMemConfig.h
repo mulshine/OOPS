@@ -54,8 +54,8 @@ extern const float shaper1[SHAPER1_TABLE_SIZE];
 #define     N_ENVELOPE          NI
 #define     N_ADSR              NI
 #define     N_RAMP              NI
-
 #define     N_ENVELOPEFOLLOW    NI
+#define     N_VOCODER           NI
 
 #define     DELAY_LENGTH        16000   // The maximum delay length of all Delay/DelayL/DelayA components.
                                             // Feel free to change to suit memory constraints or desired delay max length / functionality.
@@ -69,6 +69,6 @@ extern const float shaper1[SHAPER1_TABLE_SIZE];
 #define INC_FILTER          (N_BUTTERWORTH || N_ONEPOLE || N_TWOPOLE || N_ONEZERO || N_TWOZERO || N_POLEZERO || N_BIQUAD || N_SVF || N_SVFE || N_HIGHPASS)
 #define INC_OSCILLATOR      (N_PHASOR || N_SAWTOOTH || N_CYCLE || N_TRIANGLE || N_SQUARE || N_NOISE)
 #define INC_REVERB          (N_NREV || N_PRCREV)
-#define INC_INSTRUMENT      (N_STIFKARP || N_PLUCK)
+#define INC_INSTRUMENT      (N_STIFKARP || N_PLUCK || N_VOCODER)
 
 #endif  // OPPSMEMCONFIG_H_INCLUDED

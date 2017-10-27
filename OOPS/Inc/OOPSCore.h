@@ -448,6 +448,26 @@ typedef struct _tNeuron
     
 } tNeuron;
 
+#define NUM_VOCODER_PARAM 8
+#define NBANDS 16
+
+typedef struct _tVocoder
+{
+    float param[NUM_VOCODER_PARAM];
+    
+    int32_t  swap;      //input channel swap
+    float gain;         //output level
+    float thru, high;   //hf thru
+    float kout;         //downsampled output
+    int32_t  kval;      //downsample counter
+    int32_t  nbnd;      //number of bands
+    
+    //filter coeffs and buffers - seems it's faster to leave this global than make local copy
+    float f[NBANDS][13]; //[0-8][0 1 2 | 0 1 2 3 | 0 1 2 3 | val rate]
+    
+    void (*sampleRateChanged)(struct _tVocoder *self);
+} tVocoder;
+
 
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
 void     tPhasorSampleRateChanged (tPhasor *p);
@@ -468,7 +488,9 @@ void     tStifKarpSampleRateChanged (tStifKarp *c);
 
 void     tNeuronSampleRateChanged(tNeuron* n);
 void     tCompressorSampleRateChanged(tCompressor* n);
-void     tButterworthSampleRateChanged(tCompressor* n);
+void     tButterworthSampleRateChanged(tButterworth* n);
+
+void     tVocoderSampleRateChanged(tVocoder* n);
 
 typedef enum OOPSRegistryIndex
 {
@@ -500,7 +522,8 @@ typedef enum OOPSRegistryIndex
     T_STIFKARP,
     T_NEURON,
     T_COMPRESSOR,
-		T_BUTTERWORTH,
+    T_BUTTERWORTH,
+    T_VOCODER,
     T_INDEXCNT
 }OOPSRegistryIndex;
 
@@ -627,6 +650,10 @@ typedef struct _OOPS
     
 #if N_COMPRESSOR    
     tCompressor        tCompressorRegistry      [N_COMPRESSOR];
+#endif
+    
+#if N_VOCODER
+    tVocoder           tVocoderRegistry      [N_VOCODER];
 #endif
     
     

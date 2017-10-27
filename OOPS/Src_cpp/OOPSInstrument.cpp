@@ -26,7 +26,188 @@
  *
  *
  *
- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */ 
+ * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+
+#if N_VOCODER
+
+tVocoder*   tVocoderInit        (void)
+{
+    tVocoder* v = &oops.tVocoderRegistry[oops.registryIndex[T_VOCODER]++];
+    
+    v->param[0] = 0.33f;  //input select
+    v->param[1] = 0.50f;  //output dB
+    v->param[2] = 0.40f;  //hi thru
+    v->param[3] = 0.40f;  //hi band
+    v->param[4] = 0.16f;  //envelope
+    v->param[5] = 0.55f;  //filter q
+    v->param[6] = 0.6667f;//freq range
+    v->param[7] = 0.33f;  //num bands
+    
+    tVocoderUpdate(v);
+    
+    return v;
+}
+
+void        tVocoderUpdate      (tVocoder* const v)
+{
+    float tpofs = 6.2831853f * oops.invSampleRate;
+    
+    float rr, th, re;
+    
+    float sh;
+    
+    int32_t i;
+    
+    v->swap = 1; if(v->param[0]>0.5f) v->swap = 0;
+    
+    v->gain = (float)pow(10.0f, 2.0f * v->param[1] - 3.0f * v->param[5] - 2.0f);
+    
+    v->thru = (float)pow(10.0f, 0.5f + 2.0f * v->param[1]);
+    v->high =  v->param[3] * v->param[3] * v->param[3] * v->thru;
+    v->thru *= v->param[2] * v->param[2] * v->param[2];
+    
+    if(v->param[7]<0.5f)
+    {
+        v->nbnd=8;
+        re=0.003f;
+        v->f[1][2] = 3000.0f;
+        v->f[2][2] = 2200.0f;
+        v->f[3][2] = 1500.0f;
+        v->f[4][2] = 1080.0f;
+        v->f[5][2] = 700.0f;
+        v->f[6][2] = 390.0f;
+        v->f[7][2] = 190.0f;
+    }
+    else
+    {
+        v->nbnd=16;
+        re=0.0015f;
+        v->f[ 1][2] = 5000.0f; //+1000
+        v->f[ 2][2] = 4000.0f; //+750
+        v->f[ 3][2] = 3250.0f; //+500
+        v->f[ 4][2] = 2750.0f; //+450
+        v->f[ 5][2] = 2300.0f; //+300
+        v->f[ 6][2] = 2000.0f; //+250
+        v->f[ 7][2] = 1750.0f; //+250
+        v->f[ 8][2] = 1500.0f; //+250
+        v->f[ 9][2] = 1250.0f; //+250
+        v->f[10][2] = 1000.0f; //+250
+        v->f[11][2] =  750.0f; //+210
+        v->f[12][2] =  540.0f; //+190
+        v->f[13][2] =  350.0f; //+155
+        v->f[14][2] =  195.0f; //+100
+        v->f[15][2] =   95.0f;
+    }
+    
+    if(v->param[4]<0.05f) //freeze
+    {
+        for(i=0;i<v->nbnd;i++) v->f[i][12]=0.0f;
+    }
+    else
+    {
+        v->f[0][12] = (float)pow(10.0, -1.7 - 2.7f * v->param[4]); //envelope speed
+        
+        rr = 0.022f / (float)v->nbnd; //minimum proportional to frequency to stop distortion
+        for(i=1;i<v->nbnd;i++)
+        {
+            v->f[i][12] = (float)(0.025 - rr * (double)i);
+            if(v->f[0][12] < v->f[i][12]) v->f[i][12] = v->f[0][12];
+        }
+        v->f[0][12] = 0.5f * v->f[0][12]; //only top band is at full rate
+    }
+    
+    rr = 1.0 - pow(10.0f, -1.0f - 1.2f * v->param[5]);
+    sh = (float)pow(2.0f, 3.0f * v->param[6] - 1.0f); //filter bank range shift
+    
+    for(i=1;i<v->nbnd;i++)
+    {
+        v->f[i][2] *= sh;
+        th = acos((2.0 * rr * cos(tpofs * v->f[i][2])) / (1.0 + rr * rr));
+        v->f[i][0] = (float)(2.0 * rr * cos(th)); //a0
+        v->f[i][1] = (float)(-rr * rr);           //a1
+        //was .98
+        v->f[i][2] *= 0.96f; //shift 2nd stage slightly to stop high resonance peaks
+        th = acos((2.0 * rr * cos(tpofs * v->f[i][2])) / (1.0 + rr * rr));
+        v->f[i][2] = (float)(2.0 * rr * cos(th));
+    }
+}
+
+float       tVocoderTick        (tVocoder* const v, float synth, float voice)
+{
+    float a, b, o=0.0f, aa, bb, oo = v->kout, g = v->gain, ht = v->thru, hh = v->high, tmp;
+    uint32_t i, k = v->kval, sw = v->swap, nb = v->nbnd;
+
+    a = voice; //speech
+    b = synth; //synth
+    
+    if(sw==0) { tmp=a; a=b; b=tmp; } //swap channels
+    
+    tmp = a - v->f[0][7]; //integrate modulator for HF band and filter bank pre-emphasis
+    v->f[0][7] = a;
+    a = tmp;
+    
+    if(tmp<0.0f) tmp = -tmp;
+    v->f[0][11] -= v->f[0][12] * (v->f[0][11] - tmp);      //high band envelope
+    o = v->f[0][11] * (ht * a + hh * (b - v->f[0][3])); //high band + high thru
+    
+    v->f[0][3] = b; //integrate carrier for HF band
+    
+    if(++k & 0x1) //this block runs at half sample rate
+    {
+        oo = 0.0f;
+        aa = a + v->f[0][9] - v->f[0][8] - v->f[0][8];  //apply zeros here instead of in each reson
+        v->f[0][9] = v->f[0][8];  v->f[0][8] = a;
+        bb = b + v->f[0][5] - v->f[0][4] - v->f[0][4];
+        v->f[0][5] = v->f[0][4];  v->f[0][4] = b;
+        
+        for(i=1; i<nb; i++) //filter bank: 4th-order band pass
+        {
+            tmp = v->f[i][0] * v->f[i][3] + v->f[i][1] * v->f[i][4] + bb;
+            v->f[i][4] = v->f[i][3];
+            v->f[i][3] = tmp;
+            tmp += v->f[i][2] * v->f[i][5] + v->f[i][1] * v->f[i][6];
+            v->f[i][6] = v->f[i][5];
+            v->f[i][5] = tmp;
+            
+            tmp = v->f[i][0] * v->f[i][7] + v->f[i][1] * v->f[i][8] + aa;
+            v->f[i][8] = v->f[i][7];
+            v->f[i][7] = tmp;
+            tmp += v->f[i][2] * v->f[i][9] + v->f[i][1] * v->f[i][10];
+            v->f[i][10] = v->f[i][9];
+            v->f[i][9] = tmp;
+            
+            if(tmp<0.0f) tmp = -tmp;
+            v->f[i][11] -= v->f[i][12] * (v->f[i][11] - tmp);
+            oo += v->f[i][5] * v->f[i][11];
+        }
+    }
+    o += oo * g; //effect of interpolating back up to Fs would be minimal (aliasing >16kHz)
+
+    v->kout = oo;
+    v->kval = k & 0x1;
+    if(fabs(v->f[0][11])<1.0e-10) v->f[0][11] = 0.0f; //catch HF envelope denormal
+    
+    for(i=1;i<nb;i++)
+        if(fabs(v->f[i][3])<1.0e-10 || fabs(v->f[i][7])<1.0e-10)
+            for(k=3; k<12; k++) v->f[i][k] = 0.0f; //catch reson & envelope denormals
+    
+    if(fabs(o)>10.0f) tVocoderSuspend(v); //catch instability
+    
+    return o;
+    
+}
+
+void        tVocoderSuspend     (tVocoder* const v)
+{
+    int32_t i, j;
+    
+    for(i=0; i<v->nbnd; i++) for(j=3; j<12; j++) v->f[i][j] = 0.0f; //zero band filters and envelopes
+    v->kout = 0.0f;
+    v->kval = 0;
+}
+
+#endif
+
  
 #if N_PLUCK
 /* ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ tPluck ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ */
