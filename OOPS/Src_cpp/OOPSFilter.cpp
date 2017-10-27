@@ -148,7 +148,8 @@ float   tOneZeroGetPhaseDelay(tOneZero* const f, float frequency )
     
     float phase = atan2f( imag, real );
     
-    real = 0.0, imag = 0.0;
+    real = 0.0;
+    imag = 0.0;
     
     phase -= atan2f( imag, real );
     

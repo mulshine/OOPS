@@ -11,13 +11,9 @@
 #ifndef FM_H_INCLUDED
 #define FM_H_INCLUDED
 
-float delayVal;
+tVocoder*   vocoder;
+tSawtooth*  osc;
 
-float qVal, freqVal;
-
-tCompressor*    compressor;
-tDelayL*        delay;
-tSVF*           bandpass;
-
+tSawtooth* fakeVoice;
 
 #endif  // FM_H_INCLUDED
