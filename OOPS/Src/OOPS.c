@@ -8,7 +8,15 @@
   ==============================================================================
 */
 
-#include "OOPS.h"
+#if _WIN32 || _WIN64
+
+#include "..\Inc\OOPS.h"
+
+#else
+
+#include "../Inc/OOPS.h"
+
+#endif
 
 OOPS oops;
 

@@ -8,8 +8,19 @@
   ==============================================================================
 */
 
-#include "OOPSDelay.h"
-#include "OOPS.h"
+#if _WIN32 || _WIN64
+
+#include "..\Inc\OOPSDelay.h"
+#include "..\Inc\OOPS.h"
+
+#else
+
+#include "../Inc/OOPSDelay.h"
+#include "../Inc/OOPS.h"
+
+#endif
+
+
 
 #if N_DELAY
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ Delay ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //

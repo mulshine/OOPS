@@ -8,8 +8,19 @@
   ==============================================================================
 */
 
-#include "OOPSInstrument.h"
-#include "OOPS.h"
+#if _WIN32 || _WIN64
+
+#include "..\Inc\OOPSInstrument.h"
+#include "..\Inc\OOPS.h"
+
+#else
+
+#include "../Inc/OOPSInstrument.h"
+#include "../Inc/OOPS.h"
+
+#endif
+
+
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *

@@ -8,9 +8,21 @@
   ==============================================================================
 */
 
-#include "OOPSUtilities.h"
-#include "OOPSWavetables.h"
-#include "OOPS.h"
+
+#if _WIN32 || _WIN64
+
+#include "..\Inc\OOPSUtilities.h"
+#include "..\Inc\OOPSWavetables.h"
+#include "..\Inc\OOPS.h"
+
+#else
+
+#include "../Inc/OOPSUtilities.h"
+#include "../Inc/OOPSWavetables.h"
+#include "../Inc/OOPS.h"
+
+#endif
+
 
 #if N_COMPRESSOR
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ Compressor ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
