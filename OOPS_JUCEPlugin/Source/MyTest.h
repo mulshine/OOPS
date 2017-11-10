@@ -11,9 +11,6 @@
 #ifndef FM_H_INCLUDED
 #define FM_H_INCLUDED
 
-tVocoder*   vocoder;
-tSawtooth*  osc;
-
-tSawtooth* fakeVoice;
+tSawtooth* osc;
 
 #endif  // FM_H_INCLUDED

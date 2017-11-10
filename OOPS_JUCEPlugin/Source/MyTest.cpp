@@ -16,18 +16,17 @@ void    OOPSTest_init            (float sampleRate)
     OOPSInit(sampleRate, &randomNumberGenerator);
     
     osc = tSawtoothInit();
-    vocoder = tVocoderInit();
-    fakeVoice = tSawtoothInit();
     
-    tSawtoothSetFreq(fakeVoice, 220.0f);
-
+    tSawtoothSetFreq(osc, 220.0f);
 }
 
 int count = 0;
 
 float   OOPSTest_tick            (float input)
 {
-    float sample = tVocoderTick(vocoder, tSawtoothTick(osc), input);
+    float sample = 0.0f;
+    
+    sample = tSawtoothTick(osc);
     
     return sample;
 }
@@ -35,14 +34,20 @@ float   OOPSTest_tick            (float input)
 
 void    OOPSTest_block           (void)
 {
+    float val = getSliderValue("Freq");
     
+    float freq = val * 1000.0f + 1.0f;
+    
+    tSawtoothSetFreq(osc, freq);
+    
+    // UI 
+    setSliderModelValue("Freq", freq);
 }
 
 void    OOPSTest_controllerInput (int controller, float value)
 {
 
 }
-
 
 void    OOPSTest_pitchBendInput  (int pitchBend)
 {
@@ -51,11 +56,8 @@ void    OOPSTest_pitchBendInput  (int pitchBend)
 
 void    OOPSTest_noteOn          (int midiNoteNumber, float velocity)
 {
-    DBG("note on: " + String(midiNoteNumber));
-    tSawtoothSetFreq(osc, OOPS_midiToFrequency(midiNoteNumber));
+
 }
-
-
 
 void    OOPSTest_noteOff         (int midiNoteNumber)
 {

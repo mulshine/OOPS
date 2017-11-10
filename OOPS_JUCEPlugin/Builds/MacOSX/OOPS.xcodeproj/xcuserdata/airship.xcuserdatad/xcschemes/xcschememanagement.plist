@@ -7,12 +7,12 @@
 		<key>OOPS - AU.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>2</integer>
+			<integer>0</integer>
 		</dict>
 		<key>OOPS - All.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>0</integer>
+			<integer>2</integer>
 		</dict>
 		<key>OOPS - Shared Code.xcscheme</key>
 		<dict>
