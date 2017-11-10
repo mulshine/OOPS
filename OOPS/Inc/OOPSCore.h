@@ -487,6 +487,19 @@ typedef struct _tTalkbox
     void (*sampleRateChanged)(struct _tTalkbox *self);
 } tTalkbox;
 
+typedef struct _tMidiNote
+{
+    uint8_t pitch;
+    uint8_t velocity;
+    oBool on;
+} tMidiNote;
+
+typedef struct _tPolyphonicHandler
+{
+    int8_t midiNoteToIndex[128];
+    tMidiNote midiNotes[NUMBER_VOICES];
+} tPolyphonicHandler;
+
 
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
 void     tPhasorSampleRateChanged (tPhasor *p);
@@ -544,6 +557,7 @@ typedef enum OOPSRegistryIndex
     T_BUTTERWORTH,
     T_VOCODER,
     T_TALKBOX,
+    T_POLYPHONICHANDLER,
     T_INDEXCNT
 }OOPSRegistryIndex;
 
@@ -678,6 +692,10 @@ typedef struct _OOPS
     
 #if N_TALKBOX
     tTalkbox           tTalkboxRegistry         [N_TALKBOX];
+#endif
+
+#if N_POLYPHONICHANDLER
+    tPolyphonicHandler  tPolyphonicHandlerRegistry     [N_POLYPHONICHANDLER];
 #endif
     
     

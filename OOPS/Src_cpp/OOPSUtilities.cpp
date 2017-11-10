@@ -309,6 +309,7 @@ float   tEnvelopeTick(tEnvelope* const env)
 #endif // N_ENVELOPE
 
 #if N_ENVELOPEFOLLOW
+
 /* Envelope Follower */
 tEnvelopeFollower*    tEnvelopeFollowerInit(float attackThreshold, float decayCoeff)
 {
@@ -420,3 +421,63 @@ void    tRampSampleRateChanged(tRamp* const r)
 }
 
 #endif //N_RAMP
+
+
+#if N_POLYPHONICHANDLER
+/* Poly Handler */
+
+tPolyphonicHandler*    tPolyphonicHandlerInit()
+{
+    tPolyphonicHandler* poly = &oops.tPolyphonicHandlerRegistry[oops.registryIndex[T_POLYPHONICHANDLER]++];
+    return poly;
+}
+
+tMidiNote tPolyphonicHandlerGetMidiNote(tPolyphonicHandler* poly, int8_t voiceIndex)
+{
+    return poly->midiNotes[voiceIndex];
+}
+
+static int8_t tGetOffMidiNoteIndex(tPolyphonicHandler* poly)
+{
+    int8_t offIndex;
+    for (offIndex = 0; offIndex < NUMBER_VOICES; offIndex++)
+    {
+        tMidiNote midi = tPolyphonicHandlerGetMidiNote(poly, offIndex);
+        if (!midi.on)
+            return offIndex;
+    }
+    // Note steal of the oldest note
+    return 0;
+}
+
+static void tShiftNotesAfterNoteOff(tPolyphonicHandler* poly, int8_t offIndex)
+{
+    for (int8_t i = offIndex; i < NUMBER_VOICES - 1; i++)
+    {
+        poly->midiNotes[i] = poly->midiNotes[i + 1];
+        poly->midiNoteToIndex[poly->midiNotes[i].pitch] = i;
+    }
+}
+
+void tPolyphonicHandlerNoteOn(tPolyphonicHandler* poly, int midiNoteNumber, float velocity)
+{
+    // Find the first index to turn off
+    int8_t offIndex = tGetOffMidiNoteIndex(poly);
+    poly->midiNotes[offIndex].pitch = midiNoteNumber;
+    poly->midiNotes[offIndex].velocity = velocity;
+    poly->midiNotes[offIndex].on = OTRUE;
+    
+    poly->midiNoteToIndex[midiNoteNumber] = offIndex;
+}
+
+void tPolyphonicHandlerNoteOff(tPolyphonicHandler* poly, int midiNoteNumber)
+{
+    int8_t offIndex = poly->midiNoteToIndex[midiNoteNumber];
+    poly->midiNotes[offIndex].velocity = 0;
+    poly->midiNotes[offIndex].on = OFALSE;
+    // Properly shift notes down so note steal will always be the 0th note
+    tShiftNotesAfterNoteOff(poly, offIndex);
+}
+
+#endif // N_POLYHANDLER
+

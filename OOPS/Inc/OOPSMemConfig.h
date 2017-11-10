@@ -34,7 +34,7 @@ extern const float shaper1[SHAPER1_TABLE_SIZE];
 #define     N_NEURON            NI
 #define     N_PHASOR            NI
 #define     N_CYCLE             NI
-#define     N_SAWTOOTH          NI
+#define     N_SAWTOOTH          2
 #define     N_TRIANGLE          NI
 #define     N_SQUARE            NI
 #define     N_NOISE             NI + (1 * N_STIFKARP) + (1 * N_PLUCK) // StifKarp and Pluck each contain 1 Noise component.
@@ -57,17 +57,21 @@ extern const float shaper1[SHAPER1_TABLE_SIZE];
 #define     N_ENVELOPEFOLLOW    NI
 #define     N_VOCODER           NI
 #define     N_TALKBOX           1
+#define     N_POLYPHONICHANDLER 1
+
+#define NUMBER_VOICES   2  // Sets the number of voices each polyphonic handler can handle
 
 #define     DELAY_LENGTH        16000   // The maximum delay length of all Delay/DelayL/DelayA components.
                                             // Feel free to change to suit memory constraints or desired delay max length / functionality.
 
 #define TALKBOX_BUFFER_LENGTH   1600    // Every talkbox instance introduces 5 buffers of this size
 
+
 #define     INC_MISC_WT         0     // Set this to 1 if you are interested in the mtof1, adc1, tanh1, and shaper1 wavetables
                                         // and have spare memory.
 
 // Preprocessor defines to determine whether to include component files in build.
-#define INC_UTILITIES       (N_ENVELOPE || N_ENVELOPEFOLLOW || N_RAMP || N_ADSR || N_COMPRESSOR)
+#define INC_UTILITIES       (N_ENVELOPE || N_ENVELOPEFOLLOW || N_RAMP || N_ADSR || N_COMPRESSOR || N_POLYPHONICHANDLER)
 #define INC_DELAY           (N_DELAY || N_DELAYL || N_DELAYA)
 #define INC_FILTER          (N_BUTTERWORTH || N_ONEPOLE || N_TWOPOLE || N_ONEZERO || N_TWOZERO || N_POLEZERO || N_BIQUAD || N_SVF || N_SVFE || N_HIGHPASS)
 #define INC_OSCILLATOR      (N_PHASOR || N_SAWTOOTH || N_CYCLE || N_TRIANGLE || N_SQUARE || N_NOISE)
