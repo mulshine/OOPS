@@ -11,6 +11,8 @@
 #include "OOPSTest.h"
 #include "MyTest.h"
 
+int8_t NUMBER_VOICES = 3;
+
 void    OOPSTest_init            (float sampleRate)
 {
     OOPSInit(sampleRate, &randomNumberGenerator);
@@ -29,8 +31,10 @@ float   OOPSTest_tick            (float input)
     float sample = 0;
     for (int8_t i = 0; i < NUMBER_VOICES; i++)
     {
-        tMidiNote midiNote = tPolyphonicHandlerGetMidiNote(poly, i);
-        float velocityMod = midiNote.velocity / 127.0;
+        tMidiNote* midiNote = tPolyphonicHandlerGetMidiNote(poly, i);
+        float velocityMod = 0;
+        if (midiNote != NULL)
+            velocityMod = midiNote->velocity / 127.0;
         sample += velocityMod * tSawtoothTick(sawtooths[i]) / NUMBER_VOICES;
     }
     
@@ -60,12 +64,15 @@ void    OOPSTest_noteOn          (int midiNoteNumber, float velocity)
     
     for (int8_t i = 0; i < NUMBER_VOICES; i++)
     {
-        tMidiNote midiNote = tPolyphonicHandlerGetMidiNote(poly, i);
-        tSawtoothSetFreq(sawtooths[i], OOPS_midiToFrequency(midiNote.pitch));
+        tMidiNote* midiNote = tPolyphonicHandlerGetMidiNote(poly, i);
+        if (midiNote != NULL)
+        {
+            tSawtoothSetFreq(sawtooths[i], OOPS_midiToFrequency(midiNote->pitch));
+            DBG("note on: " + String(midiNote->pitch));
+            DBG("note VELOCITY: " + String(midiNote->velocity));
+        }
     }
     
-//    DBG("note on: " + String(midiNote1.pitch));
-//    DBG("note VELOCITY: " + String(midiNote1.velocity));
 }
 
 
@@ -76,8 +83,9 @@ void    OOPSTest_noteOff         (int midiNoteNumber)
     
     for (int8_t i = 0; i < NUMBER_VOICES; i++)
     {
-        tMidiNote midiNote = tPolyphonicHandlerGetMidiNote(poly, i);
-        tSawtoothSetFreq(sawtooths[i], OOPS_midiToFrequency(midiNote.pitch));
+        tMidiNote* midiNote = tPolyphonicHandlerGetMidiNote(poly, i);
+        if (midiNote != NULL)
+            tSawtoothSetFreq(sawtooths[i], OOPS_midiToFrequency(midiNote->pitch));
     }
 }
 

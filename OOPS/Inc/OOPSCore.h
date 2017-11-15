@@ -494,10 +494,19 @@ typedef struct _tMidiNote
     oBool on;
 } tMidiNote;
 
+typedef struct _tMidiNode
+{
+    _tMidiNode* prev;
+    _tMidiNode* next;
+    tMidiNote midiNote;
+} tMidiNode;
+
 typedef struct _tPolyphonicHandler
 {
-    int8_t midiNoteToIndex[128];
-    tMidiNote midiNotes[NUMBER_VOICES];
+    tMidiNode midiNodes[128];
+    tMidiNode* onListFirst;
+    tMidiNode* offListFirst;
+    
 } tPolyphonicHandler;
 
 

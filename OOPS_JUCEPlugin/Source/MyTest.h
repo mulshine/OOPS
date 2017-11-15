@@ -12,6 +12,6 @@
 #define FM_H_INCLUDED
 
 tPolyphonicHandler* poly;
-tSawtooth* sawtooths[NUMBER_VOICES];
+tSawtooth* sawtooths[3];
 
 #endif  // FM_H_INCLUDED

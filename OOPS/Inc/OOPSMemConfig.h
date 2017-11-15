@@ -34,7 +34,7 @@ extern const float shaper1[SHAPER1_TABLE_SIZE];
 #define     N_NEURON            NI
 #define     N_PHASOR            NI
 #define     N_CYCLE             NI
-#define     N_SAWTOOTH          2
+#define     N_SAWTOOTH          10
 #define     N_TRIANGLE          NI
 #define     N_SQUARE            NI
 #define     N_NOISE             NI + (1 * N_STIFKARP) + (1 * N_PLUCK) // StifKarp and Pluck each contain 1 Noise component.
@@ -58,8 +58,6 @@ extern const float shaper1[SHAPER1_TABLE_SIZE];
 #define     N_VOCODER           NI
 #define     N_TALKBOX           1
 #define     N_POLYPHONICHANDLER 1
-
-#define NUMBER_VOICES   2  // Sets the number of voices each polyphonic handler can handle
 
 #define     DELAY_LENGTH        16000   // The maximum delay length of all Delay/DelayL/DelayA components.
                                             // Feel free to change to suit memory constraints or desired delay max length / functionality.
