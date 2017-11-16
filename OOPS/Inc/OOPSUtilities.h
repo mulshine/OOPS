@@ -14,7 +14,6 @@
 #include "OOPSCore.h"
 /* Compressor */
 
-//tCompressor*            tCompressorInit    (float tauAttack, float tauRelease);
 tCompressor*            tCompressorInit    (void);
 float                   tCompressorTick    (tCompressor* const, float input);
 
@@ -53,4 +52,13 @@ int                     tEnvelopeFollowerDecayCoeff     (tEnvelopeFollower*  con
 int                     tEnvelopeFollowerAttackThresh   (tEnvelopeFollower*  const, float attackThresh);
 
 
+
+/* Polyphonic Handler */
+tPolyphonicHandler*     tPolyphonicHandlerInit(void);
+tMidiNote* tPolyphonicHandlerGetMidiNote(tPolyphonicHandler* poly, int8_t voiceIndex);
+void tPolyphonicHandlerNoteOn(tPolyphonicHandler* poly, int midiNoteNumber, float velocity);
+void tPolyphonicHandlerNoteOff(tPolyphonicHandler* poly, int midiNoteNumber);
+
 #endif  // OOPSUTILITIES_H_INCLUDED
+
+

@@ -11,6 +11,7 @@
 #ifndef FM_H_INCLUDED
 #define FM_H_INCLUDED
 
-tSawtooth* osc;
+tPolyphonicHandler* poly;
+tSawtooth* sawtooths[3];
 
 #endif  // FM_H_INCLUDED
