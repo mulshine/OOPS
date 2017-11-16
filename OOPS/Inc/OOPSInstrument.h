@@ -92,5 +92,42 @@ void        tStifKarpSetBaseLoopGain    (tStifKarp*  const, float aGain );
 // tStifKarp utilities.
 float       tStifKarpGetLastOut         (tStifKarp*  const);
 
+// 808 Cowbell
+t808Cowbell*    t808CowbellInit             (void);
+float           t808CowbellTick             (t808Cowbell* const);
+
+void            t808CowbellOn               (t808Cowbell* const, float vel);
+void            t808CowbellSetDecay         (t808Cowbell* const, float decay);
+void            t808CowbellSetHighpassFreq  (t808Cowbell* const, float freq);
+void            t808CowbellSetBandpassFreq  (t808Cowbell* const, float freq);
+void            t808CowbellSetFreq          (t808Cowbell* const, float freq);
+void            t808CowbellSetOscMix        (t808Cowbell* const, float oscMix);
+
+
+// 808 Hihat
+t808Hihat*  t808HihatInit               (void);
+float       t808HihatTick               (t808Hihat* const);
+
+void        t808HihatOn                 (t808Hihat* const, float vel);
+void        t808HihatSetOscNoiseMix     (t808Hihat* const, float oscNoiseMix);
+void        t808HihatSetDecay           (t808Hihat* const, float decay);
+void        t808HihatSetHighpassFreq    (t808Hihat* const, float freq);
+void        t808HihatSetOscBandpassFreq (t808Hihat* const, float freq);
+void        t808HihatSetOscFreq         (t808Hihat* const, float freq);
+
+
+// 808 Snare
+t808Snare*  t808SnareInit               (void);
+float       t808SnareTick               (t808Snare* const);
+
+void        t808SnareOn                 (t808Snare* const, float vel);
+void        t808SnareSetTone1Freq       (t808Snare* const, float freq);
+void        t808SnareSetTone2Freq       (t808Snare* const, float freq);
+void        t808SnareSetTone1Decay      (t808Snare* const, float decay);
+void        t808SnareSetTone2Decay      (t808Snare* const, float decay);
+void        t808SnareSetNoiseDecay      (t808Snare* const, float decay);
+void        t808SnareSetToneNoiseMix    (t808Snare* const, float toneNoiseMix);
+void        t808SnareSetNoiseFilterFreq (t808Snare* const, float noiseFilterFreq);
+void        t808SnareSetNoiseFilterQ    (t808Snare* const, float noiseFilterQ);
 
 #endif  // OOPSINSTRUMENT_H_INCLUDED

@@ -26,6 +26,9 @@ extern const float shaper1[SHAPER1_TABLE_SIZE];
 #define NI 0
 
 //#define     N_MYOBJECT            0   // Zero instances is fine.
+#define     N_808SNARE          1
+#define     N_808HIHAT          1
+#define     N_808COWBELL        1
 #define     N_COMPRESSOR        0
 #define     N_PRCREV            0
 #define     N_NREV              0
@@ -74,7 +77,7 @@ extern const float shaper1[SHAPER1_TABLE_SIZE];
 #define INC_FILTER          (N_BUTTERWORTH || N_ONEPOLE || N_TWOPOLE || N_ONEZERO || N_TWOZERO || N_POLEZERO || N_BIQUAD || N_SVF || N_SVFE || N_HIGHPASS)
 #define INC_OSCILLATOR      (N_PHASOR || N_SAWTOOTH || N_CYCLE || N_TRIANGLE || N_SQUARE || N_NOISE)
 #define INC_REVERB          (N_NREV || N_PRCREV)
-#define INC_INSTRUMENT      (N_STIFKARP || N_PLUCK || N_VOCODER || N_TALKBOX)
+#define INC_INSTRUMENT      (N_STIFKARP || N_PLUCK || N_VOCODER || N_TALKBOX || N_808SNARE || N_808HIHAT || N_808COWBELL)
 
 
 #endif  // OPPSMEMCONFIG_H_INCLUDED
