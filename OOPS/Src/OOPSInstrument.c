@@ -27,6 +27,190 @@
  *
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
+#if N_TALKBOX
+
+tTalkbox* tTalkboxInit()
+{
+    tTalkbox* v = &oops.tTalkboxRegistry[oops.registryIndex[T_TALKBOX]++];
+
+    v->param[0] = 0.5f;  //wet
+    v->param[1] = 0.0f;  //dry
+    v->param[2] = 0; // Swap
+    v->param[3] = 1.0f;  //quality
+    
+    tTalkboxUpdate(v);
+    
+    return v;
+}
+
+void tTalkboxUpdate(tTalkbox* const v) ///update internal parameters...
+{
+    float fs = oops.sampleRate;
+    if(fs <  8000.0f) fs =  8000.0f;
+    if(fs > 96000.0f) fs = 96000.0f;
+    
+    int32_t n = (int32_t)(0.01633f * fs);
+    if(n > TALKBOX_BUFFER_LENGTH) n = TALKBOX_BUFFER_LENGTH;
+    
+    //O = (VstInt32)(0.0005f * fs);
+    v->O = (int32_t)((0.0001f + 0.0004f * v->param[3]) * fs);
+    
+    if(n != v->N) //recalc hanning window
+    {
+        v->N = n;
+        float dp = TWO_PI / v->N;
+        float p = 0.0f;
+        for(n=0; n<v->N; n++)
+        {
+            v->window[n] = 0.5f - 0.5f * cosf(p);
+            p += dp;
+        }
+    }
+    v->wet = 0.5f * v->param[0] * v->param[0];
+    v->dry = 2.0f * v->param[1] * v->param[1];
+}
+
+
+void tTalkboxSuspend(tTalkbox* const v) ///clear any buffers...
+{
+    v->pos = v->K = 0;
+    v->emphasis = 0.0f;
+    v->FX = 0;
+    
+    v->u0 = v->u1 = v->u2 = v->u3 = v->u4 = 0.0f;
+    v->d0 = v->d1 = v->d2 = v->d3 = v->d4 = 0.0f;
+    
+    for (int32_t i = 0; i < TALKBOX_BUFFER_LENGTH; i++)
+    {
+        v->buf0[i] = 0;
+        v->buf1[i] = 0;
+        v->car0[i] = 0;
+        v->car1[i] = 0;
+    }
+}
+
+
+#define ORD_MAX           100 // Was 50. Increasing this gets rid of glitchiness, lowering it breaks it; not sure how it affects performance
+void tTalkboxLpc(float *buf, float *car, int32_t n, int32_t o)
+{
+    float z[ORD_MAX], r[ORD_MAX], k[ORD_MAX], G, x;
+    int32_t i, j, nn=n;
+    
+    for(j=0; j<=o; j++, nn--)  //buf[] is already emphasized and windowed
+    {
+        z[j] = r[j] = 0.0f;
+        for(i=0; i<nn; i++) r[j] += buf[i] * buf[i+j]; //autocorrelation
+    }
+    r[0] *= 1.001f;  //stability fix
+    
+    float min = 0.00001f;
+    if(r[0] < min) { for(i=0; i<n; i++) buf[i] = 0.0f; return; }
+    
+    tTalkboxLpcDurbin(r, o, k, &G);  //calc reflection coeffs
+    
+    for(i=0; i<=o; i++)
+    {
+        if(k[i] > 0.995f) k[i] = 0.995f; else if(k[i] < -0.995f) k[i] = -.995f;
+    }
+    
+    for(i=0; i<n; i++)
+    {
+        x = G * car[i];
+        for(j=o; j>0; j--)  //lattice filter
+        {
+            x -= k[j] * z[j-1];
+            z[j] = z[j-1] + k[j] * x;
+        }
+        buf[i] = z[0] = x;  //output buf[] will be windowed elsewhere
+    }
+}
+
+
+void tTalkboxLpcDurbin(float *r, int p, float *k, float *g)
+{
+    int i, j;
+    float a[ORD_MAX], at[ORD_MAX], e=r[0];
+    
+    for(i=0; i<=p; i++) a[i] = at[i] = 0.0f; //probably don't need to clear at[] or k[]
+    
+    for(i=1; i<=p; i++)
+    {
+        k[i] = -r[i];
+        
+        for(j=1; j<i; j++)
+        {
+            at[j] = a[j];
+            k[i] -= a[j] * r[i-j];
+        }
+        if(fabs(e) < 1.0e-20f) { e = 0.0f;  break; }
+        k[i] /= e; // This might be costing us
+        
+        a[i] = k[i];
+        for(j=1; j<i; j++) a[j] = at[j] + k[i] * at[i-j];
+        
+        e *= 1.0f - k[i] * k[i];
+    }
+    
+    if(e < 1.0e-20f) e = 0.0f;
+    *g = sqrtf(e);
+}
+
+float tTalkboxTick(tTalkbox* const v, float synth, float voice)
+{
+
+    int32_t  p0=v->pos, p1 = (v->pos + v->N/2) % v->N;
+    float e=v->emphasis, w, o, x, dr, fx=v->FX;
+    float p, q, h0=0.3f, h1=0.77f;
+    
+    o = voice;
+    x = synth;
+    
+    dr = o;
+    
+    p = v->d0 + h0 *  x; v->d0 = v->d1;  v->d1 = x  - h0 * p;
+    q = v->d2 + h1 * v->d4; v->d2 = v->d3;  v->d3 = v->d4 - h1 * q;
+    v->d4 = x;
+    x = p + q;
+    
+    if(v->K++)
+    {
+        v->K = 0;
+        
+        v->car0[p0] = v->car1[p1] = x; //carrier input
+        
+        x = o - e;  e = o;  //6dB/oct pre-emphasis
+        
+        w = v->window[p0]; fx = v->buf0[p0] * w;  v->buf0[p0] = x * w;  //50% overlapping hanning windows
+        if(++p0 >= v->N) { tTalkboxLpc(v->buf0, v->car0, v->N, v->O);  p0 = 0; }
+        
+        w = 1.0f - w;  fx += v->buf1[p1] * w;  v->buf1[p1] = x * w;
+        if(++p1 >= v->N) { tTalkboxLpc(v->buf1, v->car1, v->N, v->O);  p1 = 0; }
+    }
+    
+    p = v->u0 + h0 * fx; v->u0 = v->u1;  v->u1 = fx - h0 * p;
+    q = v->u2 + h1 * v->u4; v->u2 = v->u3;  v->u3 = v->u4 - h1 * q;
+    v->u4 = fx;
+    x = p + q;
+    
+    o = x;
+    
+    v->emphasis = e;
+    v->pos = p0;
+    v->FX = fx;
+
+    float den = 1.0e-10f; //(float)pow(10.0f, -10.0f * param[4]);
+    if(fabs(v->d0) < den) v->d0 = 0.0f; //anti-denormal (doesn't seem necessary but P4?)
+    if(fabs(v->d1) < den) v->d1 = 0.0f;
+    if(fabs(v->d2) < den) v->d2 = 0.0f;
+    if(fabs(v->d3) < den) v->d3 = 0.0f;
+    if(fabs(v->u0) < den) v->u0 = 0.0f;
+    if(fabs(v->u1) < den) v->u1 = 0.0f;
+    if(fabs(v->u2) < den) v->u2 = 0.0f;
+    if(fabs(v->u3) < den) v->u3 = 0.0f;
+    return o;
+}
+
+#endif
 
 #if N_VOCODER
 

@@ -494,10 +494,12 @@ typedef struct _tMidiNote
     oBool on;
 } tMidiNote;
 
+typedef struct _tMidiNode tMidiNode;
+
 typedef struct _tMidiNode
 {
-    _tMidiNode* prev;
-    _tMidiNode* next;
+    tMidiNode* prev;
+    tMidiNode* next;
     tMidiNote midiNote;
 } tMidiNode;
 
