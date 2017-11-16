@@ -26,6 +26,8 @@ void    OOPSTest_init            (float sampleRate)
 
 int count = 0;
 
+#define NO_VOICE NULL
+
 float   OOPSTest_tick            (float input)
 {
     float sample = 0;
@@ -33,7 +35,7 @@ float   OOPSTest_tick            (float input)
     {
         tMidiNote* midiNote = tPolyphonicHandlerGetMidiNote(poly, i);
         float velocityMod = 0;
-        if (midiNote != NULL)
+        if (midiNote != NO_VOICE)
             velocityMod = midiNote->velocity / 127.0;
         sample += velocityMod * tSawtoothTick(sawtooths[i]) / NUMBER_VOICES;
     }

@@ -420,3 +420,162 @@ void    tRampSampleRateChanged(tRamp* const r)
 }
 
 #endif //N_RAMP
+
+#if N_POLYPHONICHANDLER
+/* Poly Handler */
+
+static void nodeListInit(tPolyphonicHandler* poly)
+{
+    for (int16_t i = 0; i < 128; i++)
+    {
+        poly->midiNodes[i].midiNote.pitch = i;
+        poly->midiNodes[i].midiNote.velocity = 0;
+        poly->midiNodes[i].midiNote.on = OFALSE;
+    }
+}
+
+// Initially everything is off, init as such
+static void offListInit(tPolyphonicHandler* poly)
+{
+    tMidiNode* prevNode = NULL;
+    tMidiNode* curNode = &poly->midiNodes[0];
+    poly->offListFirst = curNode;
+    
+    for (int16_t i = 1; i < 128; i++)
+    {
+        curNode->prev = prevNode;
+        curNode->next = &poly->midiNodes[i];
+        
+        prevNode = curNode;
+        curNode = &poly->midiNodes[i];
+    }
+    // Set the final node
+    curNode->prev = prevNode;
+    curNode->next = NULL;
+}
+
+static void onListInit(tPolyphonicHandler* poly)
+{
+    poly->onListFirst = NULL;
+}
+
+tPolyphonicHandler*    tPolyphonicHandlerInit()
+{
+    tPolyphonicHandler* poly = &oops.tPolyphonicHandlerRegistry[oops.registryIndex[T_POLYPHONICHANDLER]++];
+    nodeListInit(poly);
+    offListInit(poly);
+    onListInit(poly);
+    
+    return poly;
+}
+
+static void tPolyphonicHandlerPrint(tPolyphonicHandler* poly)
+{
+    //    DBG("\n");
+    //    for (int8_t i = 0; i < NUMBER_VOICES; i++)
+    //    {
+    //        DBG("voice: " + String(i));
+    //        DBG("pitch: " + String(poly->midiNotes[i].pitch));
+    //        DBG("on: " + String((int) poly->midiNotes[i].on));
+    //    }
+}
+
+
+tMidiNote* tPolyphonicHandlerGetMidiNote(tPolyphonicHandler* poly, int8_t voiceIndex)
+{
+    tMidiNote* midiNote = NULL;
+    
+    tMidiNode* currNode = poly->onListFirst;
+    
+    int8_t i = 0;
+    while (i < voiceIndex && currNode != NULL)
+    {
+        currNode = currNode->next;
+        i++;
+    }
+    
+    if (currNode != NULL)
+        midiNote = &(currNode->midiNote);
+    
+    return midiNote;
+}
+
+static void removeNoteFromOffList(tPolyphonicHandler* poly, int8_t midiNoteNumber)
+{
+    // If this has no prev, this is the first node on the OFF list
+    if (poly->midiNodes[midiNoteNumber].prev == NULL)
+        poly->offListFirst = poly->midiNodes[midiNoteNumber].next;
+    
+    // Awkward handling to avoid deref null pointers
+    if (poly->midiNodes[midiNoteNumber].prev != NULL)
+        poly->midiNodes[midiNoteNumber].prev->next = poly->midiNodes[midiNoteNumber].next;
+    
+    if (poly->midiNodes[midiNoteNumber].next != NULL)
+        poly->midiNodes[midiNoteNumber].next->prev = poly->midiNodes[midiNoteNumber].prev;
+    
+    poly->midiNodes[midiNoteNumber].next = NULL;
+    poly->midiNodes[midiNoteNumber].prev = NULL;
+}
+
+static void prependNoteToOnList(tPolyphonicHandler* poly, int midiNoteNumber)
+{
+    if (poly->onListFirst != NULL)
+    {
+        poly->midiNodes[midiNoteNumber].next = poly->onListFirst;
+        poly->onListFirst->prev = &poly->midiNodes[midiNoteNumber];
+    }
+    poly->onListFirst = &poly->midiNodes[midiNoteNumber];
+}
+
+
+// TODO: Fail gracefully on odd MIDI situations
+//       For example, getting a note off for an already on note and vice-versa
+void tPolyphonicHandlerNoteOn(tPolyphonicHandler* poly, int midiNoteNumber, float velocity)
+{
+    removeNoteFromOffList(poly, midiNoteNumber);
+    // Set the MIDI note on accordingly
+    poly->midiNodes[midiNoteNumber].midiNote.velocity = velocity;
+    poly->midiNodes[midiNoteNumber].midiNote.on = OTRUE;
+    prependNoteToOnList(poly, midiNoteNumber);
+}
+
+// Unfortunately similar code to removeNoteFromOffList without any clear way of factoring out to a helper function
+static void removeNoteFromOnList(tPolyphonicHandler* poly, int8_t midiNoteNumber)
+{
+    // If this has no prev, this is the first node on the OFF list
+    if (poly->midiNodes[midiNoteNumber].prev == NULL)
+        poly->onListFirst = poly->midiNodes[midiNoteNumber].next;
+    
+    // Awkward handling to avoid deref null pointers
+    if (poly->midiNodes[midiNoteNumber].prev != NULL)
+        poly->midiNodes[midiNoteNumber].prev->next = poly->midiNodes[midiNoteNumber].next;
+    
+    if (poly->midiNodes[midiNoteNumber].next != NULL)
+        poly->midiNodes[midiNoteNumber].next->prev = poly->midiNodes[midiNoteNumber].prev;
+    
+    poly->midiNodes[midiNoteNumber].next = NULL;
+    poly->midiNodes[midiNoteNumber].prev = NULL;
+}
+
+// Unfortunately similar code to prependNoteToOnList without any clear way of factoring out to a helper function
+static void prependNoteToOffList(tPolyphonicHandler* poly, int midiNoteNumber)
+{
+    if (poly->offListFirst != NULL)
+    {
+        poly->midiNodes[midiNoteNumber].next = poly->offListFirst;
+        poly->offListFirst->prev = &poly->midiNodes[midiNoteNumber];
+    }
+    poly->offListFirst = &poly->midiNodes[midiNoteNumber];
+}
+
+
+void tPolyphonicHandlerNoteOff(tPolyphonicHandler* poly, int midiNoteNumber)
+{
+    removeNoteFromOnList(poly, midiNoteNumber);
+    // Set the MIDI note on accordingly
+    poly->midiNodes[midiNoteNumber].midiNote.velocity = 0;
+    poly->midiNodes[midiNoteNumber].midiNote.on = OFALSE;
+    prependNoteToOffList(poly, midiNoteNumber);
+}
+
+#endif // N_POLYHANDLER
