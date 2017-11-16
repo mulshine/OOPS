@@ -659,3 +659,306 @@ void    tStifKarpSampleRateChanged (tStifKarp* const c)
 }
 
 #endif //N_STIFKARP
+
+#if N_808COWBELL
+#define USE_STICK 0
+void t808CowbellOn(t808Cowbell* const cowbell, float vel)
+{
+    
+    tEnvelopeOn(cowbell->envGain, vel);
+    
+#if USE_STICK
+    tEnvelopeOn(cowbell->envStick,vel);
+#endif
+    
+}
+
+float t808CowbellTick(t808Cowbell* const cowbell) {
+    
+    float sample = 0.0f;
+    
+    // Mix oscillators.
+    sample = (cowbell->oscMix * tSquareTick(cowbell->p[0])) + ((1.0f-cowbell->oscMix) * tSquareTick(cowbell->p[1]));
+    
+    // Filter dive and filter.
+    tSVFSetFreq(cowbell->bandpassOsc, cowbell->filterCutoff + 1000.0f * tEnvelopeTick(cowbell->envFilter));
+    sample = tSVFTick(cowbell->bandpassOsc,sample);
+    
+    sample *= (0.9f * tEnvelopeTick(cowbell->envGain));
+    
+#if USE_STICK
+    sample += (0.1f * tEnvelopeTick(cowbell->envStick) * tSVFTick(cowbell->bandpassStick, tNoiseTick(cowbell->stick)));
+#endif
+    
+    sample = tHighpassTick(cowbell->highpass, sample);
+    
+    return sample;
+}
+
+void t808CowbellSetDecay(t808Cowbell* const cowbell, float decay)
+{
+    tEnvelopeSetDecay(cowbell->envGain,decay);
+}
+
+void t808CowbellSetHighpassFreq(t808Cowbell *cowbell, float freq)
+{
+    tHighpassSetFreq(cowbell->highpass,freq);
+}
+
+void t808CowbellSetBandpassFreq(t808Cowbell* const cowbell, float freq)
+{
+    cowbell->filterCutoff = freq;
+}
+
+void t808CowbellSetFreq(t808Cowbell* const cowbell, float freq)
+{
+    
+    tSquareSetFreq(cowbell->p[0],freq);
+    tSquareSetFreq(cowbell->p[1],1.48148f*freq);
+}
+
+void t808CowbellSetOscMix(t808Cowbell* const cowbell, float oscMix)
+{
+    cowbell->oscMix = oscMix;
+}
+
+t808Cowbell* t808CowbellInit(void) {
+    
+    t808Cowbell* cowbell = &oops.t808CowbellRegistry[oops.registryIndex[T_808COWBELL]++];
+    
+    cowbell->p[0] = tSquareInit();
+    cowbell->p[1] = tSquareInit();
+    
+    tSquareSetFreq(cowbell->p[0], 540.0f);
+    tSquareSetFreq(cowbell->p[1], 1.48148f * 540.0f);
+    
+    cowbell->oscMix = 0.5f;
+    
+    cowbell->bandpassOsc = tSVFInit(SVFTypeBandpass, 2500, 1.0f);
+    
+    cowbell->bandpassStick = tSVFInit(SVFTypeBandpass, 1800, 1.0f);
+    
+    cowbell->envGain = tEnvelopeInit(5.0f, 100.0f, OFALSE);
+    
+    cowbell->envFilter = tEnvelopeInit(5.0, 100.0f, OFALSE);
+    
+    cowbell->highpass = tHighpassInit(1000.0f);
+    
+#if USE_STICK
+    cowbell->stick = tNoiseInit(NoiseTypeWhite);
+    cowbell->envStick = tEnvelopeInit(5.0f, 5.0f, 0);
+#endif
+    
+    return cowbell;
+}
+
+#endif
+
+#if N_808HIHAT
+
+void t808HihatOn(t808Hihat* const hihat, float vel) {
+    
+    tEnvelopeOn(hihat->envGain, vel);
+    tEnvelopeOn(hihat->envStick, vel);
+    
+}
+
+void t808HihatSetOscNoiseMix(t808Hihat* const hihat, float oscNoiseMix) {
+    
+    hihat->oscNoiseMix = oscNoiseMix;
+    
+}
+
+float t808HihatTick(t808Hihat* const hihat) {
+    
+    float sample = 0.0f;
+    float gainScale = 0.1666f;
+    
+    for (int i = 0; i < 6; i++)
+    {
+        sample += tSquareTick(hihat->p[i]);
+    }
+    
+    sample *= gainScale;
+    
+    sample = (hihat->oscNoiseMix * sample) + ((1.0f-hihat->oscNoiseMix) * (0.8f * tNoiseTick(hihat->n)));
+    
+    sample = tSVFTick(hihat->bandpassOsc, sample);
+    
+    sample *= tEnvelopeTick(hihat->envGain);
+    
+    sample = 0.85f * OOPS_clip(0.0f, tHighpassTick(hihat->highpass, sample), 1.0f);
+    
+    sample += 0.15f * tEnvelopeTick(hihat->envStick) * tSVFTick(hihat->bandpassStick, tNoiseTick(hihat->stick));
+    
+    return sample;
+}
+
+void t808HihatSetDecay(t808Hihat* const hihat, float decay)
+{
+    tEnvelopeSetDecay(hihat->envGain,decay);
+}
+
+void t808HihatSetHighpassFreq(t808Hihat* const hihat, float freq)
+{
+    tHighpassSetFreq(hihat->highpass,freq);
+}
+
+void t808HihatSetOscBandpassFreq(t808Hihat* const hihat, float freq)
+{
+    tSVFSetFreq(hihat->bandpassOsc,freq);
+}
+
+
+void t808HihatSetOscFreq(t808Hihat* const hihat, float freq)
+{
+    tSquareSetFreq(hihat->p[0], 2.0f * freq);
+    tSquareSetFreq(hihat->p[1], 3.00f * freq);
+    tSquareSetFreq(hihat->p[2], 4.16f * freq);
+    tSquareSetFreq(hihat->p[3], 5.43f * freq);
+    tSquareSetFreq(hihat->p[4], 6.79f * freq);
+    tSquareSetFreq(hihat->p[5], 8.21f * freq);
+    
+}
+
+t808Hihat* t808HihatInit(void)
+{
+    t808Hihat* hihat = &oops.t808HihatRegistry[oops.registryIndex[T_808HIHAT]++];
+    
+    for (int i = 0; i < 6; i++)
+    {
+        hihat->p[i] = tSquareInit();
+    }
+    
+    hihat->stick = tNoiseInit(WhiteNoise);
+    hihat->n = tNoiseInit(WhiteNoise);
+    
+    // need to fix SVF to be generic
+    hihat->bandpassStick = tSVFInit(SVFTypeBandpass,2500.0,1.5f);
+    hihat->bandpassOsc = tSVFInit(SVFTypeBandpass,3500,0.5f);
+    
+    hihat->envGain = tEnvelopeInit(5.0f, 50.0f, OFALSE);
+    hihat->envStick = tEnvelopeInit(5.0f, 15.0f, OFALSE);
+    
+    hihat->highpass = tHighpassInit(7000.0f);
+    
+    float freq = 40.0f;
+    
+    tSquareSetFreq(hihat->p[0], 2.0f * freq);
+    tSquareSetFreq(hihat->p[1], 3.00f * freq);
+    tSquareSetFreq(hihat->p[2], 4.16f * freq);
+    tSquareSetFreq(hihat->p[3], 5.43f * freq);
+    tSquareSetFreq(hihat->p[4], 6.79f * freq);
+    tSquareSetFreq(hihat->p[5], 8.21f * freq);
+    
+    return hihat;
+}
+#endif
+
+#if N_808SNARE
+
+void t808SnareOn(t808Snare* const snare, float vel)
+{
+    for (int i = 0; i < 2; i++)
+    {
+        tEnvelopeOn(snare->toneEnvOsc[i], vel);
+        tEnvelopeOn(snare->toneEnvGain[i], vel);
+        tEnvelopeOn(snare->toneEnvFilter[i], vel);
+    }
+    
+    tEnvelopeOn(snare->noiseEnvGain, vel);
+    tEnvelopeOn(snare->noiseEnvFilter, vel);
+}
+
+void t808SnareSetTone1Freq(t808Snare* const snare, float freq)
+{
+    snare->tone1Freq = freq;
+    tTriangleSetFreq(snare->tone[0], freq);
+    
+}
+
+void t808SnareSetTone2Freq(t808Snare* const snare, float freq)
+{
+    snare->tone2Freq = freq;
+    tTriangleSetFreq(snare->tone[1],freq);
+}
+
+void t808SnareSetTone1Decay(t808Snare* const snare, float decay)
+{
+    tEnvelopeSetDecay(snare->toneEnvGain[0],decay);
+}
+
+void t808SnareSetTone2Decay(t808Snare* const snare, float decay)
+{
+    tEnvelopeSetDecay(snare->toneEnvGain[1],decay);
+}
+
+void t808SnareSetNoiseDecay(t808Snare* const snare, float decay)
+{
+    tEnvelopeSetDecay(snare->noiseEnvGain,decay);
+}
+
+void t808SnareSetToneNoiseMix(t808Snare* const snare, float toneNoiseMix)
+{
+    snare->toneNoiseMix = toneNoiseMix;
+}
+
+void t808SnareSetNoiseFilterFreq(t808Snare* const snare, float noiseFilterFreq)
+{
+    snare->noiseFilterFreq = noiseFilterFreq;
+}
+
+void t808SnareSetNoiseFilterQ(t808Snare* const snare, float noiseFilterQ)
+{
+    tSVFSetQ(snare->noiseLowpass, noiseFilterQ);
+}
+
+
+static float tone[2];
+
+float t808SnareTick(t808Snare* const snare)
+{
+    for (int i = 0; i < 2; i++)
+    {
+        tTriangleSetFreq(snare->tone[i], snare->tone1Freq + (50.0f * tEnvelopeTick(snare->toneEnvOsc[i])));
+        tone[i] = tTriangleTick(snare->tone[i]);
+        
+        tSVFSetFreq(snare->toneLowpass[i], 2000 + (500 * tEnvelopeTick(snare->toneEnvFilter[i])));
+        tone[i] = tSVFTick(snare->toneLowpass[i], tone[i]) * tEnvelopeTick(snare->toneEnvGain[i]);
+    }
+    
+    float noise = tNoiseTick(snare->noiseOsc);
+    tSVFSetFreq(snare->noiseLowpass, snare->noiseFilterFreq +(500 * tEnvelopeTick(snare->noiseEnvFilter)));
+    noise = tSVFTick(snare->noiseLowpass, noise) * tEnvelopeTick(snare->noiseEnvGain);
+    
+    float sample = (snare->toneNoiseMix)*(tone[0] * snare->toneGain[0] + tone[1] * snare->toneGain[1]) + (1.0f-snare->toneNoiseMix) * (noise * snare->noiseGain);
+    
+    return sample;
+}
+
+t808Snare* t808SnareInit(void)
+{
+    t808Snare* snare = &oops.t808SnareRegistry[oops.registryIndex[T_808SNARE]++];
+    
+    for (int i = 0; i < 2; i++)
+    {
+        snare->tone[i] = tTriangleInit();
+        snare->toneLowpass[i] = tSVFInit(SVFTypeLowpass, 2000, 1.0f);
+        snare->toneEnvOsc[i] = tEnvelopeInit(3.0f, 20.0f, OFALSE);
+        snare->toneEnvGain[i] = tEnvelopeInit(10.0f, 200.0f, OFALSE);
+        snare->toneEnvFilter[i] = tEnvelopeInit(3.0f, 200.0f, OFALSE);
+        snare->toneGain[i] = 0.5f;
+    }
+    
+    
+    snare->noiseOsc = tNoiseInit(WhiteNoise);
+    snare->noiseLowpass = tSVFInit(SVFTypeLowpass, 2000, 3.0f);
+    snare->noiseEnvGain = tEnvelopeInit(10.0f, 125.0f, OFALSE);
+    snare->noiseEnvFilter = tEnvelopeInit(3.0f, 100.0f, OFALSE);
+    snare->noiseGain = 0.25f;
+    
+    
+    return snare;
+}
+
+#endif
