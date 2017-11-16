@@ -52,12 +52,40 @@ int                     tEnvelopeFollowerDecayCoeff     (tEnvelopeFollower*  con
 int                     tEnvelopeFollowerAttackThresh   (tEnvelopeFollower*  const, float attackThresh);
 
 
+/* Stack */
+tStack*     tStack_init                 (void);
+void        tStack_setCapacity          (tStack* const, uint16_t cap);
+int         tStack_addIfNotAlreadyThere (tStack* const, uint16_t item);
+void        tStack_add                  (tStack* const, uint16_t item);
+int         tStack_remove               (tStack* const, uint16_t item);
+void        tStack_clear                (tStack* const);
+int         tStack_first                (tStack* const);
+int         tStack_getSize              (tStack* const);
+int         tStack_contains             (tStack* const, uint16_t item);
+int         tStack_next                 (tStack* const);
+int         tStack_get                  (tStack* const, int which);
+
 
 /* Polyphonic Handler */
 tPoly*     tPolyInit(void);
 tMidiNote* tPolyGetMidiNote(tPoly* poly, int8_t voiceIndex);
 void tPolyNoteOn(tPoly* poly, int midiNoteNumber, float velocity);
 void tPolyNoteOff(tPoly* poly, int midiNoteNumber);
+
+/* MPoly*/
+tMPoly*     tMPoly_init(void);
+
+//ADDING A NOTE
+void        tMPoly_noteOn(tMPoly* const, int note, uint8_t vel);
+
+void        tMPoly_noteOff(tMPoly* const, uint8_t note);
+
+void        tMPoly_orderedAddToStack(tMPoly* const, uint8_t noteVal);
+
+void        tMPoly_pitchBend(tMPoly* const, uint8_t bend);
+
+
+
 
 #endif  // OOPSUTILITIES_H_INCLUDED
 

@@ -11,7 +11,7 @@
 #ifndef FM_H_INCLUDED
 #define FM_H_INCLUDED
 
-tPoly* poly;
-tSawtooth* sawtooths[3];
+tMPoly* poly;
+tSawtooth* sawtooths[NUM_VOICES];
 
 #endif  // FM_H_INCLUDED

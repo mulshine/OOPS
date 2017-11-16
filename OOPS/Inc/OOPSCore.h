@@ -568,6 +568,46 @@ typedef struct _t808Snare {
     
 } t808Snare;
 
+#define STACK_SIZE 128
+typedef struct _tStack
+{
+    int data[STACK_SIZE];
+    uint16_t pos;
+    uint16_t size;
+    uint16_t capacity;
+    oBool ordered;
+    
+} tStack;
+
+
+/* tMPoly */
+typedef struct _tMPoly
+{
+    int numVoices;
+    int numVoicesActive;
+    
+    int voices[NUM_VOICES][2];
+    
+    int notes[128][2];
+    
+    int CCs[128];
+    
+    uint8_t CCsRaw[128];
+    
+    int lastVoiceToChange;
+    
+    tStack* stack;
+    tStack* orderStack;
+    
+    int32_t pitchBend;
+    
+    int currentNote;
+    int currentVoice;
+    int currentVelocity;
+    int maxLength;
+    
+} tMPoly;
+
 
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
 void     tPhasorSampleRateChanged (tPhasor *p);
@@ -630,9 +670,11 @@ typedef enum OOPSRegistryIndex
     T_VOCODER,
     T_TALKBOX,
     T_POLY,
+    T_MPOLY,
     T_808SNARE,
     T_808HIHAT,
     T_808COWBELL,
+    T_STACK,
     T_INDEXCNT
 }OOPSRegistryIndex;
 
@@ -773,6 +815,11 @@ typedef struct _OOPS
     tPoly  tPolyRegistry     [N_POLY];
 #endif
     
+    
+#if N_MPOLY
+    tMPoly  tMPolyRegistry     [N_MPOLY];
+#endif
+    
 #if N_808SNARE
     t808Snare        t808SnareRegistry      [N_808SNARE];
 #endif
@@ -783,6 +830,10 @@ typedef struct _OOPS
     
 #if N_808COWBELL
     t808Cowbell       t808CowbellRegistry      [N_808COWBELL];
+#endif
+    
+#if N_STACK
+    tStack            tStackRegistry      [N_STACK];
 #endif
     
     
