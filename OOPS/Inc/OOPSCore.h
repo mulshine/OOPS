@@ -503,13 +503,13 @@ typedef struct _tMidiNode
     tMidiNote midiNote;
 } tMidiNode;
 
-typedef struct _tPolyphonicHandler
+typedef struct _tPoly
 {
     tMidiNode midiNodes[128];
     tMidiNode* onListFirst;
     tMidiNode* offListFirst;
     
-} tPolyphonicHandler;
+} tPoly;
 
 typedef struct _t808Cowbell {
     
@@ -629,7 +629,7 @@ typedef enum OOPSRegistryIndex
     T_BUTTERWORTH,
     T_VOCODER,
     T_TALKBOX,
-    T_POLYPHONICHANDLER,
+    T_POLY,
     T_808SNARE,
     T_808HIHAT,
     T_808COWBELL,
@@ -769,8 +769,8 @@ typedef struct _OOPS
     tTalkbox           tTalkboxRegistry         [N_TALKBOX];
 #endif
 
-#if N_POLYPHONICHANDLER
-    tPolyphonicHandler  tPolyphonicHandlerRegistry     [N_POLYPHONICHANDLER];
+#if N_POLY
+    tPoly  tPolyRegistry     [N_POLY];
 #endif
     
 #if N_808SNARE

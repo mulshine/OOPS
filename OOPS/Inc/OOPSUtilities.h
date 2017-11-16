@@ -54,10 +54,10 @@ int                     tEnvelopeFollowerAttackThresh   (tEnvelopeFollower*  con
 
 
 /* Polyphonic Handler */
-tPolyphonicHandler*     tPolyphonicHandlerInit(void);
-tMidiNote* tPolyphonicHandlerGetMidiNote(tPolyphonicHandler* poly, int8_t voiceIndex);
-void tPolyphonicHandlerNoteOn(tPolyphonicHandler* poly, int midiNoteNumber, float velocity);
-void tPolyphonicHandlerNoteOff(tPolyphonicHandler* poly, int midiNoteNumber);
+tPoly*     tPolyInit(void);
+tMidiNote* tPolyGetMidiNote(tPoly* poly, int8_t voiceIndex);
+void tPolyNoteOn(tPoly* poly, int midiNoteNumber, float velocity);
+void tPolyNoteOff(tPoly* poly, int midiNoteNumber);
 
 #endif  // OOPSUTILITIES_H_INCLUDED
 

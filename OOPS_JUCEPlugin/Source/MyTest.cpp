@@ -17,7 +17,7 @@ void    OOPSTest_init            (float sampleRate)
 {
     OOPSInit(sampleRate, &randomNumberGenerator);
     
-    poly = tPolyphonicHandlerInit();
+    poly = tPolyInit();
     for (int8_t i = 0; i < NUMBER_VOICES; i++)
     {
         sawtooths[i] = tSawtoothInit();
@@ -34,7 +34,7 @@ float   OOPSTest_tick            (float input)
     float sample = 0;
     for (int8_t i = 0; i < NUMBER_VOICES; i++)
     {
-        tMidiNote* midiNote = tPolyphonicHandlerGetMidiNote(poly, i);
+        tMidiNote* midiNote = tPolyGetMidiNote(poly, i);
         float velocityMod = 0;
         if (midiNote != NO_VOICE)
             velocityMod = midiNote->velocity / 127.0;
@@ -62,11 +62,11 @@ void    OOPSTest_pitchBendInput  (int pitchBend)
 
 void    OOPSTest_noteOn          (int midiNoteNumber, float velocity)
 {
-    tPolyphonicHandlerNoteOn(poly, midiNoteNumber, velocity * 127);
+    tPolyNoteOn(poly, midiNoteNumber, velocity * 127);
     
     for (int8_t i = 0; i < NUMBER_VOICES; i++)
     {
-        tMidiNote* midiNote = tPolyphonicHandlerGetMidiNote(poly, i);
+        tMidiNote* midiNote = tPolyGetMidiNote(poly, i);
         if (midiNote != NULL)
         {
             tSawtoothSetFreq(sawtooths[i], OOPS_midiToFrequency(midiNote->pitch));
@@ -80,11 +80,11 @@ void    OOPSTest_noteOn          (int midiNoteNumber, float velocity)
 
 void    OOPSTest_noteOff         (int midiNoteNumber)
 {
-    tPolyphonicHandlerNoteOff(poly, midiNoteNumber);
+    tPolyNoteOff(poly, midiNoteNumber);
     
     for (int8_t i = 0; i < NUMBER_VOICES; i++)
     {
-        tMidiNote* midiNote = tPolyphonicHandlerGetMidiNote(poly, i);
+        tMidiNote* midiNote = tPolyGetMidiNote(poly, i);
         if (midiNote != NULL)
             tSawtoothSetFreq(sawtooths[i], OOPS_midiToFrequency(midiNote->pitch));
     }

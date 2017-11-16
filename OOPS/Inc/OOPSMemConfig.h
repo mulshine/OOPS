@@ -60,7 +60,7 @@ extern const float shaper1[SHAPER1_TABLE_SIZE];
 #define     N_ENVELOPEFOLLOW    0
 #define     N_VOCODER           0
 #define     N_TALKBOX           1
-#define     N_POLYPHONICHANDLER 1
+#define     N_POLY 1
 
 #define     DELAY_LENGTH        16000   // The maximum delay length of all Delay/DelayL/DelayA components.
                                             // Feel free to change to suit memory constraints or desired delay max length / functionality.
@@ -72,7 +72,7 @@ extern const float shaper1[SHAPER1_TABLE_SIZE];
                                         // and have spare memory.
 
 // Preprocessor defines to determine whether to include component files in build.
-#define INC_UTILITIES       (N_ENVELOPE || N_ENVELOPEFOLLOW || N_RAMP || N_ADSR || N_COMPRESSOR || N_POLYPHONICHANDLER)
+#define INC_UTILITIES       (N_ENVELOPE || N_ENVELOPEFOLLOW || N_RAMP || N_ADSR || N_COMPRESSOR || N_POLY)
 #define INC_DELAY           (N_DELAY || N_DELAYL || N_DELAYA)
 #define INC_FILTER          (N_BUTTERWORTH || N_ONEPOLE || N_TWOPOLE || N_ONEZERO || N_TWOZERO || N_POLEZERO || N_BIQUAD || N_SVF || N_SVFE || N_HIGHPASS)
 #define INC_OSCILLATOR      (N_PHASOR || N_SAWTOOTH || N_CYCLE || N_TRIANGLE || N_SQUARE || N_NOISE)
