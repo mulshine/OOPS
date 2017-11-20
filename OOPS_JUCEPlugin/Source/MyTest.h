@@ -13,5 +13,6 @@
 
 tMPoly* poly;
 tSawtooth* sawtooths[NUM_VOICES];
+tADSR* adsrs[NUM_VOICES];
 
 #endif  // FM_H_INCLUDED

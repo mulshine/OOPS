@@ -308,6 +308,246 @@ float   tEnvelopeTick(tEnvelope* const env)
 
 #endif // N_ENVELOPE
 
+#if N_ADSR
+/* ADSR */
+tADSR*    tADSRInit(float attack, float decay, float sustain, float release)
+{
+    tADSR* adsr = &oops.tADSRRegistry[oops.registryIndex[T_ADSR]++];
+    
+    adsr->exp_buff = exp_decay;
+    adsr->inc_buff = attack_decay_inc;
+    adsr->buff_size = sizeof(exp_decay);
+    
+    if (attack > 8192.0f)
+        attack = 8192.0f;
+    if (attack < 0.0f)
+        attack = 0.0f;
+    
+    if (decay > 8192.0f)
+        decay = 8192.0f;
+    if (decay < 0.0f)
+        decay = 0.0f;
+    
+    if (sustain > 1.0f)
+        sustain = 1.0f;
+    if (sustain < 0.0f)
+        sustain = 0.0f;
+    
+    if (release > 8192.0f)
+        release = 8192.0f;
+    if (release < 0.0f)
+        release = 0.0f;
+    
+    int16_t attackIndex = ((int16_t)(attack * 8.0f))-1;
+    int16_t decayIndex = ((int16_t)(decay * 8.0f))-1;
+    int16_t releaseIndex = ((int16_t)(release * 8.0f))-1;
+    int16_t rampIndex = ((int16_t)(2.0f * 8.0f))-1;
+    
+    if (attackIndex < 0)
+        attackIndex = 0;
+    if (decayIndex < 0)
+        decayIndex = 0;
+    if (releaseIndex < 0)
+        releaseIndex = 0;
+    if (rampIndex < 0)
+        rampIndex = 0;
+    
+    adsr->inRamp = OFALSE;
+    adsr->inAttack = OFALSE;
+    adsr->inDecay = OFALSE;
+    adsr->inSustain = OFALSE;
+    adsr->inRelease = OFALSE;
+    
+    adsr->sustain = sustain;
+    
+    adsr->attackInc = adsr->inc_buff[attackIndex];
+    adsr->decayInc = adsr->inc_buff[decayIndex];
+    adsr->releaseInc = adsr->inc_buff[releaseIndex];
+    adsr->rampInc = adsr->inc_buff[rampIndex];
+    
+    return adsr;
+    
+}
+
+int     tADSRSetAttack(tADSR* const adsr, float attack)
+{
+    int32_t attackIndex;
+    
+    if (attack < 0.0f) {
+        attackIndex = 0.0f;
+    } else if (attack < 8192.0f) {
+        attackIndex = ((int32_t)(attack * 8.0f))-1;
+    } else {
+        attackIndex = ((int32_t)(8192.0f * 8.0f))-1;
+    }
+    
+    adsr->attackInc = adsr->inc_buff[attackIndex];
+    
+    return 0;
+}
+
+int     tADSRSetDecay(tADSR* const adsr, float decay)
+{
+    int32_t decayIndex;
+    
+    if (decay < 0.0f) {
+        decayIndex = 0.0f;
+    } else if (decay < 8192.0f) {
+        decayIndex = ((int32_t)(decay * 8.0f)) - 1;
+    } else {
+        decayIndex = ((int32_t)(8192.0f * 8.0f)) - 1;
+    }
+    
+    adsr->decayInc = adsr->inc_buff[decayIndex];
+    
+    return 0;
+}
+
+int     tADSRSetSustain(tADSR *const adsr, float sustain)
+{
+    if (sustain > 1.0f)      adsr->sustain = 1.0f;
+    else if (sustain < 0.0f) adsr->sustain = 0.0f;
+    else                     adsr->sustain = sustain;
+    
+    return 0;
+}
+
+int     tADSRSetRelease(tADSR* const adsr, float release)
+{
+    int32_t releaseIndex;
+    
+    if (release < 0.0f) {
+        releaseIndex = 0.0f;
+    } else if (release < 8192.0f) {
+        releaseIndex = ((int32_t)(release * 8.0f)) - 1;
+    } else {
+        releaseIndex = ((int32_t)(8192.0f * 8.0f)) - 1;
+    }
+    
+    adsr->releaseInc = adsr->inc_buff[releaseIndex];
+    
+    return 0;
+}
+
+int tADSROn(tADSR* const adsr, float velocity)
+{
+    if ((adsr->inAttack || adsr->inDecay) || (adsr->inSustain || adsr->inRelease)) // In case ADSR retriggered while it is still happening.
+    {
+        adsr->rampPhase = 0;
+        adsr->inRamp = OTRUE;
+        adsr->rampPeak = adsr->next;
+    }
+    else // Normal start.
+    {
+        adsr->inAttack = OTRUE;
+    }
+    
+    adsr->attackPhase = 0;
+    adsr->decayPhase = 0;
+    adsr->releasePhase = 0;
+    adsr->inDecay = OFALSE;
+    adsr->inSustain = OFALSE;
+    adsr->inRelease = OFALSE;
+    adsr->gain = velocity;
+    
+    return 0;
+}
+
+int tADSROff(tADSR* const adsr)
+{
+    if (adsr->inRelease) return 0;
+    
+    adsr->inAttack = OFALSE;
+    adsr->inDecay = OFALSE;
+    adsr->inSustain = OFALSE;
+    adsr->inRelease = OTRUE;
+    
+    adsr->releasePeak = adsr->next;
+    
+    return 0;
+}
+
+float   tADSRTick(tADSR* const adsr)
+{
+    if (adsr->inRamp)
+    {
+        if (adsr->rampPhase > UINT16_MAX)
+        {
+            adsr->inRamp = OFALSE;
+            adsr->inAttack = OTRUE;
+            adsr->next = 0.0f;
+        }
+        else
+        {
+            adsr->next = adsr->rampPeak * adsr->exp_buff[(uint32_t)adsr->rampPhase];
+        }
+        
+        adsr->rampPhase += adsr->rampInc;
+    }
+    
+    if (adsr->inAttack)
+    {
+        
+        // If attack done, time to turn around.
+        if (adsr->attackPhase > UINT16_MAX)
+        {
+            adsr->inDecay = OTRUE;
+            adsr->inAttack = OFALSE;
+            adsr->next = adsr->gain * 1.0f;
+        }
+        else
+        {
+            // do interpolation !
+            adsr->next = adsr->gain * adsr->exp_buff[UINT16_MAX - (uint32_t)adsr->attackPhase]; // inverted and backwards to get proper rising exponential shape/perception
+        }
+        
+        // Increment ADSR attack.
+        adsr->attackPhase += adsr->attackInc;
+        
+    }
+    
+    if (adsr->inDecay)
+    {
+        
+        // If decay done, sustain.
+        if (adsr->decayPhase >= UINT16_MAX)
+        {
+            adsr->inDecay = OFALSE;
+            adsr->inSustain = OTRUE;
+            adsr->next = adsr->gain * adsr->sustain;
+        }
+        
+        else
+        {
+            adsr->next = adsr->gain * (adsr->sustain + ((adsr->exp_buff[(uint32_t)adsr->decayPhase]) * (1 - adsr->sustain))); // do interpolation !
+        }
+        
+        // Increment ADSR decay.
+        adsr->decayPhase += adsr->decayInc;
+    }
+
+    if (adsr->inRelease)
+    {
+        // If release done, finish.
+        if (adsr->releasePhase >= UINT16_MAX)
+        {
+            adsr->inRelease = OFALSE;
+            adsr->next = 0.0f;
+        }
+        else {
+            
+            adsr->next = adsr->releasePeak * (adsr->exp_buff[(uint32_t)adsr->releasePhase]); // do interpolation !
+        }
+        
+        // Increment envelope release;
+        adsr->releasePhase += adsr->releaseInc;
+    }
+
+    return adsr->next;
+}
+
+#endif // N_ADSR
+
 #if N_ENVELOPEFOLLOW
 /* Envelope Follower */
 tEnvelopeFollower*    tEnvelopeFollowerInit(float attackThreshold, float decayCoeff)

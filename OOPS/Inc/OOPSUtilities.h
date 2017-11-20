@@ -30,7 +30,21 @@ int                     tEnvelopeLoop      (tEnvelope*  const, oBool loop);
 
 int                     tEnvelopeOn        (tEnvelope*  const, float velocity);
 
-/* ADSR coming soon. */
+/* ADSR */
+tADSR*                  tADSRInit      (float attack, float decay, float sustain, float release);
+float                   tADSRTick      (tADSR*  const);
+
+int                     tADSRSetAttack (tADSR*  const, float attack);
+
+int                     tADSRSetDecay  (tADSR*  const, float decay);
+
+int                     tADSRSetSustain (tADSR*  const, float sustain);
+
+int                     tADSRSetRelease (tADSR*  const, float release);
+
+int                     tADSROn        (tADSR*  const, float velocity);
+
+int                     tADSROff        (tADSR*  const);
 
 /* Ramp */
 tRamp*                  tRampInit   (float time, int samplesPerTick);
@@ -40,8 +54,6 @@ float 									tRampSample (tRamp*  const);
 int                     tRampSetTime(tRamp*  const, float time);
 
 int                     tRampSetDest(tRamp*  const, float dest);
-
-
 
 /* Envelope Follower */
 tEnvelopeFollower*      tEnvelopeFollowerInit           (float attackThreshold, float decayCoeff);

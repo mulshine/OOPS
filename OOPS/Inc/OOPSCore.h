@@ -323,7 +323,19 @@ typedef struct _tEnvelope {
 // Attack-Decay-Sustain-Release envelope
 typedef struct _tADSR
 {
-
+    const float *exp_buff;
+    const float *inc_buff;
+    uint32_t buff_size;
+    
+    float next;
+    
+    float attackInc, decayInc, releaseInc, rampInc;
+    
+    oBool inAttack, inDecay, inSustain, inRelease, inRamp;
+    
+    float sustain, gain, rampPeak, releasePeak;
+    
+    float attackPhase, decayPhase, releasePhase, rampPhase;
     
     void (*sampleRateChanged)(struct _tADSR *self);
     
