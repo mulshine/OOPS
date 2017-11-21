@@ -19,7 +19,7 @@
  *                                                                                                       *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#define NUM_VOICES 8
+#define NUM_VOICES 5
 
 #define SHAPER1_TABLE_SIZE 65536
 extern const float shaper1[SHAPER1_TABLE_SIZE];
@@ -57,7 +57,7 @@ extern const float shaper1[SHAPER1_TABLE_SIZE];
 #define     N_DELAYL            0 + (1 * N_STIFKARP) + (1 * N_PLUCK)
 #define     N_DELAYA            0 + (1 * N_PRCREV) + (1 * N_STIFKARP)
 #define     N_ENVELOPE          2
-#define     N_ADSR              0
+#define     N_ADSR              10
 #define     N_RAMP              10
 #define     N_ENVELOPEFOLLOW    0
 #define     N_VOCODER           0

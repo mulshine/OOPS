@@ -16,11 +16,12 @@ float gainPerOsc = 1.0f / NUM_VOICES;
 void    OOPSTest_init            (float sampleRate)
 {
     OOPSInit(sampleRate, &randomNumberGenerator);
-    
+
     poly = tMPoly_init();
     for (int8_t i = 0; i < NUM_VOICES; i++)
     {
         sawtooths[i] = tSawtoothInit();
+        adsrs[i] = tADSRInit(100.0f, 200.0f, 0.0f, 200.0f);
     }
 }
 
@@ -30,10 +31,10 @@ float   OOPSTest_tick            (float input)
 {
 
     float sample = 0;
-    
+
     for (int8_t i = 0; i < NUM_VOICES; i++)
     {
-        sample += tSawtoothTick(sawtooths[i]) * poly->voices[i][1] / 127.0f;
+        sample += tSawtoothTick(sawtooths[i]) * tADSRTick(adsrs[i]); //* poly->voices[i][1] / 127.0f
     }
     
     /*
@@ -69,13 +70,14 @@ void    OOPSTest_pitchBendInput  (int pitchBend)
 void    OOPSTest_noteOn          (int midiNoteNumber, float velocity)
 {
     tMPoly_noteOn(poly, midiNoteNumber, (int) (velocity * 127.0f));
+    tADSROn(adsrs[poly->lastVoiceToChange], velocity);
     
     for (int i = 0; i < NUM_VOICES; i++)
     {
         int note = poly->voices[i][0];
         
         DBG(String(note) + " " + String(poly->voices[i][1]));
-        tSawtoothSetFreq(sawtooths[i], OOPS_midiToFrequency(note));
+        if (poly->voices[i][1] > 0) tSawtoothSetFreq(sawtooths[i], OOPS_midiToFrequency(note));
     }
     /*
     tPolyNoteOn(poly, midiNoteNumber, velocity * 127);
@@ -96,8 +98,8 @@ void    OOPSTest_noteOn          (int midiNoteNumber, float velocity)
 
 void    OOPSTest_noteOff         (int midiNoteNumber)
 {
-    
     tMPoly_noteOff(poly, midiNoteNumber);
+    tADSROff(adsrs[poly->lastVoiceToChange]);
 }
 
 
