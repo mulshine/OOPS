@@ -8,9 +8,9 @@
               pluginIsSynth="0" pluginWantsMidiIn="1" pluginProducesMidiOut="0"
               pluginIsMidiEffectPlugin="0" pluginEditorRequiresKeys="0" pluginAUExportPrefix="OOPSAU"
               pluginRTASCategory="" aaxIdentifier="com.mrmulshine.OOPS" pluginAAXCategory="AAX_ePlugInCategory_Dynamics"
-              jucerVersion="5.1.2" companyName="mrmulshine" companyEmail="mrmulshine@gmail.com"
+              jucerVersion="5.2.0" companyName="mrmulshine" companyEmail="mrmulshine@gmail.com"
               displaySplashScreen="1" reportAppUsage="1" splashScreenColour="Dark"
-              buildStandalone="1" enableIAA="0" cppLanguageStandard="11">
+              buildStandalone="1" enableIAA="0" cppLanguageStandard="11" companyCopyright="mrmulshine">
   <MAINGROUP id="F7Bywq" name="OOPS">
     <GROUP id="{14C5E2CD-5D51-3FD3-5677-28BECA29E95E}" name="Source">
       <GROUP id="{EB72C69D-9DB4-93A0-1BB7-AECD0E7666DA}" name="OOPS">
@@ -75,8 +75,9 @@
     <XCODE_MAC targetFolder="Builds/MacOSX">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="OOPS" osxArchitecture="64BitUniversal"
-                       osxCompatibility="default"/>
-        <CONFIGURATION name="Release" isDebug="0" optimisation="3" targetName="OOPS"/>
+                       osxCompatibility="default" enablePluginBinaryCopyStep="1"/>
+        <CONFIGURATION name="Release" isDebug="0" optimisation="3" targetName="OOPS"
+                       enablePluginBinaryCopyStep="1"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_core" path="../../JUCE/modules"/>
@@ -98,10 +99,12 @@
     </XCODE_MAC>
     <XCODE_IPHONE targetFolder="Builds/iOS" iosScreenOrientation="portraitlandscape"
                   iosDevelopmentTeamID="QY96HSP2FJ" microphonePermissionNeeded="1"
-                  iosBackgroundAudio="1">
+                  iosBackgroundAudio="1" iPadScreenOrientation="portraitlandscape"
+                  iosDeviceFamily="1,2">
       <CONFIGURATIONS>
-        <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="OOPS"/>
-        <CONFIGURATION name="Release" isDebug="0" optimisation="3" targetName="OOPS"/>
+        <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="OOPS" enablePluginBinaryCopyStep="1"/>
+        <CONFIGURATION name="Release" isDebug="0" optimisation="3" targetName="OOPS"
+                       enablePluginBinaryCopyStep="1"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_core" path="../../JUCE/modules"/>
@@ -124,9 +127,11 @@
     <VS2017 targetFolder="Builds/VisualStudio2017">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" winWarningLevel="4" generateManifest="1" winArchitecture="x64"
-                       isDebug="1" optimisation="1" targetName="OOPS"/>
+                       isDebug="1" optimisation="1" targetName="OOPS" debugInformationFormat="ProgramDatabase"
+                       enablePluginBinaryCopyStep="0"/>
         <CONFIGURATION name="Release" winWarningLevel="4" generateManifest="1" winArchitecture="x64"
-                       isDebug="0" optimisation="3" targetName="OOPS"/>
+                       isDebug="0" optimisation="3" targetName="OOPS" debugInformationFormat="ProgramDatabase"
+                       enablePluginBinaryCopyStep="0" linkTimeOptimisation="1"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_video" path="..\..\..\JUCE\modules"/>
