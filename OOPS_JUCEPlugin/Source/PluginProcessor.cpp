@@ -48,6 +48,8 @@ void OopsAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     start = false;
     ramp = false;
     
+    AudioProcessor::setPlayConfigDetails(2, 2, 44100, 512);
+    
     OOPSTest_init(sampleRate);
 }
 
@@ -63,7 +65,13 @@ void OopsAudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuffer& mi
     for (int i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
     
-    OOPSTest_block();
+    const float* inPointerL = buffer.getReadPointer (0);
+    const float* inPointerR = buffer.getReadPointer (1);
+    
+    float* outPointerL = buffer.getWritePointer( 0);
+    float* outPointerR = buffer.getWritePointer( 1);
+    
+    OOPSTest_block((float*)inPointerL, (float*)inPointerR, outPointerL, outPointerR, buffer.getNumSamples());
     
     MidiMessage m;
     int time;
@@ -87,18 +95,13 @@ void OopsAudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuffer& mi
         }
     }
     
-
-    const float* inPointerL = buffer.getReadPointer (0);
-    const float* inPointerR = buffer.getReadPointer (1);
-    
-    float* outPointerL = buffer.getWritePointer( 0);
-    float* outPointerR = buffer.getWritePointer( 1);
-    
+    /*
     for (int samp = 0; samp < buffer.getNumSamples(); ++samp)
     {
         outPointerL[samp] = OOPSTest_tick( (inPointerL[samp] +inPointerR[samp]) * 0.5f);
         outPointerR[samp] = outPointerL[samp];
     }
+     */
 }
 
 //==============================================================================

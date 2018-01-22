@@ -125,10 +125,10 @@ void tSNAC_setBias(tSNAC *s, float bias);
 void tSNAC_setMinRMS(tSNAC *s, float rms);
 
 /*To get freq, perform SAMPLE_RATE/snac_getperiod() */
-float tSNAC_getperiod(tSNAC *s);
+float tSNAC_getPeriod(tSNAC *s);
 float tSNAC_getfidelity(tSNAC *s);
 
-/* tAtkDtct */
+/* tAtkDtk */
 tAtkDtk* tAtkDtk_init(int blocksize);
 
 tAtkDtk* tAtkDtk_init_expanded(int blocksize, int atk, int rel);

@@ -1244,7 +1244,7 @@ tSOLAD*     tSOLAD_init(void)
     
     solad_init(w);
     
-    return(w);
+    return w;
 }
 
 // send one block of input samples, receive one block of output samples
@@ -1580,7 +1580,7 @@ tSNAC* tSNAC_init(int framearg, int overlaparg)
     tSNAC_setFramesize(s, framearg);
     tSNAC_setOverlap(s, overlaparg);
     
-    return(s);
+    return s;
 }
 /******************************************************************************/
 /************************** public access functions****************************/
@@ -1913,7 +1913,7 @@ tAtkDtk* tAtkDtk_init(int blocksize)
     tAtkDtk *a = &oops.tAtkDtkRegistry[oops.registryIndex[T_ATKDTK]++];
     
     atkdtk_init(a, blocksize, DEFATTACK, DEFRELEASE);
-    return (a);
+    return a;
     
 }
 
@@ -2026,5 +2026,5 @@ static void atkdtk_envelope(tAtkDtk *a, float *in)
     }
     
 }
-#endif //N_ATKDTCT
+#endif //N_ATKDTK
 

@@ -45,7 +45,7 @@ std::vector<std::string> cSliderNames =
 
 std::vector<std::string> cComboBoxNames =
 {
-    "Waveform"
+  
 };
 
 std::vector<std::string> cWaveformTypes =

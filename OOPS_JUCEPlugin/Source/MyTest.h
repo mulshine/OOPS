@@ -11,10 +11,17 @@
 #ifndef FM_H_INCLUDED
 #define FM_H_INCLUDED
 
-tMPoly* poly;
-tSawtooth* sawtooths[NUM_VOICES];
-tADSR* adsrs[NUM_VOICES];
+tSOLAD* sola;
+tSNAC* snac;
+tAtkDtk* atk;
+
+#define MICROBLOCK_LEN      512
+#define TOTAL_BUFFERS       4
+#define BUFSIZE             (TOTAL_BUFFERS * MICROBLOCK_LEN)
 
 
+float inBuffer[BUFSIZE];
+float outBuffer[BUFSIZE];
+float sampleBuffer[BUFSIZE];
 
 #endif  // FM_H_INCLUDED
