@@ -65,9 +65,6 @@ extern const float shaper1[SHAPER1_TABLE_SIZE];
 #define     N_POLY              1
 #define     N_STACK             2
 #define     N_MPOLY             1
-#define     N_SOLAD             1
-#define     N_SNAC              1
-#define     N_ATKDTK            1
 
 #define     DELAY_LENGTH        16000   // The maximum delay length of all Delay/DelayL/DelayA components.
                                             // Feel free to change to suit memory constraints or desired delay max length / functionality.

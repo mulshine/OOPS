@@ -14,14 +14,38 @@
 #include "..\Inc\OOPSUtilities.h"
 #include "..\Inc\OOPSWavetables.h"
 #include "..\Inc\OOPS.h"
+#include "..\Externals\d_fft_mayer.h"
 
 #else
 
 #include "../Inc/OOPSUtilities.h"
 #include "../Inc/OOPSWavetables.h"
 #include "../Inc/OOPS.h"
+#include "../Externals/d_fft_mayer.h"
+
 
 #endif
+
+float last;
+
+float peakEnvelope(float input, float timeConstant)
+{
+    float thing = -1000.0f * 64.0f * oops.invSampleRate / timeConstant;
+    float thru;
+    
+    thing = exp(thing);
+    
+    if (thing > last)   thru = thing;
+    else                thru = last;
+    
+    last = thing;
+    
+    if (input >= 1)
+    {
+        
+    }
+    return 0.0f;
+}
 
 
 #if N_COMPRESSOR
@@ -1195,3 +1219,812 @@ void tMPoly_orderedAddToStack(tMPoly* poly, uint8_t noteVal)
 }
 
 #endif //N_MPOLY
+
+#if N_SOLAD
+
+/******************************************************************************/
+/***************** static function declarations *******************************/
+/******************************************************************************/
+
+static void solad_init(tSOLAD *w);
+static inline float read_sample(tSOLAD *w, float floatindex);
+static void pitchdown(tSOLAD *w, float *out);
+static void pitchup(tSOLAD *w, float *out);
+
+/******************************************************************************/
+/***************** public access functions ************************************/
+/******************************************************************************/
+
+// init
+tSOLAD*     tSOLAD_init(void)
+{
+    tSOLAD *w = &oops.tSOLADRegistry[oops.registryIndex[T_SOLAD]++];
+
+    w->pitchfactor = 1.;
+    
+    solad_init(w);
+    
+    return(w);
+}
+
+// send one block of input samples, receive one block of output samples
+void tSOLAD_ioSamples(tSOLAD *w, float* in, float* out, int blocksize)
+{
+    int i = w->timeindex;
+    int n = w->blocksize = blocksize;
+    
+    if(!i) w->delaybuf[LOOPSIZE] = in[0];   // copy one sample for interpolation
+    while(n--) w->delaybuf[i++] = *in++;    // copy one input block to delay buffer
+    
+    if(w->pitchfactor > 1) pitchup(w, out);
+    else pitchdown(w, out);
+    
+    w->timeindex += blocksize;
+    w->timeindex &= LOOPMASK;
+}
+
+// set periodicity analysis data
+void tSOLAD_setPeriod(tSOLAD *w, float period)
+{
+    if(period > MAXPERIOD) period = MAXPERIOD;
+    if(period > MINPERIOD) w->period = period;  // ignore period when too small
+}
+
+// set pitch factor between 0.25 and 4
+void tSOLAD_setPitchFactor(tSOLAD *w, float pitchfactor)
+{
+    if(pitchfactor < 0.25) pitchfactor = 0.25;
+    else if(pitchfactor > 4.) pitchfactor = 4.;
+    w->pitchfactor = pitchfactor;
+}
+
+// force readpointer lag
+void tSOLAD_setReadLag(tSOLAD *w, float readlag)
+{
+    if(readlag < 0) readlag = 0;
+    if(readlag < w->readlag)               // do not jump backward, only forward
+    {
+        w->jump = w->readlag - readlag;
+        w->readlag = readlag;
+        w->xfadelength = readlag;
+        w->xfadevalue = 1;
+    }
+}
+
+// reset state variables
+void tSOLAD_resetState(tSOLAD *w)
+{
+    int n = LOOPSIZE + 1;
+    float *buf = w->delaybuf;
+    
+    while(n--) *buf++ = 0;
+    solad_init(w);
+}
+
+/******************************************************************************/
+/******************** private procedures **************************************/
+/******************************************************************************/
+
+/*
+ Function pitchdown() is called to read samples from the delay buffer when pitch
+ factor is between 0.25 and 1. The read pointer lags behind because of the slowed
+ down speed, and it must jump forward towards the write pointer soon as there is
+ sufficient space to jump. That is, if there is at least one period of the input
+ signal between read pointer and write pointer.  When short periods follow up on
+ long periods, the read pointer may have space to jump over more than one period
+ lenghts. Jump length must be [periodlength ^ 2] in any case.
+ 
+ A linear crossfade function joins the jump-from point with the jump-to point.
+ The crossfade must be completed before another read pointer jump is allowed.
+ Length of the crossfade function is stored as a number of samples in terms of
+ the input sample rate. This length is dynamically translated
+ to a crossfade length expressed in output reading rate, according to pitch
+ factor which can change before the crossfade is completed. Crossfade length does
+ not cover an invariable length in periods for all pitch transposition factors.
+ For pitch factors from 0.5 till 1, crossfade length is stretched in the
+ output just as much as the signal itself, as crossfade speed is set to equal
+ pitch factor. For pitch factors below 0.5, the read pointer wants to jump
+ forward before one period is read, therefore the crossfade length as expressed
+ in output periods must be shorter. Crossfade speed is set to [1 - pitchfactor]
+ for those cases. Pitch factor 0.5 is the natural switch point between crossfade
+ speeds [pitchfactor] and [1 - pitchfactor] because 0.5 == 1 - 0.5. The crossfade
+ speed modification for pitch factors below 0.5 also means that much of the
+ original signal content will be skipped.
+ */
+
+
+static void pitchdown(tSOLAD *w, float *out)
+{
+    int n = w->blocksize;
+    float refindex = (float)(w->timeindex + LOOPSIZE); // no negative values!
+    float pitchfactor = w->pitchfactor;
+    float period = w->period;
+    float readlag = w->readlag;
+    float readlagstep = 1 - pitchfactor;
+    float jump = w->jump;
+    float xfadevalue = w->xfadevalue;
+    float xfadelength = w->xfadelength;
+    float xfadespeed, xfadestep, readindex, outputsample;
+    
+    if(pitchfactor > 0.5) xfadespeed = pitchfactor;
+    else xfadespeed = 1 - pitchfactor;
+    xfadestep = xfadespeed / xfadelength;
+    
+    while(n--)
+    {
+        if(readlag > period)        // check if read pointer may jump forward...
+        {
+            if(xfadevalue <= 0)      // ...but do not interrupt crossfade
+            {
+                jump = period;                           // jump forward
+                while((jump * 2) < readlag) jump *= 2;   // use available space
+                readlag -= jump;                         // reduce read pointer lag
+                xfadevalue = 1;                          // start crossfade
+                xfadelength = period - 1;
+                xfadestep = xfadespeed / xfadelength;
+            }
+        }
+        
+        readindex = refindex - readlag;
+        outputsample = read_sample(w, readindex);
+        
+        if(xfadevalue > 0)
+        {
+            outputsample *= (1 - xfadevalue);                               // fadein
+            outputsample += read_sample(w, readindex - jump) * xfadevalue;  // fadeout
+            xfadevalue -= xfadestep;
+        }
+        
+        *out++ = outputsample;
+        refindex += 1;
+        readlag += readlagstep;
+    }
+    
+    w->jump = jump;                 // state variables
+    w->readlag = readlag;
+    w->xfadevalue = xfadevalue;
+    w->xfadelength = xfadelength;
+}
+
+
+/*
+ Function pitchup() for pitch factors above 1 is more complicated than
+ pitchdown(). The read pointer increments faster than the write pointer and a
+ backward jump must happen in time, reckoning with the crossfade region. The read
+ pointer backward jump length is always one period. In order to minimize the area
+ of signal duplicates, crossfade length is aimed at [period / pitchfactor].
+ This leads to a crossfade speed of [pitchfactor * pitchfactor].
+ 
+ Some samples for the fade out (but not all of them) must already be in the
+ buffer, otherwise we will run out of input samples before the crossfade is
+ completed. The ratio of past samples and future samples for a crossfade of any
+ length is as follows:
+ 
+ past samples: xfadelength * (1 - 1 / pitchfactor)
+ future samples: xfadelength * (1 / pitchfactor)
+ 
+ For example in the case of pitch factor 1.5 this would be:
+ 
+ past samples: xfadelength * (1 - 1 / 1.5) = xfadelength * 1 / 3
+ future samples: xfadelength * (1 / 1.5) = xfadelength * 2 / 3
+ 
+ In the case of pitch factor 4 this would be:
+ 
+ past samples: xfadelength * (1 - 1 / 4) = xfadelength * 3 / 4
+ future samples: xfadelength * (1 / 4) = xfadelength * 1 / 4
+ 
+ The read pointer lag must therefore preserve a minimum dependent on pitch
+ factor. The minimum is called 'limit' here:
+ 
+ limit = period * (pitchfactor - 1) / pitchfactor * pitchfactor
+ 
+ Components of this expression are combined to reuse them in operations, while
+ (pitchfactor - 1) is changed to (pitchfactor - 0.99) to avoid numerical
+ resolution issues for pitch factors slightly above 1:
+ 
+ xfadespeed = pitchfactor * pitchfactor
+ limitfactor = (pitchfactor - 0.99) / xfadespeed
+ limit = period * limitfactor
+ 
+ When read lag is smaller than this limit, the read pointer must preferably
+ jump backward, unless a previous crossfade is not yet completed. Crossfades must
+ preferably be completed, unless the read pointer lag becomes smaller than zero.
+ With fluctuating period lengths and pitch factors, the readpointer lag limit may
+ change from one input block to the next in such a way that the actual lag is
+ suddenly much smaller than the limit, and the intended crossfade length can not
+ be applied. Therefore the crossfade length is simply calculated from the
+ available amount of samples for all cases, like so:
+ 
+ xfadelength = readlag / limitfactor
+ 
+ For most occurrences, this will amount to a crossfade length reduced to
+ [period / pitchfactor] in the output for pitch factors above 1, while in some
+ cases it will be considerably shorter. Fortunately, an incidental aberration of
+ the intended crossfade length hardly ever creates an audible artifact. The
+ reason to specify preferred crossfade length according to pitch factor is to
+ minimize the impression of echoes without sacrificing too much of the signal
+ content. The readpointer jump length remains one period in any case.
+ 
+ Sometimes, the input signal periodicity may decrease substantially between one
+ signal block and the next. In such cases it may be possible for the read pointer
+ to jump forward and reduce latency. For every signal block, a check on this
+ possibility is done. A previous crossfade must be completed before a forward
+ jump is allowed.
+ */
+static void pitchup(tSOLAD *w, float *out)
+{
+    int n = w->blocksize;
+    float refindex = (float)(w->timeindex + LOOPSIZE); // no negative values
+    float pitchfactor = w->pitchfactor;
+    float period = w->period;
+    float readlag = w->readlag;
+    float jump = w->jump;
+    float xfadevalue = w->xfadevalue;
+    float xfadelength = w->xfadelength;
+    
+    float readlagstep = pitchfactor - 1;
+    float xfadespeed = pitchfactor * pitchfactor;
+    float xfadestep = xfadespeed / xfadelength;
+    float limitfactor = (pitchfactor - (float)0.99) / xfadespeed;
+    float limit = period * limitfactor;
+    float readindex, outputsample;
+    
+    if((readlag > (period + 2 * limit)) & (xfadevalue < 0))
+    {
+        jump = period;                                        // jump forward
+        while((jump * 2) < (readlag - 2 * limit)) jump *= 2;  // use available space
+        readlag -= jump;                                      // reduce read pointer lag
+        xfadevalue = 1;                                       // start crossfade
+        xfadelength = period - 1;
+        xfadestep = xfadespeed / xfadelength;
+    }
+    
+    while(n--)
+    {
+        if(readlag < limit)  // check if read pointer should jump backward...
+        {
+            if((xfadevalue < 0) | (readlag < 0)) // ...but try not to interrupt crossfade
+            {
+                xfadelength = readlag / limitfactor;
+                if(xfadelength < 1) xfadelength = 1;
+                xfadestep = xfadespeed / xfadelength;
+                
+                jump = -period;         // jump backward
+                readlag += period;      // increase read pointer lag
+                xfadevalue = 1;         // start crossfade
+            }
+        }
+        
+        readindex = refindex - readlag;
+        outputsample = read_sample(w, readindex);
+        
+        if(xfadevalue > 0)
+        {
+            outputsample *= (1 - xfadevalue);
+            outputsample += read_sample(w, readindex - jump) * xfadevalue;
+            xfadevalue -= xfadestep;
+        }
+        
+        *out++ = outputsample;
+        refindex += 1;
+        readlag -= readlagstep;
+    }
+    
+    w->readlag = readlag;               // state variables
+    w->jump = jump;
+    w->xfadelength = xfadelength;
+    w->xfadevalue = xfadevalue;
+}
+
+// read one sample from delay buffer, with linear interpolation
+static inline float read_sample(tSOLAD *w, float floatindex)
+{
+    int index = (int)floatindex;
+    float fraction = floatindex - (float)index;
+    float *buf = w->delaybuf;
+    index &= LOOPMASK;
+    
+    return (buf[index] + (fraction * (buf[index+1] - buf[index])));
+}
+
+static void solad_init(tSOLAD *w)
+{
+    w->timeindex = 0;
+    w->xfadevalue = -1;
+    w->period = INITPERIOD;
+    w->readlag = INITPERIOD;
+    w->blocksize = INITPERIOD;
+}
+
+
+#endif // N_SOLAD
+
+#if N_SNAC
+/******************************************************************************/
+/***************************** private procedures *****************************/
+/******************************************************************************/
+
+#define REALFFT mayer_realfft
+#define REALIFFT mayer_realifft
+
+static void snac_analyzeframe(tSNAC *s);
+static void snac_autocorrelation(tSNAC *s);
+static void snac_normalize(tSNAC *s);
+static void snac_pickpeak(tSNAC *s);
+static void snac_periodandfidelity(tSNAC *s);
+static void snac_biasbuf(tSNAC *s);
+static float snac_spectralpeak(tSNAC *s, float periodlength);
+
+
+/******************************************************************************/
+/******************************** constructor, destructor *********************/
+/******************************************************************************/
+
+
+tSNAC* tSNAC_init(int framearg, int overlaparg)
+{
+    
+    tSNAC *s = &oops.tSNACRegistry[oops.registryIndex[T_SNAC]++];
+
+    s->inputbuf = NULL;
+    s->processbuf = NULL;
+    s->spectrumbuf = NULL;
+    s->biasbuf = NULL;
+    s->biasfactor = DEFBIAS;
+    s->timeindex = 0;
+    s->periodindex = 0;
+    s->periodlength = 0.;
+    s->fidelity = 0.;
+    s->minrms = DEFMINRMS;
+    
+    tSNAC_setFramesize(s, framearg);
+    tSNAC_setOverlap(s, overlaparg);
+    
+    return(s);
+}
+/******************************************************************************/
+/************************** public access functions****************************/
+/******************************************************************************/
+
+
+void tSNAC_ioSamples(tSNAC *s, float *in, float *out, int size)
+{
+    int timeindex = s->timeindex;
+    int mask = s->framesize - 1;
+    int outindex = 0;
+    float *inputbuf = s->inputbuf;
+    float *processbuf = s->processbuf;
+    
+    // call analysis function when it is time
+    if(!(timeindex & (s->framesize / s->overlap - 1))) snac_analyzeframe(s);
+    
+    while(size--)
+    {
+        inputbuf[timeindex] = *in++;
+        out[outindex++] = processbuf[timeindex++];
+        timeindex &= mask;
+    }
+    s->timeindex = timeindex;
+    return;
+}
+
+
+// set framesize and (re)allocate buffers accordingly
+void tSNAC_setFramesize(tSNAC *s, int frame)
+{
+    int n;
+    
+    if(!((frame==128)|(frame==256)|(frame==512)|(frame==1024)|(frame==2048)))
+        frame = DEFFRAMESIZE;
+    s->framesize = n = frame;
+    
+    s->inputbuf = (float*)realloc(s->inputbuf, s->framesize * sizeof(float));
+    float *inputbuf = s->inputbuf;
+    while(n--) *inputbuf++ = 0;
+    
+    s->processbuf = (float*)realloc(s->processbuf,
+                                      s->framesize * 2 * sizeof(float));
+    
+    s->spectrumbuf = (float*)realloc(s->spectrumbuf,
+                                       s->framesize * 0.5 * sizeof(float));
+    
+    s->biasbuf = (float*)realloc(s->biasbuf, s->framesize * sizeof(float));
+    snac_biasbuf(s);
+    
+    s->timeindex = 0;
+    return;
+}
+
+
+void tSNAC_setOverlap(tSNAC *s, int lap)
+{
+    if(!((lap==1)|(lap==2)|(lap==4)|(lap==8))) lap = DEFOVERLAP;
+    s->overlap = lap;
+}
+
+
+void tSNAC_setBias(tSNAC *s, float bias)
+{
+    if(bias > 1.) bias = 1.;
+    if(bias < 0.) bias = 0.;
+    s->biasfactor = bias;
+    snac_biasbuf(s);
+    return;
+}
+
+
+void tSNAC_setMinRMS(tSNAC *s, float rms)
+{
+    if(rms > 1.) rms = 1.;
+    if(rms < 0.) rms = 0.;
+    s->minrms = rms;
+    return;
+}
+
+
+float tSNAC_getPeriod(tSNAC *s)
+{
+    return(s->periodlength);
+}
+
+
+float tSNAC_getFidelity(tSNAC *s)
+{
+    return(s->fidelity);
+}
+
+
+/******************************************************************************/
+/***************************** private procedures *****************************/
+/******************************************************************************/
+
+
+// main analysis function
+static void snac_analyzeframe(tSNAC *s)
+{
+    int n, tindex = s->timeindex;
+    int framesize = s->framesize;
+    int mask = framesize - 1;
+    float norm = 1. / sqrt((float)(framesize * 2));
+    
+    float *inputbuf = s->inputbuf;
+    float *processbuf = s->processbuf;
+    
+    // copy input to processing buffers
+    for(n=0; n<framesize; n++)
+    {
+        processbuf[n] = inputbuf[tindex] * norm;
+        tindex++;
+        tindex &= mask;
+    }
+    
+    // zeropadding
+    for(n=framesize; n<(framesize<<1); n++) processbuf[n] = 0.;
+    
+    // call analysis procedures
+    snac_autocorrelation(s);
+    snac_normalize(s);
+    snac_pickpeak(s);
+    snac_periodandfidelity(s);
+}
+
+
+static void snac_autocorrelation(tSNAC *s)
+{
+    int n, m;
+    int framesize = s->framesize;
+    int fftsize = framesize * 2;
+    float *processbuf = s->processbuf;
+    float *spectrumbuf = s->spectrumbuf;
+    
+    REALFFT(fftsize, processbuf);
+    
+    // compute power spectrum
+    processbuf[0] *= processbuf[0];                      // DC
+    processbuf[framesize] *= processbuf[framesize];      // Nyquist
+    
+    for(n=1; n<framesize; n++)
+    {
+        processbuf[n] = processbuf[n] * processbuf[n]
+        + processbuf[fftsize-n] * processbuf[fftsize-n]; // imag coefficients appear reversed
+        processbuf[fftsize-n] = 0.;
+    }
+    
+    // store power spectrum up to SR/4 for possible later use
+    for(m=0; m<(framesize>>1); m++)
+    {
+        spectrumbuf[m] = processbuf[m];
+    }
+    
+    // transform power spectrum to autocorrelation function
+    REALIFFT(fftsize, processbuf);
+    return;
+}
+
+
+static void snac_normalize(tSNAC *s)
+{
+    int framesize = s->framesize;
+    int framesizeplustimeindex = s->framesize + s->timeindex;
+    int timeindexminusone = s->timeindex - 1;
+    int n, m;
+    int mask = framesize - 1;
+    int seek = framesize * SEEK;
+    float *inputbuf = s->inputbuf;
+    float *processbuf= s->processbuf;
+    float signal1, signal2;
+    
+    // minimum RMS implemented as minimum autocorrelation at index 0
+    // functionally equivalent to white noise floor
+    float rms = s->minrms / sqrt(1.0f / (float)framesize);
+    float minrzero = rms * rms;
+    float rzero = processbuf[0];
+    if(rzero < minrzero) rzero = minrzero;
+    double normintegral = (double)rzero * 2.;
+    
+    // normalize biased autocorrelation function
+    // inputbuf is circular buffer: timeindex may be non-zero when overlap > 1
+    processbuf[0] = 1;
+    for(n=1, m=s->timeindex+1; n<seek; n++, m++)
+    {
+        signal1 = inputbuf[(n + timeindexminusone)&mask];
+        signal2 = inputbuf[(framesizeplustimeindex - n)&mask];
+        normintegral -= (double)(signal1 * signal1 + signal2 * signal2);
+        processbuf[n] /= (float)normintegral * 0.5f;
+    }
+    
+    // flush instable function tail
+    for(n = seek; n<framesize; n++) processbuf[n] = 0.;
+    return;
+}
+
+
+static void snac_periodandfidelity(tSNAC *s)
+{
+    float periodlength;
+    
+    if(s->periodindex)
+    {
+        periodlength = (float)s->periodindex +
+        interpolate3phase(s->processbuf, s->periodindex);
+        if(periodlength < 8) periodlength = snac_spectralpeak(s, periodlength);
+        s->periodlength = periodlength;
+        s->fidelity = interpolate3max(s->processbuf, s->periodindex);
+    }
+    return;
+}
+
+// select the peak which most probably represents period length
+static void snac_pickpeak(tSNAC *s)
+{
+    int n, peakindex=0;
+    int seek = s->framesize * SEEK;
+    float *processbuf= s->processbuf;
+    float maxvalue = 0.;
+    float biasedpeak;
+    float *biasbuf = s->biasbuf;
+    
+    // skip main lobe
+    for(n=1; n<seek; n++)
+    {
+        if(processbuf[n] < 0.) break;
+    }
+    
+    // find interpolated / biased maximum in SNAC function
+    // interpolation finds the 'real maximum'
+    // biasing favours the first candidate
+    for(; n<seek-1; n++)
+    {
+        if(processbuf[n] >= processbuf[n-1])
+        {
+            if(processbuf[n] > processbuf[n+1])     // we have a local peak
+            {
+                biasedpeak = interpolate3max(processbuf, n) * biasbuf[n];
+                
+                if(biasedpeak > maxvalue)
+                {
+                    maxvalue = biasedpeak;
+                    peakindex = n;
+                }
+            }
+        }
+    }
+    s->periodindex = peakindex;
+    return;
+}
+
+
+// verify period length via frequency domain (up till SR/4)
+// frequency domain is more precise than lag domain for period lengths < 8
+// argument 'periodlength' is initial estimation from autocorrelation
+static float snac_spectralpeak(tSNAC *s, float periodlength)
+{
+    if(periodlength < 4.) return periodlength;
+    
+    float max = 0.;
+    int n, startbin, stopbin, peakbin = 0;
+    int spectrumsize = s->framesize>>1;
+    float *spectrumbuf = s->spectrumbuf;
+    float peaklocation = (float)(s->framesize * 2.) / periodlength;
+    
+    startbin = (int)(peaklocation * 0.8 + 0.5);
+    if(startbin < 1) startbin = 1;
+    stopbin = (int)(peaklocation * 1.25 + 0.5);
+    if(stopbin >= spectrumsize - 1) stopbin = spectrumsize - 1;
+    
+    for(n=startbin; n<stopbin; n++)
+    {
+        if(spectrumbuf[n] >= spectrumbuf[n-1])
+        {
+            if(spectrumbuf[n] > spectrumbuf[n+1])
+            {
+                if(spectrumbuf[n] > max)
+                {
+                    max = spectrumbuf[n];
+                    peakbin = n;
+                }
+            }
+        }
+    }
+    
+    // calculate amplitudes in peak region
+    for(n=(peakbin-1); n<(peakbin+2); n++)
+    {
+        spectrumbuf[n] = sqrt(spectrumbuf[n]);
+    }
+    
+    peaklocation = (float)peakbin + interpolate3phase(spectrumbuf, peakbin);
+    periodlength = (float)(s->framesize * 2.0f) / peaklocation;
+    
+    return periodlength;
+}
+
+
+// modified logarithmic bias function
+static void snac_biasbuf(tSNAC *s)
+{
+    int n;
+    int maxperiod = (int)(s->framesize * (float)SEEK);
+    float bias = s->biasfactor / log((float)(maxperiod - 4));
+    float *biasbuf = s->biasbuf;
+    
+    for(n=0; n<5; n++)    // periods < 5 samples can't be tracked
+    {
+        biasbuf[n] = 0.;
+    }
+    
+    for(n=5; n<maxperiod; n++)
+    {
+        biasbuf[n] = 1.0f - (float)log(n - 4) * bias;
+    }
+}
+#endif // N_SNAC
+
+
+#if N_ATKDTK
+/********Private function prototypes**********/
+static void atkdtk_init(tAtkDtk *a, int blocksize, int atk, int rel);
+static void atkdtk_envelope(tAtkDtk *a, float *in);
+
+/********Constructor/Destructor***************/
+
+tAtkDtk* tAtkDtk_init(int blocksize)
+{
+    tAtkDtk *a = &oops.tAtkDtkRegistry[oops.registryIndex[T_ATKDTK]++];
+    
+    atkdtk_init(a, blocksize, DEFATTACK, DEFRELEASE);
+    return (a);
+    
+}
+
+tAtkDtk* tAtkDtk_init_expanded(int blocksize, int atk, int rel)
+{
+    tAtkDtk *a = &oops.tAtkDtkRegistry[oops.registryIndex[T_ATKDTK]++];
+    
+    atkdtk_init(a, blocksize, atk, rel);
+    return (a);
+    
+}
+
+void tAtkDtk_free(tAtkDtk *a)
+{
+    free(a);
+}
+
+/*******Public Functions***********/
+
+
+void tAtkDtk_setBlocksize(tAtkDtk *a, int size)
+{
+    
+    if(!((size==64)|(size==128)|(size==256)|(size==512)|(size==1024)|(size==2048)))
+        size = DEFBLOCKSIZE;
+    a->blocksize = size;
+    
+    return;
+    
+}
+
+void tAtkDtk_setSamplerate(tAtkDtk *a, int inRate)
+{
+    a->samplerate = inRate;
+    
+    //Reset atk and rel to recalculate coeff
+    tAtkDtk_setAtk(a, a->atk);
+    tAtkDtk_setRel(a, a->rel);
+    
+    return;
+}
+
+void tAtkDtk_setThreshold(tAtkDtk *a, float thres)
+{
+    a->threshold = thres;
+    return;
+}
+
+void tAtkDtk_setAtk(tAtkDtk *a, int inAtk)
+{
+    a->atk = inAtk;
+    a->atk_coeff = pow(0.01, 1.0/(a->atk * a->samplerate * 0.001));
+    
+    return;
+}
+
+void tAtkDtk_setRel(tAtkDtk *a, int inRel)
+{
+    a->rel = inRel;
+    a->rel_coeff = pow(0.01, 1.0/(a->rel * a->samplerate * 0.001));
+    
+    return;
+}
+
+
+int tAtkDtk_detect(tAtkDtk *a, float *in)
+{
+    int result;
+    
+    atkdtk_envelope(a, in);
+    
+    if(a->env >= a->prevAmp*2) //2 times greater = 6dB increase
+        result = 1;
+    else
+        result = 0;
+    
+    a->prevAmp = a->env;
+    
+    return result;
+    
+}
+
+/*******Private Functions**********/
+
+static void atkdtk_init(tAtkDtk *a, int blocksize, int atk, int rel)
+{
+    a->env = 0;
+    a->blocksize = blocksize;
+    a->threshold = DEFTHRESHOLD;
+    a->samplerate = DEFSAMPLERATE;
+    a->prevAmp = 0;
+    
+    a->env = 0;
+    
+    tAtkDtk_setAtk(a, atk);
+    tAtkDtk_setRel(a, rel);
+}
+
+static void atkdtk_envelope(tAtkDtk *a, float *in)
+{
+    int i = 0;
+    float tmp;
+    for(i = 0; i < a->blocksize; ++i){
+        tmp = fastabs(in[i]);
+        
+        if(tmp > a->env)
+            a->env = a->atk_coeff * (a->env - tmp) + tmp;
+        else
+            a->env = a->rel_coeff * (a->env - tmp) + tmp;
+    }
+    
+}
+#endif //N_ATKDTCT
+

@@ -25,6 +25,10 @@
 
 #define EXPONENTIAL_TABLE_SIZE 65536
 
+
+
+
+
 // dope af
 float OOPS_chebyshevT(float in, int n){
 	if (n == 0) return 1;

@@ -97,61 +97,7 @@ void        tMPoly_orderedAddToStack(tMPoly* const, uint8_t noteVal);
 void        tMPoly_pitchBend(tMPoly* const, uint8_t bend);
 
 
-/* tSOLAD : pitch shifting */
-tSOLAD*     tSOLAD_init(void);
 
-// send one block of input samples, receive one block of output samples
-void tSOLAD_ioSamples(tSOLAD *w, float* in, float* out, int blocksize);
-
-// set periodicity analysis data
-void tSOLAD_setPeriod(tSOLAD *w, float period);
-
-// set pitch factor between 0.25 and 4
-void tSOLAD_setPitchFactor(tSOLAD *w, float pitchfactor);
-
-// force readpointer lag
-void tSOLAD_setReadLag(tSOLAD *w, float readlag);
-
-// reset state variables
-void tSOLAD_resetState(tSOLAD *w);
-
-/* tSNAC: */
-tSNAC *tSNAC_init(int periodarg, int overlaparg);    // constructor
-
-void tSNAC_ioSamples(tSNAC *s, float *in, float *out, int size);
-void tSNAC_setFramesize(tSNAC *s, int frame);
-void tSNAC_setOverlap(tSNAC *s, int lap);
-void tSNAC_setBias(tSNAC *s, float bias);
-void tSNAC_setMinRMS(tSNAC *s, float rms);
-
-/*To get freq, perform SAMPLE_RATE/snac_getperiod() */
-float tSNAC_getperiod(tSNAC *s);
-float tSNAC_getfidelity(tSNAC *s);
-
-/* tAtkDtct */
-tAtkDtk* tAtkDtk_init(int blocksize);
-
-tAtkDtk* tAtkDtk_init_expanded(int blocksize, int atk, int rel);
-
-void tAtkDtk_free(tAtkDtk *a);
-
-// set expected input blocksize
-void tAtkDtk_setBlocksize(tAtkDtk *a, int size);
-
-// change atkDetector sample rate
-void tAtkDtk_setSamplerate(tAtkDtk *a, int inRate);
-
-// set attack time and coeff
-void tAtkDtk_setAtk(tAtkDtk *a, int inAtk);
-
-// set release time and coeff
-void tAtkDtk_setRel(tAtkDtk *a, int inRel);
-
-// set level above which values are identified as attacks
-void tAtkDtk_setThreshold(tAtkDtk *a, float thres);
-
-// find largest transient in input block, return index of attack
-int tAtkDtk_detect(tAtkDtk *a, float *in);
 
 #endif  // OOPSUTILITIES_H_INCLUDED
 

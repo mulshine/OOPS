@@ -620,81 +620,6 @@ typedef struct _tMPoly
     
 } tMPoly;
 
-#define LOOPSIZE 4096           // loop size must be power of two
-#define LOOPMASK (LOOPSIZE - 1)
-#define PITCHFACTORDEFAULT 1.0f
-#define INITPERIOD 64.0f
-#define MAXPERIOD (float)((LOOPSIZE - w->blocksize) * 0.8f)
-#define MINPERIOD 8.0f
-
-/* tSoladPS : pitch shifting algorithm */
-typedef struct _tSOLAD
-{
-    int timeindex;              // current reference time, write index
-    int blocksize;              // signal input / output block size
-    float pitchfactor;        // pitch factor between 0.25 and 4
-    float readlag;            // read pointer's lag behind write pointer
-    float period;             // period length in input signal
-    float jump;               // read pointer jump length and direction
-    float xfadelength;        // crossfade length expressed at input sample rate
-    float xfadevalue;         // crossfade phase and value
-    float delaybuf[LOOPSIZE+16];
-    
-    void (*sampleRateChanged)(struct _tSOLAD *self);
-} tSOLAD;
-
-#define DEFFRAMESIZE 1024           // default analysis framesize
-#define DEFOVERLAP 1                // default overlap
-#define DEFBIAS 0.2f        // default bias
-#define DEFMINRMS 0.003f   // default minimum RMS
-#define SEEK 0.85f       // seek-length as ratio of framesize
-
-typedef struct _tSNAC
-{
-    float *inputbuf;
-    float *processbuf;
-    float *spectrumbuf;
-    float *biasbuf;
-    
-    int timeindex;
-    int framesize;
-    int overlap;
-    int periodindex;
-    
-    float periodlength;
-    float fidelity;
-    float biasfactor;
-    float minrms;
-    
-    void (*sampleRateChanged)(struct _tSNAC *self);
-} tSNAC;
-
-#define DEFSAMPLERATE 44100
-#define DEFBLOCKSIZE 1024
-#define DEFTHRESHOLD 6
-#define DEFATTACK    10
-#define DEFRELEASE    10
-
-typedef struct _tAtkDtk
-{
-    float env;
-    
-    //Attack & Release times in msec
-    int atk;
-    int rel;
-    
-    //Attack & Release coefficients based on times
-    float atk_coeff;
-    float rel_coeff;
-    
-    int blocksize;
-    int samplerate;
-    
-    //RMS amplitude of previous block - used to decide if attack is present
-    float prevAmp;
-    
-    float threshold;
-} tAtkDtk;
 
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
 void     tPhasorSampleRateChanged (tPhasor *p);
@@ -722,9 +647,6 @@ void     tVocoderSampleRateChanged(tVocoder* n);
 void     t808SnareSampleRateChanged(t808Snare* n);
 void     t808HihatSampleRateChanged(t808Hihat* n);
 void     t808CowbellSampleRateChanged(t808Cowbell* n);
-
-void     tSOLADSampleRateChanged(tSOLAD* n);
-void     tSNACSampleRateChanged(tSNAC* n);
 
 typedef enum OOPSRegistryIndex
 {
@@ -765,9 +687,6 @@ typedef enum OOPSRegistryIndex
     T_808HIHAT,
     T_808COWBELL,
     T_STACK,
-    T_SOLAD,
-    T_SNAC,
-    T_ATKDTK,
     T_INDEXCNT
 }OOPSRegistryIndex;
 
@@ -911,18 +830,6 @@ typedef struct _OOPS
     
 #if N_MPOLY
     tMPoly  tMPolyRegistry     [N_MPOLY];
-#endif
-    
-#if N_SOLAD
-    tSOLAD tSOLADRegistry   [N_SOLAD];
-#endif
-    
-#if N_SNAC
-    tSNAC tSNACRegistry   [N_SNAC];
-#endif
-    
-#if N_ATKDTK
-    tAtkDtk tAtkDtkRegistry   [N_ATKDTK];
 #endif
     
 #if N_808SNARE

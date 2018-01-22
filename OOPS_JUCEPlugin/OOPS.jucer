@@ -13,7 +13,24 @@
               buildStandalone="1" enableIAA="0" cppLanguageStandard="11" companyCopyright="mrmulshine">
   <MAINGROUP id="F7Bywq" name="OOPS">
     <GROUP id="{14C5E2CD-5D51-3FD3-5677-28BECA29E95E}" name="Source">
+      <GROUP id="{29B401B7-8D07-AAD7-B6B0-EF7916164E1B}" name="pshift">
+        <FILE id="jgSQ6e" name="atkdetect.c" compile="1" resource="0" file="../../Downloads/pedal2/DSP2G/DSP2G/src/atkdetect.c"/>
+        <FILE id="war1NB" name="atkdetect.h" compile="0" resource="0" file="../../Downloads/pedal2/DSP2G/DSP2G/src/atkdetect.h"/>
+        <FILE id="fcNqm8" name="d_fft_mayer.c" compile="1" resource="0" file="../../Downloads/pedal2/DSP2G/DSP2G/src/d_fft_mayer.c"/>
+        <FILE id="pfh3LE" name="d_fft_mayer.h" compile="0" resource="0" file="../../Downloads/pedal2/DSP2G/DSP2G/src/d_fft_mayer.h"/>
+        <FILE id="gUHICB" name="interface.h" compile="0" resource="0" file="../../Downloads/pedal2/DSP2G/DSP2G/src/interface.h"/>
+        <FILE id="UkMGrj" name="snac.c" compile="1" resource="0" file="../../Downloads/pedal2/DSP2G/DSP2G/src/snac.c"/>
+        <FILE id="n7toNw" name="snac.h" compile="0" resource="0" file="../../Downloads/pedal2/DSP2G/DSP2G/src/snac.h"/>
+        <FILE id="aX0jCN" name="solad.c" compile="1" resource="0" file="../../Downloads/pedal2/DSP2G/DSP2G/src/solad.c"/>
+        <FILE id="KE9p1C" name="solad.h" compile="0" resource="0" file="../../Downloads/pedal2/DSP2G/DSP2G/src/solad.h"/>
+        <FILE id="lnVXI5" name="trigtbl.h" compile="0" resource="0" file="../../Downloads/pedal2/DSP2G/DSP2G/src/trigtbl.h"/>
+        <FILE id="N8pg3W" name="utils.h" compile="0" resource="0" file="../../Downloads/pedal2/DSP2G/DSP2G/src/utils.h"/>
+      </GROUP>
       <GROUP id="{EB72C69D-9DB4-93A0-1BB7-AECD0E7666DA}" name="OOPS">
+        <GROUP id="{335C972C-09DA-14F2-680A-9F81FF0D71F3}" name="Externals">
+          <FILE id="VPDEfk" name="d_fft_mayer.cpp" compile="1" resource="0" file="../OOPS/Externals/d_fft_mayer.cpp"/>
+          <FILE id="CW7W1M" name="d_fft_mayer.h" compile="0" resource="0" file="../OOPS/Externals/d_fft_mayer.h"/>
+        </GROUP>
         <GROUP id="{694B3407-585A-447D-9843-F414A9411E1A}" name="Inc">
           <FILE id="dpuqNA" name="OOPS.h" compile="0" resource="0" file="../OOPS/Inc/OOPS.h"/>
           <FILE id="bL0JCC" name="OOPSCore.h" compile="0" resource="0" file="../OOPS/Inc/OOPSCore.h"/>
