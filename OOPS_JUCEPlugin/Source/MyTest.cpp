@@ -31,6 +31,9 @@ void    OOPSTest_init            (float sampleRate)
     sola = tSOLAD_init();
     atk = tAtkDtk_init(64);
     
+    osc = tCycleInit();
+    tCycleSetFreq(osc, 220.0f);
+    
     tSOLAD_setPitchFactor(sola, desPitchRatio);
 }
 
@@ -109,29 +112,75 @@ static void DPS_pitchshift(float* in, float* out, int numSamples)
 float samp;
 int ind;
 
+int counter = 0;
+
+#define SINE_IN 1
+#define SNAC 1
+#define SOLAD 0
+
 void    OOPSTest_block           (float* inL, float* inR, float* outL, float* outR, int numSamples)
 {
+    float s1 = getSliderValue("s1");
+    float s2 = getSliderValue("s2");
+    float samp = 0.0f;
+    
     //Should these calls be using sample_buff?
+#if SINE_IN
+    for (int cc=0; cc < numSamples; cc++)
+    {
+        samp = tCycleTick(osc);
+        inBuffer[cur_read_block*MICROBLOCK_LEN+(2*cc)] = samp;
+        inBuffer[cur_read_block*MICROBLOCK_LEN+(2*cc)+1] = samp;
+    }
+    
+    tCycleSetFreq(osc, s1 * 8000.0f + 40.0f);
+    setSliderModelValue("s1", s1 * 8000.0f + 40.0f);
+#else
     for (int cc=0; cc < numSamples; cc++)
     {
         inBuffer[cur_read_block*MICROBLOCK_LEN+(2*cc)] = inL[cc];
         inBuffer[cur_read_block*MICROBLOCK_LEN+(2*cc)+1] = inR[cc];
     }
+#endif
     
-    /*
-    samp = inBuffer[cur_read_block*MICROBLOCK_LEN + cc] * 0.5;
-    ind = cur_write_block*MICROBLOCK_LEN + cc;
-     */
+    //DPS_pitchshift(&inBuffer[cur_read_block*MICROBLOCK_LEN], &outBuffer[cur_write_block*MICROBLOCK_LEN], MICROBLOCK_LEN);
     
-    sampleBuffer[ind] = samp;
+    // tSNAC period detection
+#if SNAC
+    tSNAC_ioSamples(snac, &inBuffer[cur_read_block*MICROBLOCK_LEN], &outBuffer[cur_write_block*MICROBLOCK_LEN], MICROBLOCK_LEN);
     
-    DPS_pitchshift(&inBuffer[cur_read_block*MICROBLOCK_LEN], &outBuffer[cur_write_block*MICROBLOCK_LEN], MICROBLOCK_LEN);
+    if (++counter >= 20)
+    {
+        counter = 0;
+        DBG("period: " + String(tSNAC_getPeriod(snac)));
+    }
+#endif
     
+    
+#if SOLAD
+    tSOLAD_setPeriod(sola, (1.0 - s1) * 200.0f);
+    setSliderModelValue("s1", (1.0 - s1) * 200.0f);
+    
+    tSOLAD_setPitchFactor(sola, s2 * 3.5f + 0.5f);
+    setSliderModelValue("s2", s2 * 3.5f + 0.5f);
+    
+    //  tSOLAD pshift works
+    tSOLAD_ioSamples(sola, &inBuffer[cur_read_block*MICROBLOCK_LEN], &outBuffer[cur_write_block*MICROBLOCK_LEN], MICROBLOCK_LEN);
+#endif
+    
+#if SINE_IN
+    for (int cc=0; cc < numSamples; cc++)
+    {
+        outL[cc] = inBuffer[cur_read_block*MICROBLOCK_LEN+(2*cc)];
+        outR[cc] = inBuffer[cur_read_block*MICROBLOCK_LEN+(2*cc)+1];
+    }
+#else
     for (int cc=0; cc < numSamples; cc++)
     {
         outL[cc] = outBuffer[cur_write_block*MICROBLOCK_LEN+(2*cc)];
         outR[cc] = outBuffer[cur_write_block*MICROBLOCK_LEN+(2*cc)+1];
     }
+#endif
     
     cur_read_block++;
     if (cur_read_block >= TOTAL_BUFFERS)
@@ -140,14 +189,6 @@ void    OOPSTest_block           (float* inL, float* inR, float* outL, float* ou
     cur_write_block++;
     if (cur_write_block >= TOTAL_BUFFERS)
         cur_write_block=0;
-
-#if 0
-    for (int i = 0; i < numSamples; i++)
-    {
-        outL[i] = inL[i];
-        outR[i] = inR[i];
-    }
-#endif
 }
 
 void    OOPSTest_controllerInput (int controller, float value)

@@ -13,6 +13,8 @@
 #define MYTEST 0
 #define FM     1
 
+
+
 std::vector<std::string> cButtonNames =  std::vector<std::string>
 {
     
@@ -20,6 +22,7 @@ std::vector<std::string> cButtonNames =  std::vector<std::string>
 
 std::vector<std::string> cSliderNames =  std::vector<std::string>
 {
+    "s1","s2"
 };
 
 std::vector<std::string> cComboBoxNames =  std::vector<std::string>

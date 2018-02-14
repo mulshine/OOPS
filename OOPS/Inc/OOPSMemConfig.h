@@ -38,8 +38,8 @@ extern const float shaper1[SHAPER1_TABLE_SIZE];
 #define     N_STIFKARP          0
 #define     N_NEURON            0
 #define     N_PHASOR            0
-#define     N_CYCLE             0
-#define     N_SAWTOOTH          10
+#define     N_CYCLE             1
+#define     N_SAWTOOTH          0
 #define     N_TRIANGLE          0
 #define     N_SQUARE            0
 #define     N_NOISE             1 + (1 * N_STIFKARP) + (1 * N_PLUCK) // StifKarp and Pluck each contain 1 Noise component.

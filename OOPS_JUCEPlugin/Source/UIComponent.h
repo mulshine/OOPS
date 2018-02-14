@@ -37,7 +37,7 @@ public:
     
     void buttonClicked (Button* b) override;
     
-    void textEditorTextChanged (TextEditor&) override;
+    void textEditorReturnKeyPressed (TextEditor& tf) override;
     
     void comboBoxChanged (ComboBox* cb) override;
     

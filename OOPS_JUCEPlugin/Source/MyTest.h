@@ -15,6 +15,8 @@ tSOLAD* sola;
 tSNAC* snac;
 tAtkDtk* atk;
 
+tCycle* osc;
+
 #define MICROBLOCK_LEN      512
 #define TOTAL_BUFFERS       4
 #define BUFSIZE             (TOTAL_BUFFERS * MICROBLOCK_LEN)
