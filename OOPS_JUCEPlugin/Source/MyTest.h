@@ -11,9 +11,8 @@
 #ifndef FM_H_INCLUDED
 #define FM_H_INCLUDED
 
-tMPoly* poly;
-tSawtooth* sawtooths[NUM_VOICES];
-tADSR* adsrs[NUM_VOICES];
+tNeuron* neuron;
+tRamp* env;
 
 
 

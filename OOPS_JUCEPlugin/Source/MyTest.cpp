@@ -11,95 +11,188 @@
 #include "OOPSTest.h"
 #include "MyTest.h"
 
-float gainPerOsc = 1.0f / NUM_VOICES;
+float gain;
 
 void    OOPSTest_init            (float sampleRate)
 {
     OOPSInit(sampleRate, &randomNumberGenerator);
 
-    poly = tMPoly_init();
-    for (int8_t i = 0; i < NUM_VOICES; i++)
-    {
-        sawtooths[i] = tSawtoothInit();
-        adsrs[i] = tADSRInit(100.0f, 200.0f, 0.0f, 200.0f);
-    }
+    neuron = tNeuronInit();
+    
+    env = tRampInit(10, 1);
+    
+    gain = 1.0f;
+    
+    setSliderModelValue("Gain", gain);
+    setSliderModelValue("K", neuron->gK);
+    setSliderModelValue("C", neuron->C);
+    setSliderModelValue("L", neuron->gL);
+    setSliderModelValue("N", neuron->gN);
+    setSliderModelValue("V1", neuron->V[0]);
+    setSliderModelValue("V2", neuron->V[1]);
+    setSliderModelValue("V3", neuron->V[2]);
+    setSliderModelValue("TimeStep", neuron->timeStep);
+
 }
 
 int count = 0;
 
 float   OOPSTest_tick            (float input)
 {
-
-    float sample = 0;
-
-    for (int8_t i = 0; i < NUM_VOICES; i++)
-    {
-        sample += tSawtoothTick(sawtooths[i]) * tADSRTick(adsrs[i]); //* poly->voices[i][1] / 127.0f
-    }
+    neuron->current = tRampTick(env);
     
-    /*
-    for (int8_t i = 0; i < NUM_VOICES; i++)
-    {
-        tMidiNote* midiNote = tPolyGetMidiNote(poly, i);
-        float velocityMod = 0;
-        if (midiNote != NO_VOICE)
-            velocityMod = midiNote->velocity / 127.0;
-        sample += velocityMod * tSawtoothTick(sawtooths[i]) / NUMBER_VOICES;
-    }
-     */
-    
-    return sample;
+    return gain * tNeuronTick(neuron);
 }
-
+float k,c,l,n,v1,v2,v3,ts,g;
 
 void    OOPSTest_block           (void)
 {
-
+    float val;
+    
+    val = getSliderValue("K");
+    if (val != k)
+    {
+        k = val;
+        neuron->gK = 128.0f * (k*2.0f - 1.0f);
+    }
+    
+    val = getSliderValue("C");
+    if (val != c)
+    {
+        c = val;
+        neuron->C = c * 2.0f + 0.01;
+    }
+    
+    val = getSliderValue("L");
+    if (val != l)
+    {
+        l = val;
+        neuron->gL = 128.0f * (l*2.0f);
+    }
+    
+    val = getSliderValue("N");
+    if (val != n)
+    {
+        n = val;
+        neuron->gN = 128.0f * (n*2.0f - 1.0f);
+    }
+    
+    val = getSliderValue("V1");
+    if (val != v1)
+    {
+        v1 = val;
+        neuron->V[0] = 128.0f * (v1*2.0f - 1.0f);
+    }
+    
+    val = getSliderValue("V2");
+    if (val != v2)
+    {
+        k = v2;
+        neuron->V[1] = 128.0f * (v2*2.0f);
+    }
+    
+    val = getSliderValue("V3");
+    if (val != v3)
+    {
+        v3 = val;
+        neuron->V[2] = 128.0f * (v3*2.0f - 1.0f);
+    }
+    
+    val = getSliderValue("TimeStep");
+    if (val != ts)
+    {
+        ts = val;
+        neuron->timeStep = 1.0f / (128.0f* ts * 2.0f + 1.0f);
+    }
+    val = getSliderValue("Gain");
+                            
+    if (val != g)
+    {
+        g= val;
+        gain = g;
+    }
+    
+    setSliderModelValue("Gain", gain);
+    setSliderModelValue("K", neuron->gK);
+    setSliderModelValue("C", neuron->C);
+    setSliderModelValue("L", neuron->gL);
+    setSliderModelValue("N", neuron->gN);
+    setSliderModelValue("V1", neuron->V[0]);
+    setSliderModelValue("V2", neuron->V[1]);
+    setSliderModelValue("V3", neuron->V[2]);
+    setSliderModelValue("TimeStep", neuron->timeStep);
+  
 }
 
-void    OOPSTest_controllerInput (int controller, float value)
+typedef enum NeuronParam
 {
+    NeuronK = 0,
+    NeuronC,
+    NeuronL,
+    NeuronN,
+    NeuronV1,
+    NeuronV2,
+    NeuronV3,
+    NeuronTimeStep,
+    NeuronCurrent,
+    NeuronParamNil
+    
+} NeuronParam;
 
+
+void    OOPSTest_controllerInput (int cnum, float cval)
+{
+    cval *= 128.0f;
+    
+    if (cnum == 1)
+    {
+        neuron->gK = cval*2.0f - 128.0f;
+    }
+    else if (cnum == 2)
+    {
+        neuron->gL = cval*2.0f;
+    }
+    else if (cnum == 3)
+    {
+        neuron->gN = cval*2.0f - 128.0f;
+    }
+    else if (cnum == 4)
+    {
+        neuron->C = (cval/128.0f) * 2.0f + 0.01;
+    }
+    else if (cnum == 5)
+    {
+        neuron->V[0] = cval*2.0f - 128.0f;
+    }
+    else if (cnum == 6)
+    {
+        neuron->V[2] = cval*2.0f - 128;
+    }
+    else if (cnum == 7)
+    {
+        neuron->timeStep = 1.0f / (cval * 2.0f + 1.0f);
+    }
+    else if (cnum == 8)
+    {
+        gain = cval / 128.0f;
+    }
 }
 
 void    OOPSTest_pitchBendInput  (int pitchBend)
 {
 
 }
-
-void    OOPSTest_noteOn          (int midiNoteNumber, float velocity)
+int lastNote;
+void    OOPSTest_noteOn          (int note, float velocity)
 {
-    tMPoly_noteOn(poly, midiNoteNumber, (int) (velocity * 127.0f));
-    tADSROn(adsrs[poly->lastVoiceToChange], velocity);
-    
-    for (int i = 0; i < NUM_VOICES; i++)
-    {
-        int note = poly->voices[i][0];
-        
-        DBG(String(note) + " " + String(poly->voices[i][1]));
-        if (poly->voices[i][1] > 0) tSawtoothSetFreq(sawtooths[i], OOPS_midiToFrequency(note));
-    }
-    /*
-    tPolyNoteOn(poly, midiNoteNumber, velocity * 127);
-    
-    for (int8_t i = 0; i < NUMBER_VOICES; i++)
-    {
-        tMidiNote* midiNote = tPolyGetMidiNote(poly, i);
-        if (midiNote != NULL)
-        {
-            tSawtoothSetFreq(sawtooths[i], OOPS_midiToFrequency(midiNote->pitch));
-            DBG("note on: " + String(midiNote->pitch));
-            DBG("note VELOCITY: " + String(midiNote->velocity));
-        }
-    }
-    */
+    tRampSetDest(env, 50.0f + note * 1.5f);
+    lastNote = note;
 }
 
 
-void    OOPSTest_noteOff         (int midiNoteNumber)
+void    OOPSTest_noteOff         (int note)
 {
-    tMPoly_noteOff(poly, midiNoteNumber);
-    tADSROff(adsrs[poly->lastVoiceToChange]);
+    if (lastNote == note) tRampSetDest(env, 0.0f);
 }
 
 
