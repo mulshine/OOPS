@@ -620,7 +620,7 @@ typedef struct _tMPoly
     
 } tMPoly;
 
-#define LOOPSIZE 4096           // loop size must be power of two
+#define LOOPSIZE (4096*2)           // loop size must be power of two
 #define LOOPMASK (LOOPSIZE - 1)
 #define PITCHFACTORDEFAULT 1.0f
 #define INITPERIOD 64.0f

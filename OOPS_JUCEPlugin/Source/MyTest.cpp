@@ -22,14 +22,14 @@ int cur_read_block = 2, cur_write_block = 0;
 float desPitchRatio = 2.0;
 /**********************************************/
 
-void    OOPSTest_init            (float sampleRate)
+void    OOPSTest_init            (float sampleRate, int samplesPerBlock)
 {
     OOPSInit(sampleRate, &randomNumberGenerator);
 
     /* Initialize devices for pitch shifting */
-    snac = tSNAC_init(MICROBLOCK_LEN/2, DEFOVERLAP);
+    snac = tSNAC_init(samplesPerBlock, DEFOVERLAP);
     sola = tSOLAD_init();
-    atk = tAtkDtk_init(64);
+    atk = tAtkDtk_init(samplesPerBlock);
     
     osc = tCycleInit();
     tCycleSetFreq(osc, 220.0f);
@@ -114,71 +114,78 @@ int ind;
 
 int counter = 0;
 
-#define SINE_IN 1
+#define SINE_IN 0
+#define SINE_OUT 0
 #define SNAC 1
-#define SOLAD 0
+#define SOLAD 1
 
 void    OOPSTest_block           (float* inL, float* inR, float* outL, float* outR, int numSamples)
 {
     float s1 = getSliderValue("s1");
     float s2 = getSliderValue("s2");
-    float samp = 0.0f;
+    float samp = 0.0f, period = 50.0f, sine_freq, sine_period;
     
-    //Should these calls be using sample_buff?
 #if SINE_IN
     for (int cc=0; cc < numSamples; cc++)
     {
         samp = tCycleTick(osc);
-        inBuffer[cur_read_block*MICROBLOCK_LEN+(2*cc)] = samp;
-        inBuffer[cur_read_block*MICROBLOCK_LEN+(2*cc)+1] = samp;
+        inBuffer[cur_read_block*numSamples+(2*cc)] = samp;
+        inBuffer[cur_read_block*numSamples+(2*cc)+1] = samp;
     }
     
-    tCycleSetFreq(osc, s1 * 8000.0f + 40.0f);
-    setSliderModelValue("s1", s1 * 8000.0f + 40.0f);
+    sine_freq = s1 * 8000.0f + 40.0f;
+    sine_period = (1 / sine_freq)  * 44100.0f;
+    tCycleSetFreq(osc, sine_freq);
+    setSliderModelValue("s1", sine_freq);
 #else
     for (int cc=0; cc < numSamples; cc++)
     {
-        inBuffer[cur_read_block*MICROBLOCK_LEN+(2*cc)] = inL[cc];
-        inBuffer[cur_read_block*MICROBLOCK_LEN+(2*cc)+1] = inR[cc];
+        inBuffer[cur_read_block*numSamples+(2*cc)] = inL[cc];
+        inBuffer[cur_read_block*numSamples+(2*cc)+1] = inR[cc];
     }
 #endif
     
-    //DPS_pitchshift(&inBuffer[cur_read_block*MICROBLOCK_LEN], &outBuffer[cur_write_block*MICROBLOCK_LEN], MICROBLOCK_LEN);
-    
+    // DPS_pitchshift(&inBuffer[cur_read_block*MICROBLOCK_LEN], &outBuffer[cur_write_block*MICROBLOCK_LEN], MICROBLOCK_LEN);
     // tSNAC period detection
 #if SNAC
-    tSNAC_ioSamples(snac, &inBuffer[cur_read_block*MICROBLOCK_LEN], &outBuffer[cur_write_block*MICROBLOCK_LEN], MICROBLOCK_LEN);
-    
-    if (++counter >= 20)
+    tSNAC_ioSamples(snac, &inBuffer[cur_read_block*numSamples], &outBuffer[cur_write_block*numSamples], 2*numSamples);
+
+    period = tSNAC_getPeriod(snac);
+    if (++counter >= 50)
     {
         counter = 0;
-        DBG("period: " + String(tSNAC_getPeriod(snac)));
+        DBG("expected period: " + String(sine_period));
+        DBG("snac     period: " + String(period));
+        DBG("pitch    factor: " + String(s2 * 3.5f + 0.5f));
     }
 #endif
     
     
 #if SOLAD
-    tSOLAD_setPeriod(sola, (1.0 - s1) * 200.0f);
-    setSliderModelValue("s1", (1.0 - s1) * 200.0f);
+    tSOLAD_setPeriod(sola, period);
     
-    tSOLAD_setPitchFactor(sola, s2 * 3.5f + 0.5f);
+    tSOLAD_setPitchFactor(sola, 2.0f);
     setSliderModelValue("s2", s2 * 3.5f + 0.5f);
     
     //  tSOLAD pshift works
-    tSOLAD_ioSamples(sola, &inBuffer[cur_read_block*MICROBLOCK_LEN], &outBuffer[cur_write_block*MICROBLOCK_LEN], MICROBLOCK_LEN);
+    tSOLAD_ioSamples(sola, &inBuffer[cur_read_block*numSamples], &outBuffer[cur_write_block*numSamples], 2*numSamples);
 #endif
     
-#if SINE_IN
+#if SINE_OUT
     for (int cc=0; cc < numSamples; cc++)
     {
-        outL[cc] = inBuffer[cur_read_block*MICROBLOCK_LEN+(2*cc)];
-        outR[cc] = inBuffer[cur_read_block*MICROBLOCK_LEN+(2*cc)+1];
+        outL[cc] = inBuffer[cur_read_block*numSamples+(2*cc)];
+        outR[cc] = inBuffer[cur_read_block*numSamples+(2*cc)+1];
     }
 #else
     for (int cc=0; cc < numSamples; cc++)
     {
+        /*
         outL[cc] = outBuffer[cur_write_block*MICROBLOCK_LEN+(2*cc)];
         outR[cc] = outBuffer[cur_write_block*MICROBLOCK_LEN+(2*cc)+1];
+         */
+        outL[cc] = outBuffer[cur_write_block*numSamples+(2*cc)];
+        outR[cc] = outBuffer[cur_write_block*numSamples+(2*cc)+1];
     }
 #endif
     

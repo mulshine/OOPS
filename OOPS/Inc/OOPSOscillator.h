@@ -51,6 +51,31 @@ float       tSawtoothTick      (tSawtooth*  const);
 // Set frequency in Hz.
 int         tSawtoothSetFreq   (tSawtooth*  const, float freq);
 
+class oSawtooth : public tSawtooth
+{
+public:
+    oSawtooth(void)
+    {
+        
+    }
+    
+    ~oSawtooth(void)
+    {
+        
+    }
+    float tick (void)
+    {
+        return tSawtoothTick(this);
+    }
+    
+    void setFreq(float freq)
+    {
+        tSawtoothSetFreq(this, freq);
+    }
+    
+private:
+};
+
 
 /* tTriangle: Anti-aliased Triangle waveform using wavetable interpolation. Wavetables constructed from sine components. */
 tTriangle*  tTriangleInit      (void);

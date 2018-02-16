@@ -19,7 +19,7 @@
 
 // OOPSTest API
 float   OOPSTest_tick            (float input);
-void    OOPSTest_init            (float sampleRate);
+void    OOPSTest_init            (float sampleRate, int samplesPerBlock);
 void    OOPSTest_end             (void);
 void    OOPSTest_block           (float* inL, float* inR, float* outL, float* outR, int numSamples);
 

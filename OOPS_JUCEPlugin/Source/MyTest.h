@@ -17,13 +17,12 @@ tAtkDtk* atk;
 
 tCycle* osc;
 
-#define MICROBLOCK_LEN      512
-#define TOTAL_BUFFERS       4
-#define BUFSIZE             (TOTAL_BUFFERS * MICROBLOCK_LEN)
+#define MICROBLOCK_LEN 512
+#define TOTAL_BUFFERS 4
 
 
-float inBuffer[BUFSIZE];
-float outBuffer[BUFSIZE];
-float sampleBuffer[BUFSIZE];
+float inBuffer[9182];
+float outBuffer[9182];
+float sampleBuffer[9182];
 
 #endif  // FM_H_INCLUDED
