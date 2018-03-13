@@ -6,12 +6,14 @@
     Author:  Michael R Mulshine
 
   ==============================================================================
-*/
+ */
 
 #include "OOPSLink.h"
 
-#define MYTEST 0
-#define FM     1
+std::vector<std::vector<int>> cSliderRanges =
+{
+    
+};
 
 std::vector<std::string> cButtonNames =  std::vector<std::string>
 {
@@ -20,7 +22,7 @@ std::vector<std::string> cButtonNames =  std::vector<std::string>
 
 std::vector<std::string> cSliderNames =  std::vector<std::string>
 {
-    "K","C","L","N","V1","V2","V3","TimeStep","Gain"
+    "oops"
 };
 
 std::vector<std::string> cComboBoxNames =  std::vector<std::string>

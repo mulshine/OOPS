@@ -35,7 +35,6 @@ UIComponent::UIComponent()
         textFields.set(i, new TextEditor());
         textFields[i]->addListener(this);
         textFields[i]->setName(cSliderNames[i]);
-        textFields[i]->setEnabled(false);
         addAndMakeVisible(textFields[i]);
     }
     
@@ -74,12 +73,20 @@ UIComponent::UIComponent()
 void UIComponent::timerCallback(void)
 {
     for (int i = 0; i < cSliderNames.size(); i++)
-        textFields[i]->setText(String(cSliderModelValues[i]), false);
+    {
+        if (!textFields[i]->isTextInputActive()) textFields[i]->setText(String(cSliderModelValues[i]), false);
+    }
 }
 
-void UIComponent::textEditorTextChanged (TextEditor& tf)
+void UIComponent::textEditorReturnKeyPressed (TextEditor& tf)
 {
-    
+    for (auto slider : sliders)
+    {
+        if (slider->getName() == tf.getName())
+        {
+            slider->setValue(tf.getText().getDoubleValue());
+        }
+    }
 }
 
 UIComponent::~UIComponent()

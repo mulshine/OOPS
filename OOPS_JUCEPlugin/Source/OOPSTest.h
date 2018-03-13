@@ -15,8 +15,6 @@
 
 #include "../../OOPS/Inc/OOPS.h"
 
-#include "Yin.h"
-
 // OOPSTest API
 float   OOPSTest_tick            (float input);
 void    OOPSTest_init            (float sampleRate);
@@ -25,5 +23,8 @@ void    OOPSTest_block           (void);
 
 void    OOPSTest_noteOn          (int midiNoteNumber, float velocity);
 void    OOPSTest_noteOff         (int midiNoteNumber);
+
+void    OOPSTest_controllerInput (int cnum, float cval);
+void    OOPSTest_pitchBendInput  (int pitchBend);
 
 #endif  // OOPSTEST1_H_INCLUDED

@@ -11,8 +11,17 @@
 #ifndef FM_H_INCLUDED
 #define FM_H_INCLUDED
 
+tCompressor* compressor;
+
+#define NUM_RAMP 7
+
 tNeuron* neuron;
 tRamp* env;
+tRamp* tsr;
+tRamp* ramp[NUM_RAMP];
+
+tCycle* osc;
+
 
 
 

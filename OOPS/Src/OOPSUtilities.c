@@ -592,7 +592,7 @@ int     tEnvelopeFollowerAttackThresh(tEnvelopeFollower* const ef, float attackT
 /* Ramp */
 tRamp*    tRampInit(float time, int samples_per_tick)
 {
-    tRamp* ramp = &oops.tRampRegistry[oops.registryIndex[T_RAMP]];
+    tRamp* ramp = &oops.tRampRegistry[oops.registryIndex[T_RAMP]++];
     
     ramp->inv_sr_ms = 1.0f/(oops.sampleRate*0.001f);
 		ramp->minimum_time = ramp->inv_sr_ms * samples_per_tick;

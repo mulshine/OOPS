@@ -31,14 +31,14 @@ extern const float shaper1[SHAPER1_TABLE_SIZE];
 #define     N_808SNARE          0
 #define     N_808HIHAT          0
 #define     N_808COWBELL        0
-#define     N_COMPRESSOR        0
+#define     N_COMPRESSOR        1
 #define     N_PRCREV            0
 #define     N_NREV              0
 #define     N_PLUCK             0
 #define     N_STIFKARP          0
 #define     N_NEURON            1
 #define     N_PHASOR            0
-#define     N_CYCLE             0
+#define     N_CYCLE             1
 #define     N_SAWTOOTH          0
 #define     N_TRIANGLE          0
 #define     N_SQUARE            0
@@ -58,7 +58,7 @@ extern const float shaper1[SHAPER1_TABLE_SIZE];
 #define     N_DELAYA            0 + (1 * N_PRCREV) + (1 * N_STIFKARP)
 #define     N_ENVELOPE          0
 #define     N_ADSR              0
-#define     N_RAMP              1
+#define     N_RAMP              12
 #define     N_ENVELOPEFOLLOW    0
 #define     N_VOCODER           0
 #define     N_TALKBOX           0

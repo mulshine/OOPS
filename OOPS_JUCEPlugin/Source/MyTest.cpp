@@ -11,6 +11,8 @@
 #include "OOPSTest.h"
 #include "MyTest.h"
 
+#define USE_RAMP 0
+
 float gain;
 
 void    OOPSTest_init            (float sampleRate)
@@ -20,18 +22,24 @@ void    OOPSTest_init            (float sampleRate)
     neuron = tNeuronInit();
     
     env = tRampInit(10, 1);
+    //ramp[3] = tRampInit(10, 1);
+    //ramp[6] = tRampInit(10, 1);
     
     gain = 1.0f;
     
-    setSliderModelValue("Gain", gain);
-    setSliderModelValue("K", neuron->gK);
-    setSliderModelValue("C", neuron->C);
-    setSliderModelValue("L", neuron->gL);
-    setSliderModelValue("N", neuron->gN);
-    setSliderModelValue("V1", neuron->V[0]);
-    setSliderModelValue("V2", neuron->V[1]);
-    setSliderModelValue("V3", neuron->V[2]);
-    setSliderModelValue("TimeStep", neuron->timeStep);
+
+    for (int i = 0; i < NUM_RAMP; i++)
+    {
+        ramp[i] = tRampInit(10, 1);
+    }
+
+    compressor = tCompressorInit();
+    compressor->M = 1.0f;
+    compressor->T = 0.0f;
+    compressor->tauAttack = 25.0f;
+    compressor->tauRelease = 250.0f;
+    compressor->R = 12.0f;
+    compressor->W = 6.0f;
 
 }
 
@@ -39,89 +47,48 @@ int count = 0;
 
 float   OOPSTest_tick            (float input)
 {
-    neuron->current = tRampTick(env);
+    float sample = 0.0f;
     
-    return gain * tNeuronTick(neuron);
+    neuron->current = tRampTick(env);
+    //tNeuronSetTimeStep(neuron, tRampTick(ramp[6]));
+    //tNeuronSetV3(neuron, tRampTick(ramp[5]));
+    //tNeuronSetV1(neuron, tRampTick(ramp[4]));
+    //tNeuronSetC(neuron, tRampTick(ramp[3]));
+    //tNeuronSetN(neuron, tRampTick(ramp[2]));
+    //tNeuronSetL(neuron, tRampTick(ramp[1]));
+    //tNeuronSetK(neuron, tRampTick(ramp[0]));
+    
+#if USE_RAMP
+    neuron->gK = tRampTick(ramp[0]);
+    neuron->gL = tRampTick(ramp[1]);
+    neuron->gN = tRampTick(ramp[2]);
+    tNeuronSetC(neuron, tRampTick(ramp[3]));
+    neuron->V[0] = tRampTick(ramp[4]);
+    neuron->V[2] = tRampTick(ramp[5]);
+    neuron->timeStep = tRampTick(ramp[6]);
+    
+    
+    if (++count == 50)
+    {
+        count = 0;
+        
+        for (int i = 0; i < NUM_RAMP; i++)
+        {
+            DBG("r"+String(i+1)+" = "+String(tRampSample(ramp[i])));
+        }
+    }
+#endif
+
+    sample = tCompressorTick(compressor, tNeuronTick(neuron));
+    //sample = tNeuronTick(neuron);
+    
+    return sample;
 }
 float k,c,l,n,v1,v2,v3,ts,g;
 
 void    OOPSTest_block           (void)
 {
-    float val;
-    
-    val = getSliderValue("K");
-    if (val != k)
-    {
-        k = val;
-        neuron->gK = 128.0f * (k*2.0f - 1.0f);
-    }
-    
-    val = getSliderValue("C");
-    if (val != c)
-    {
-        c = val;
-        neuron->C = c * 2.0f + 0.01;
-    }
-    
-    val = getSliderValue("L");
-    if (val != l)
-    {
-        l = val;
-        neuron->gL = 128.0f * (l*2.0f);
-    }
-    
-    val = getSliderValue("N");
-    if (val != n)
-    {
-        n = val;
-        neuron->gN = 128.0f * (n*2.0f - 1.0f);
-    }
-    
-    val = getSliderValue("V1");
-    if (val != v1)
-    {
-        v1 = val;
-        neuron->V[0] = 128.0f * (v1*2.0f - 1.0f);
-    }
-    
-    val = getSliderValue("V2");
-    if (val != v2)
-    {
-        k = v2;
-        neuron->V[1] = 128.0f * (v2*2.0f);
-    }
-    
-    val = getSliderValue("V3");
-    if (val != v3)
-    {
-        v3 = val;
-        neuron->V[2] = 128.0f * (v3*2.0f - 1.0f);
-    }
-    
-    val = getSliderValue("TimeStep");
-    if (val != ts)
-    {
-        ts = val;
-        neuron->timeStep = 1.0f / (128.0f* ts * 2.0f + 1.0f);
-    }
-    val = getSliderValue("Gain");
-                            
-    if (val != g)
-    {
-        g= val;
-        gain = g;
-    }
-    
-    setSliderModelValue("Gain", gain);
-    setSliderModelValue("K", neuron->gK);
-    setSliderModelValue("C", neuron->C);
-    setSliderModelValue("L", neuron->gL);
-    setSliderModelValue("N", neuron->gN);
-    setSliderModelValue("V1", neuron->V[0]);
-    setSliderModelValue("V2", neuron->V[1]);
-    setSliderModelValue("V3", neuron->V[2]);
-    setSliderModelValue("TimeStep", neuron->timeStep);
-  
+
 }
 
 typedef enum NeuronParam
@@ -142,50 +109,66 @@ typedef enum NeuronParam
 
 void    OOPSTest_controllerInput (int cnum, float cval)
 {
+    //DBG("cnum: " + String(cnum) + " val: " + String(cval));
+    float in = cval;
     cval *= 128.0f;
-    
+
     if (cnum == 1)
     {
-        neuron->gK = cval*2.0f - 128.0f;
+        //tNeuronSetK(neuron, 70.0f + in * 50.0f);
+        //tRampSetDest(ramp[0], cval*2.0f);
     }
     else if (cnum == 2)
     {
-        neuron->gL = cval*2.0f;
+        tNeuronSetL(neuron, -in);
+        //tRampSetDest(ramp[1], cval*2.0f);
     }
     else if (cnum == 3)
     {
-        neuron->gN = cval*2.0f - 128.0f;
+        tNeuronSetN(neuron, 128.0f + cval * 3.0f);
+        //tRampSetDest(ramp[2], cval*2.0f - 128.0f);
     }
     else if (cnum == 4)
     {
-        neuron->C = (cval/128.0f) * 2.0f + 0.01;
+        //tRampSetDest(ramp[3], (cval/128.0f) * 2.0f + 0.01);
+        tNeuronSetC(neuron, in * 2.0f + 0.01);
     }
     else if (cnum == 5)
     {
-        neuron->V[0] = cval*2.0f - 128.0f;
+        tNeuronSetV1(neuron, cval*2.0f - 128.0f);
+        //tRampSetDest(ramp[4], cval*2.0f - 128.0f);
     }
     else if (cnum == 6)
     {
-        neuron->V[2] = cval*2.0f - 128;
+        tNeuronSetV3(neuron, cval*2.0f - 128.0f);
+        //tRampSetDest(ramp[5], cval*2.0f - 128.0f);
     }
     else if (cnum == 7)
     {
-        neuron->timeStep = 1.0f / (cval * 2.0f + 1.0f);
+        tNeuronSetTimeStep(neuron, 1.0f / (cval * 2.0f + 1.0f));
+        //tCycleSetFreq(osc, 10.0f + cval * 5.0f);
+        //tRampSetDest(ramp[6], 1.0f / (cval * 2.0f + 1.0f));
     }
     else if (cnum == 8)
     {
-        gain = cval / 128.0f;
+        gain = 1.0f;
     }
+
+    
+    
 }
 
 void    OOPSTest_pitchBendInput  (int pitchBend)
 {
-
+    DBG("pitch bend: " + String(pitchBend));
 }
+
 int lastNote;
+
 void    OOPSTest_noteOn          (int note, float velocity)
 {
     tRampSetDest(env, 50.0f + note * 1.5f);
+    DBG("note on: " + String(note));
     lastNote = note;
 }
 
@@ -199,5 +182,5 @@ void    OOPSTest_noteOff         (int note)
 
 void    OOPSTest_end             (void)
 {
-
+    // it never ends
 }

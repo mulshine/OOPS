@@ -81,9 +81,13 @@ void OopsAudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuffer& mi
         {
             OOPSTest_noteOff(noteNumber);
         }
-        else
+        else if (m.isController())
         {
-            
+            OOPSTest_controllerInput(m.getControllerNumber(), m.getControllerValue() / 128.0f);
+        }
+        else if (m.isPitchWheel())
+        {
+            OOPSTest_pitchBendInput(m.getPitchWheelValue());
         }
     }
     
