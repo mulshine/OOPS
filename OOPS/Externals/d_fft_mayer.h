@@ -19,7 +19,4 @@ void mayer_ifft(int n, REAL *real, REAL *imag);
 void mayer_realfft(int n, REAL *real);
 void mayer_realifft(int n, REAL *real);
 
-
-
-
 #endif /* D_FFT_MAYER_H_ */

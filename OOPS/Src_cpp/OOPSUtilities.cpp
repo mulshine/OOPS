@@ -26,27 +26,149 @@
 
 #endif
 
-float last;
+#define LOGTEN 2.302585092994
 
-float peakEnvelope(float input, float timeConstant)
+float mtof(float f)
 {
-    float thing = -1000.0f * 64.0f * oops.invSampleRate / timeConstant;
-    float thru;
-    
-    thing = exp(thing);
-    
-    if (thing > last)   thru = thing;
-    else                thru = last;
-    
-    last = thing;
-    
-    if (input >= 1)
-    {
-        
-    }
-    return 0.0f;
+    if (f <= -1500.0f) return(0);
+    else if (f > 1499.0f) return(mtof(1499.0f));
+    else return (8.17579891564f * exp(0.0577622650f * f));
 }
 
+float ftom(float f)
+{
+    return (f > 0 ? 17.3123405046f * log(.12231220585f * f) : -1500.0f);
+}
+
+float powtodb(float f)
+{
+    if (f <= 0) return (0);
+    else
+    {
+        float val = 100 + 10.f/LOGTEN * log(f);
+        return (val < 0 ? 0 : val);
+    }
+}
+
+float rmstodb(float f)
+{
+    if (f <= 0) return (0);
+    else
+    {
+        float val = 100 + 20.f/LOGTEN * log(f);
+        return (val < 0 ? 0 : val);
+    }
+}
+
+float dbtopow(float f)
+{
+    if (f <= 0)
+        return(0);
+    else
+    {
+        if (f > 870.0f)
+            f = 870.0f;
+        return (exp((LOGTEN * 0.1f) * (f-100.0f)));
+    }
+}
+
+float dbtorms(float f)
+{
+    if (f <= 0)
+        return(0);
+    else
+    {
+        if (f > 485.0f)
+            f = 485.0f;
+    }
+    return (exp((LOGTEN * 0.05f) * (f-100.0f)));
+}
+#if N_ENV
+
+/* ---------------- env~ - simple envelope follower. ----------------- */
+tEnv* tEnvInit(int ws, int hs)
+{
+    tEnv* x = &oops.tEnvRegistry[oops.registryIndex[T_ENV]++];
+    
+    int period = hs, npoints = ws;
+    
+    int i;
+    
+    if (npoints < 1) npoints = 1024;
+    if (period < 1) period = npoints/2;
+    if (period < npoints / MAXOVERLAP + 1)
+        period = npoints / MAXOVERLAP + 1;
+
+    x->x_npoints = npoints;
+    x->x_phase = 0;
+    x->x_period = period;
+    
+    x->windowSize = npoints;
+    x->hopSize = period;
+    
+    for (i = 0; i < MAXOVERLAP; i++) x->x_sumbuf[i] = 0;
+    for (i = 0; i < npoints; i++)
+        x->buf[i] = (1.0f - cos((2 * 3.14159f * i) / npoints))/npoints;
+    for (; i < npoints+INITVSTAKEN; i++) x->buf[i] = 0;
+    
+    x->x_f = 0;
+    
+    x->x_allocforvs = INITVSTAKEN;
+    
+    // ~ ~ ~ dsp ~ ~ ~
+    if (x->x_period % oops.blockSize)
+    {
+        x->x_realperiod = x->x_period + oops.blockSize - (x->x_period % oops.blockSize);
+    }
+    else
+    {
+        x->x_realperiod = x->x_period;
+    }
+    // ~ ~ ~ ~ ~ ~ ~ ~
+    
+    return (x);
+}
+
+float tEnvTick (tEnv* x)
+{
+    return powtodb(x->x_result);
+}
+
+void tEnvProcessBlock(tEnv* x, float* in)
+{
+    int n = oops.blockSize;
+    
+    int count;
+    t_sample *sump;
+    in += n;
+    for (count = x->x_phase, sump = x->x_sumbuf;
+         count < x->x_npoints; count += x->x_realperiod, sump++)
+    {
+        t_sample *hp = x->buf + count;
+        t_sample *fp = in;
+        t_sample sum = *sump;
+        int i;
+        
+        for (i = 0; i < n; i++)
+        {
+            fp--;
+            sum += *hp++ * (*fp * *fp);
+        }
+        *sump = sum;
+    }
+    sump[0] = 0;
+    x->x_phase -= n;
+    if (x->x_phase < 0)
+    {
+        x->x_result = x->x_sumbuf[0];
+        for (count = x->x_realperiod, sump = x->x_sumbuf;
+             count < x->x_npoints; count += x->x_realperiod, sump++)
+            sump[0] = sump[1];
+        sump[0] = 0;
+        x->x_phase = x->x_realperiod - n;
+    }
+}
+#endif // N_ENV
 
 #if N_COMPRESSOR
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ Compressor ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //

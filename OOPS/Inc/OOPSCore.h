@@ -696,6 +696,24 @@ typedef struct _tAtkDtk
     float threshold;
 } tAtkDtk;
 
+#define MAXOVERLAP 32
+#define INITVSTAKEN 64
+
+typedef struct tEnv
+{
+    float buf[5000];
+    int x_phase;                    /* number of points since last output */
+    int x_period;                   /* requested period of output */
+    int x_realperiod;               /* period rounded up to vecsize multiple */
+    int x_npoints;                  /* analysis window size in samples */
+    float x_result;                 /* result to output */
+    float x_sumbuf[MAXOVERLAP];     /* summing buffer */
+    float x_f;
+    int windowSize, hopSize;
+    int x_allocforvs;               /* extra buffer for DSP vector size */
+} tEnv;
+
+
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
 void     tPhasorSampleRateChanged (tPhasor *p);
 void     tCycleSampleRateChanged (tCycle *c);
@@ -768,12 +786,14 @@ typedef enum OOPSRegistryIndex
     T_SOLAD,
     T_SNAC,
     T_ATKDTK,
+    T_ENV,
     T_INDEXCNT
 }OOPSRegistryIndex;
 
 typedef struct _OOPS
 {
     float sampleRate, invSampleRate;
+    int blockSize;
     
     float   (*random)(void);
     
@@ -905,28 +925,28 @@ typedef struct _OOPS
 #endif
 
 #if N_POLY
-    tPoly  tPolyRegistry     [N_POLY];
+    tPoly               tPolyRegistry     [N_POLY];
 #endif
     
     
 #if N_MPOLY
-    tMPoly  tMPolyRegistry     [N_MPOLY];
+    tMPoly              tMPolyRegistry     [N_MPOLY];
 #endif
     
 #if N_SOLAD
-    tSOLAD tSOLADRegistry   [N_SOLAD];
+    tSOLAD              tSOLADRegistry   [N_SOLAD];
 #endif
     
 #if N_SNAC
-    tSNAC tSNACRegistry   [N_SNAC];
+    tSNAC               tSNACRegistry   [N_SNAC];
 #endif
     
 #if N_ATKDTK
-    tAtkDtk tAtkDtkRegistry   [N_ATKDTK];
+    tAtkDtk            tAtkDtkRegistry   [N_ATKDTK];
 #endif
     
 #if N_808SNARE
-    t808Snare        t808SnareRegistry      [N_808SNARE];
+    t808Snare           t808SnareRegistry      [N_808SNARE];
 #endif
     
 #if N_808HIHAT
@@ -939,6 +959,10 @@ typedef struct _OOPS
     
 #if N_STACK
     tStack            tStackRegistry      [N_STACK];
+#endif
+    
+#if N_ENV
+    tEnv               tEnvRegistry[N_ENV];
 #endif
     
     

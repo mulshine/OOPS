@@ -13,9 +13,14 @@
 
 tSOLAD* sola;
 tSNAC* snac;
-tAtkDtk* atk;
+
+tEnv* env;
+
+tHighpass* hp;
 
 tCycle* osc;
+
+
 
 #define MICROBLOCK_LEN 512
 #define TOTAL_BUFFERS 4
@@ -23,6 +28,8 @@ tCycle* osc;
 
 float inBuffer[9182];
 float outBuffer[9182];
+float monoBuffer[9182];
+
 float sampleBuffer[9182];
 
 #endif  // FM_H_INCLUDED

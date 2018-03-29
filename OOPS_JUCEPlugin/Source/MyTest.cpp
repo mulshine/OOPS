@@ -20,94 +20,77 @@ float solad_out_left[MICROBLOCK_LEN/2] = {0};
 int cur_read_block = 2, cur_write_block = 0;
 
 float desPitchRatio = 2.0;
+
+int hopSize = 64, windowSize = 64;
+float max, timeConstant = 100, envout, deltamax, radius;
 /**********************************************/
+
+static void setTimeConstant(float tc)
+{
+    timeConstant = tc;
+    radius = exp(-1000.0f * hopSize * oops.invSampleRate / timeConstant);
+}
 
 void    OOPSTest_init            (float sampleRate, int samplesPerBlock)
 {
-    OOPSInit(sampleRate, &randomNumberGenerator);
+    OOPSInit(sampleRate, samplesPerBlock, &randomNumberGenerator);
 
     /* Initialize devices for pitch shifting */
     snac = tSNAC_init(samplesPerBlock, DEFOVERLAP);
     sola = tSOLAD_init();
-    atk = tAtkDtk_init(samplesPerBlock);
+    env = tEnvInit(windowSize, hopSize);
     
-    osc = tCycleInit();
-    tCycleSetFreq(osc, 220.0f);
+    hp = tHighpassInit(40.0f);
     
     tSOLAD_setPitchFactor(sola, desPitchRatio);
+    
+    setTimeConstant(timeConstant);
+}
+
+
+
+float lastmax;
+int fba = 20;
+void attackDetect(void)
+{
+    envout = tEnvTick(env);
+
+    if (envout >= 1.0f)
+    {
+        lastmax = max;
+        if (envout > max)
+        {
+            max = envout;
+        }
+        else
+        {
+            deltamax = envout - max;
+            max = max * radius;
+        }
+        deltamax = max - lastmax;
+    }
+    
+    fba = fba ? (fba-1) : 0;
+    
+    if (fba == 0 && (max > 60 && deltamax > 6))
+    {
+        DBG("attack");
+        fba = 5;
+        tSOLAD_setReadLag(sola, oops.blockSize);
+    }
+    
 }
 
 int count = 0;
 
 float   OOPSTest_tick            (float input)
 {
-
     float sample = 0;
-
+    
     return sample;
 }
 
 #define TEST_PS 1
-
-static void DPS_pitchshift(float* in, float* out, int numSamples)
-{
-    int cc, i = 0;
-    int atk_hit = 0;
-    float req_readlag = 0;
-    
-    // first separate channels
-    for(cc=0; cc < MICROBLOCK_LEN; cc+=2){
-        left_samples[cc/2] = (int16_t)in[cc];
-    }
-    
-    for(cc=0; cc < MICROBLOCK_LEN; cc+=2){
-        right_samples[cc/2+1] = (int16_t)in[cc];
-    }
-    
-    tSNAC_ioSamples(snac, left_samples, null_buffer, MICROBLOCK_LEN/2);
-    
-    // process left channel
-    tSOLAD_setPeriod(sola, tSNAC_getPeriod(snac));
-    
-    //Attack detection - find where in 1024 attack occurs
-    while(atk_hit != 1 && i < 16){
-        atk_hit = tAtkDtk_detect(atk, &left_samples[i*64]);
-        ++i;
-    }
-    
-    //print attack to determine if attack detector is working (can be commented out if not required)
-    printf("Attack at: %d\r\n", i*64);
-    
-    // i<16 indicates there was an attack in the input buffer
-    if(i < 16){
-        req_readlag = i*64; //Try to shift readlag pointer back 128 samples from where attack was detected
-        tSOLAD_setReadLag(sola, req_readlag);
-    }
-    
-    for (cc=0; cc < MICROBLOCK_LEN; cc+=2)
-    {
-        //int16_t in_datum=(int16_t)solad_out_left[cc/2];
-        int16_t in_datum = (int16_t)left_samples[cc/2];
-        int out_datum = in_datum;
-        
-        
-        out[cc]= (uint16_t)out_datum;
-    }
-    
-    // now the right channel
-    tSOLAD_setPitchFactor(sola, 2.0f);
-    tSOLAD_ioSamples(sola, left_samples, solad_out_right, MICROBLOCK_LEN/2);
-    
-    for (cc=1; cc < MICROBLOCK_LEN; cc+=2)
-    {
-        int16_t in_datum=(int16_t)solad_out_right[(cc-1)/2]; //To output solad pitch shifted output
-        //int16_t in_datum = (int16_t)right_samples[(cc-1)/2]; //To ignore solad
-        //int16_t in_datum = 0; //To output silence
-        
-        int out_datum= in_datum;
-        out[cc]= (uint16_t)out_datum;
-    }
-}
 
 float samp;
 int ind;
@@ -123,40 +106,27 @@ void    OOPSTest_block           (float* inL, float* inR, float* outL, float* ou
 {
     float s1 = getSliderValue("s1");
     float s2 = getSliderValue("s2");
-    float samp = 0.0f, period = 50.0f, sine_freq, sine_period;
-    
-#if SINE_IN
+    float  period;
+
     for (int cc=0; cc < numSamples; cc++)
     {
-        samp = tCycleTick(osc);
-        inBuffer[cur_read_block*numSamples+(2*cc)] = samp;
-        inBuffer[cur_read_block*numSamples+(2*cc)+1] = samp;
+        inBuffer[cur_read_block*numSamples+cc] = inL[cc];
     }
     
-    sine_freq = s1 * 8000.0f + 40.0f;
-    sine_period = (1 / sine_freq)  * 44100.0f;
-    tCycleSetFreq(osc, sine_freq);
-    setSliderModelValue("s1", sine_freq);
-#else
-    for (int cc=0; cc < numSamples; cc++)
-    {
-        inBuffer[cur_read_block*numSamples+(2*cc)] = inL[cc];
-        inBuffer[cur_read_block*numSamples+(2*cc)+1] = inR[cc];
-    }
-#endif
-    
-    // DPS_pitchshift(&inBuffer[cur_read_block*MICROBLOCK_LEN], &outBuffer[cur_write_block*MICROBLOCK_LEN], MICROBLOCK_LEN);
+    tEnvProcessBlock(env, &inBuffer[cur_read_block*numSamples]);
+    attackDetect();
+
     // tSNAC period detection
 #if SNAC
-    tSNAC_ioSamples(snac, &inBuffer[cur_read_block*numSamples], &outBuffer[cur_write_block*numSamples], 2*numSamples);
+    tSNAC_ioSamples(snac, &inBuffer[cur_read_block*numSamples], &outBuffer[cur_write_block*numSamples], numSamples);
 
     period = tSNAC_getPeriod(snac);
     if (++counter >= 50)
     {
         counter = 0;
-        DBG("expected period: " + String(sine_period));
-        DBG("snac     period: " + String(period));
-        DBG("pitch    factor: " + String(s2 * 3.5f + 0.5f));
+        
+        DBG("time  constant: " + String(s1 * 480.0f + 20.0f));
+        DBG("pitch factor: " + String(s2 * 3.5f + 0.5f));
     }
 #endif
     
@@ -164,30 +134,19 @@ void    OOPSTest_block           (float* inL, float* inR, float* outL, float* ou
 #if SOLAD
     tSOLAD_setPeriod(sola, period);
     
-    tSOLAD_setPitchFactor(sola, 2.0f);
-    setSliderModelValue("s2", s2 * 3.5f + 0.5f);
+    tSOLAD_setPitchFactor(sola, s2 * 3.5f + 0.5f);
+    setTimeConstant(s1 * 20.0f + 480.0f);
     
     //  tSOLAD pshift works
-    tSOLAD_ioSamples(sola, &inBuffer[cur_read_block*numSamples], &outBuffer[cur_write_block*numSamples], 2*numSamples);
+    tSOLAD_ioSamples(sola, &inBuffer[cur_read_block*numSamples], &outBuffer[cur_write_block*numSamples], numSamples);
 #endif
     
-#if SINE_OUT
+
     for (int cc=0; cc < numSamples; cc++)
     {
-        outL[cc] = inBuffer[cur_read_block*numSamples+(2*cc)];
-        outR[cc] = inBuffer[cur_read_block*numSamples+(2*cc)+1];
+        outL[cc] = tHighpassTick(hp,outBuffer[cur_write_block*numSamples+cc]);
+        outR[cc] = outL[cc];
     }
-#else
-    for (int cc=0; cc < numSamples; cc++)
-    {
-        /*
-        outL[cc] = outBuffer[cur_write_block*MICROBLOCK_LEN+(2*cc)];
-        outR[cc] = outBuffer[cur_write_block*MICROBLOCK_LEN+(2*cc)+1];
-         */
-        outL[cc] = outBuffer[cur_write_block*numSamples+(2*cc)];
-        outR[cc] = outBuffer[cur_write_block*numSamples+(2*cc)+1];
-    }
-#endif
     
     cur_read_block++;
     if (cur_read_block >= TOTAL_BUFFERS)
@@ -197,6 +156,7 @@ void    OOPSTest_block           (float* inL, float* inR, float* outL, float* ou
     if (cur_write_block >= TOTAL_BUFFERS)
         cur_write_block=0;
 }
+
 
 void    OOPSTest_controllerInput (int controller, float value)
 {

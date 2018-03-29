@@ -153,6 +153,14 @@ void tAtkDtk_setThreshold(tAtkDtk *a, float thres);
 // find largest transient in input block, return index of attack
 int tAtkDtk_detect(tAtkDtk *a, float *in);
 
+
+// ENV~ from PD, modified for OOPS
+tEnv* tEnvInit(int windowSize, int hopSize);
+float tEnvTick (tEnv* x);
+void tEnvProcessBlock(tEnv* x, float* in);
+
+
+
 #endif  // OOPSUTILITIES_H_INCLUDED
 
 

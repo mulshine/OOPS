@@ -14,7 +14,7 @@
 
 #include "OOPSCore.h"
 
-void        OOPSInit            (float sampleRate, float(*randomNumberFunction)(void));
+void        OOPSInit            (float sampleRate, int blocksize, float(*randomNumberFunction)(void));
 void        OOPSSetSampleRate   (float sampleRate);
 float       OOPSGetSampleRate   (void);
 

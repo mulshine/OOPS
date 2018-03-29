@@ -20,9 +20,11 @@
 
 OOPS oops;
 
-void OOPSInit(float sr, float(*random)(void))
+void OOPSInit(float sr, int blocksize, float(*random)(void))
 {
     oops.sampleRate = sr;
+    
+    oops.blockSize = blocksize;
     
     oops.invSampleRate = 1.0f/sr;
     
