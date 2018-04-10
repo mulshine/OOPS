@@ -50,13 +50,6 @@ float   OOPSTest_tick            (float input)
     float sample = 0.0f;
     
     neuron->current = tRampTick(env);
-    //tNeuronSetTimeStep(neuron, tRampTick(ramp[6]));
-    //tNeuronSetV3(neuron, tRampTick(ramp[5]));
-    //tNeuronSetV1(neuron, tRampTick(ramp[4]));
-    //tNeuronSetC(neuron, tRampTick(ramp[3]));
-    //tNeuronSetN(neuron, tRampTick(ramp[2]));
-    //tNeuronSetL(neuron, tRampTick(ramp[1]));
-    //tNeuronSetK(neuron, tRampTick(ramp[0]));
     
 #if USE_RAMP
     neuron->gK = tRampTick(ramp[0]);
