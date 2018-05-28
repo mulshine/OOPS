@@ -12,7 +12,6 @@
 
 std::vector<std::vector<int>> cSliderRanges =
 {
-    
 };
 
 std::vector<std::string> cButtonNames =  std::vector<std::string>
@@ -20,9 +19,26 @@ std::vector<std::string> cButtonNames =  std::vector<std::string>
     
 };
 
+/*
+ PITCH=0,
+ CURRENT,
+ LITHIUM,
+ SODIUM,
+ POTASSIUM,
+ CALCIUM,
+ V1,
+ V3,*/
+
 std::vector<std::string> cSliderNames =  std::vector<std::string>
 {
-
+    "Time Step",
+    "Base Current",
+    "Lithium",
+    "Sodium",
+    "Potassium",
+    "Calcium",
+    "Voltage 1",
+    "Voltage 3"
 };
 
 std::vector<std::string> cComboBoxNames =  std::vector<std::string>

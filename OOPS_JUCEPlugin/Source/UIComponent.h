@@ -48,11 +48,11 @@ private:
     static const int cLeftOffset = 30;
     static const int cTopOffset = 30;
     
-    static const int cXSpacing = 60;
+    static const int cXSpacing = 100;
     static const int cYSpacing = 5;
     
-    static const int cSliderHeight = 200;
-    static const int cSliderWidth = 20;
+    static const int cSliderHeight = 300;
+    static const int cSliderWidth = cXSpacing - 5;
     
     static const int cLabelHeight = 20;
     static const int cLabelWidth  = cSliderWidth + cXSpacing;

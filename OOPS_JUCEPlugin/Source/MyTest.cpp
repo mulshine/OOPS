@@ -21,7 +21,8 @@ void    OOPSTest_init            (float sampleRate)
 
     neuron = tNeuronInit();
     
-    env = tRampInit(10, 1);
+    current_ramp = tRampInit(10, 1);
+    current_base = 0.0f;
     //ramp[3] = tRampInit(10, 1);
     //ramp[6] = tRampInit(10, 1);
     
@@ -49,7 +50,7 @@ float   OOPSTest_tick            (float input)
 {
     float sample = 0.0f;
     
-    neuron->current = tRampTick(env);
+    neuron->current = tRampTick(current_ramp) + current_base;
     
 #if USE_RAMP
     neuron->gK = tRampTick(ramp[0]);
@@ -100,6 +101,8 @@ typedef enum NeuronParam
 } NeuronParam;
 
 
+// ALSO TURN THESE IN TO AUTOMATED PARAMETERS 
+
 void    OOPSTest_controllerInput (int cnum, float cval)
 {
     //DBG("cnum: " + String(cnum) + " val: " + String(cval));
@@ -108,43 +111,42 @@ void    OOPSTest_controllerInput (int cnum, float cval)
 
     if (cnum == 1)
     {
-        //tNeuronSetK(neuron, 70.0f + in * 50.0f);
-        //tRampSetDest(ramp[0], cval*2.0f);
+        tNeuronSetTimeStep(neuron, 1.0f / (cval * 2.0f + 1.0f));
     }
     else if (cnum == 2)
+    {
+        current_base = cval;
+        tNeuronSetCurrent(neuron, tRampSample(current_ramp) + current_base);
+    }
+    else if (cnum == 3)
     {
         tNeuronSetL(neuron, -in);
         //tRampSetDest(ramp[1], cval*2.0f);
     }
-    else if (cnum == 3)
+    else if (cnum == 4)
     {
         tNeuronSetN(neuron, 128.0f + cval * 3.0f);
         //tRampSetDest(ramp[2], cval*2.0f - 128.0f);
     }
-    else if (cnum == 4)
+    else if (cnum == 5)
+    {
+        tNeuronSetK(neuron, in * 80.0f - 20.0f);
+        //tRampSetDest(ramp[0], cval*2.0f);
+    }
+    else if (cnum == 6)
     {
         //tRampSetDest(ramp[3], (cval/128.0f) * 2.0f + 0.01);
         tNeuronSetC(neuron, in * 2.0f + 0.01);
     }
-    else if (cnum == 5)
+    else if (cnum == 7)
     {
         tNeuronSetV1(neuron, cval*2.0f - 128.0f);
         //tRampSetDest(ramp[4], cval*2.0f - 128.0f);
     }
-    else if (cnum == 6)
+    else if (cnum == 8)
     {
         tNeuronSetV3(neuron, cval*2.0f - 128.0f);
         //tRampSetDest(ramp[5], cval*2.0f - 128.0f);
-    }
-    else if (cnum == 7)
-    {
-        tNeuronSetTimeStep(neuron, 1.0f / (cval * 2.0f + 1.0f));
-        //tCycleSetFreq(osc, 10.0f + cval * 5.0f);
-        //tRampSetDest(ramp[6], 1.0f / (cval * 2.0f + 1.0f));
-    }
-    else if (cnum == 8)
-    {
-        gain = 1.0f;
     }
 
     
@@ -160,15 +162,16 @@ int lastNote;
 
 void    OOPSTest_noteOn          (int note, float velocity)
 {
-    tRampSetDest(env, 50.0f + note * 1.5f);
     DBG("note on: " + String(note));
+    
+    tRampSetDest(current_ramp, 50.0f + note * 1.5f);
     lastNote = note;
 }
 
 
 void    OOPSTest_noteOff         (int note)
 {
-    if (lastNote == note) tRampSetDest(env, 0.0f);
+    if (lastNote == note) tRampSetDest(current_ramp, 0.0f);
 }
 
 

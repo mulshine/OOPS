@@ -15,8 +15,9 @@ tCompressor* compressor;
 
 #define NUM_RAMP 7
 
+float current_base;
 tNeuron* neuron;
-tRamp* env;
+tRamp* current_ramp;
 tRamp* tsr;
 tRamp* ramp[NUM_RAMP];
 

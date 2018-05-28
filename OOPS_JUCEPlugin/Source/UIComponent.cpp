@@ -19,7 +19,7 @@ UIComponent::UIComponent()
     {
         
         sliders.set(i,  new Slider());
-        sliders[i]->setSliderStyle(Slider::SliderStyle::LinearVertical);
+        sliders[i]->setSliderStyle(Slider::SliderStyle::LinearBarVertical);
         sliders[i]->setRange(0.0, 1.0, 1.0/50000.0);
         sliders[i]->setName(cSliderNames[i]);
         sliders[i]->setComponentID(String(i));
@@ -112,20 +112,23 @@ void UIComponent::resized()
 {
     for (int i = 0; i < cSliderNames.size(); i++)
     {
-        sliders[i]      ->setBounds(cLeftOffset + ((cSliderWidth + cXSpacing) * i),
+        float width = getWidth() / 8.0f;
+        float height = getHeight();
+        sliders[i]      ->setBounds(width * i,
                                     cTopOffset,
-                                    cSliderWidth,
-                                    cSliderHeight);
-        
-        textFields[i]   ->setBounds(sliders[i]->getX()  - (cSliderNames[i].length() * 2.0f),
+                                    width - 3.0f,
+                                    height * 0.9f);
+        /*
+        textFields[i]   ->setBounds(cLeftOffset + cXSpacing * i,
                                     sliders[i]->getBottom() + cYSpacing,
-                                    75,
+                                    cXSpacing - 5,
                                     20);
+         */
         
-        sliderLabels[i] ->setBounds(sliders[i]->getX() - (cSliderNames[i].length() * 2.0f),
-                                    textFields[i]->getBottom() + cYSpacing,
-                                    cLabelWidth,
-                                    cLabelHeight);
+        sliderLabels[i] ->setBounds(width * i,
+                                    sliders[i]->getBottom() + cYSpacing,
+                                    width - 3.0f,
+                                    height * 0.1f);
     }
     
     for (int i = 0; i < cButtonNames.size(); i++)
