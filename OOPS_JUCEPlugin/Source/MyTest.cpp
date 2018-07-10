@@ -166,7 +166,7 @@ void    OOPSTest_block           (float* inL, float* inR, float* outL, float* ou
     
     for(int cc=0; cc < numSamples; cc++)
     {
-        outL[cc] = outBuffer[cur_write_block*numSamples+cc];
+        outL[cc] = s2 * 10.0f * outBuffer[cur_write_block*numSamples+cc];
         outR[cc] = outL[cc];
     }
     

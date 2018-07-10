@@ -733,7 +733,7 @@ typedef struct tEnv
     int x_allocforvs;               /* extra buffer for DSP vector size */
 } tEnv;
 
-#define FORD 7
+#define FORD 10
 #define CBSIZE 2048
 
 typedef struct _tFormantShifter

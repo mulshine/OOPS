@@ -799,7 +799,7 @@ tFormantShifter* tFormantShifterInit()
     
     fs->ford = FORD;
     fs->falph = powf(0.001f, 80.0f / (oops.sampleRate));
-    fs->flamb = -(0.8517f*sqrt(atan(0.06583f*oops.sampleRate))-0.1916f); // or about -0.88 @ 44.1kHz
+    fs->flamb = -(0.8517f*sqrt(atanf(0.06583f*oops.sampleRate))-0.1916f); // or about -0.88 @ 44.1kHz
     fs->fhp = 0.0f;
     fs->flp = 0.0f;
     fs->flpa = powf(0.001f, 10.0f / (oops.sampleRate));
@@ -833,7 +833,6 @@ void tFormantShifter_ioSamples(tFormantShifter* fs, float* in, float* out, int s
     {
         tf = *in++;
         ti4 = fs->cbiwr;
-        fs->cbi[ti4] = tf;
         
         fa = tf - fs->fhp;
         fs->fhp = tf;
@@ -853,14 +852,13 @@ void tFormantShifter_ioSamples(tFormantShifter* fs, float* in, float* out, int s
             fb = fc - tf*fa;
             fa = fa - tf*fc;
         }
-        fs->cbf[ti4] = fa;
         fs->cbiwr++;
         if(fs->cbiwr >= CBSIZE)
         {
             fs->cbiwr = 0;
         }
-    
-        tf2 = tf;
+
+        tf2 = fa;
         fa = 0;
         fb = fa;
         for (int i=0; i<ford; i++) {
@@ -915,7 +913,7 @@ void tFormantShifter_ioSamples(tFormantShifter* fs, float* in, float* out, int s
             fa = fa - tf*fc;
         }
         tf = tf2;
-        //tf = tf + flpa * fs->flp;  // lowpass post-emphasis filter
+        tf = tf + flpa * fs->flp;  // lowpass post-emphasis filter
         fs->flp = tf;
         
         // Bring up the gain slowly when formant correction goes from disabled
@@ -931,7 +929,7 @@ void tFormantShifter_ioSamples(tFormantShifter* fs, float* in, float* out, int s
         // now tf is signal output
         // ...and we're done messing with formants
         
-         out[outindex++] = tf;
+        out[outindex++] = tf;
     }
 }
 #endif
