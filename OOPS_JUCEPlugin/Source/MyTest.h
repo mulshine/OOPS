@@ -20,6 +20,7 @@ tHighpass* hp;
 
 tCycle* osc;
 tLockhartWavefolder* folder;
+float wfGain;
 
 tFormantShifter* fs;
 

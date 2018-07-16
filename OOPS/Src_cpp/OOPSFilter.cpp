@@ -831,7 +831,7 @@ void tFormantShifter_ioSamples(tFormantShifter* fs, float* in, float* out, int s
     frlamb = (tf-1)/(tf+1);
     while(size--)
     {
-        tf = *in++;
+        tf = (*in++ * 2.0f);
         ti4 = fs->cbiwr;
         
         fa = tf - fs->fhp;

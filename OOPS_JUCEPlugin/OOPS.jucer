@@ -8,7 +8,7 @@
               pluginIsSynth="0" pluginWantsMidiIn="1" pluginProducesMidiOut="0"
               pluginIsMidiEffectPlugin="0" pluginEditorRequiresKeys="0" pluginAUExportPrefix="OOPSAU"
               pluginRTASCategory="" aaxIdentifier="com.mrmulshine.OOPS" pluginAAXCategory="2"
-              jucerVersion="5.1.2" companyName="mrmulshine" companyEmail="mrmulshine@gmail.com"
+              jucerVersion="5.3.2" companyName="mrmulshine" companyEmail="mrmulshine@gmail.com"
               displaySplashScreen="1" reportAppUsage="1" splashScreenColour="Dark"
               buildStandalone="1" enableIAA="0" cppLanguageStandard="11" companyCopyright="mrmulshine"
               pluginFormats="buildVST,buildAU,buildStandalone" pluginCharacteristicsValue="pluginWantsMidiIn">

@@ -44,6 +44,8 @@ void    OOPSTest_init            (float sampleRate, int samplesPerBlock)
     
     osc = tCycleInit();
     
+    tCycleSetFreq(osc, 220.0f);
+    
     fs = tFormantShifterInit();
 
     folder = tLockhartWavefolderInit();
@@ -93,14 +95,92 @@ void attackDetect(void)
     
 }
 
+float porch = 1.0f;
+#define PORCH 1.0f        // Threshold for fold actuation
+#define STEPS 12      // Number of consecutively applied folds
+#define SCREENDOOR 12.0f   // Maximum input gain pre-fold
+
+static float fold1(float sample)
+{
+    if (sample > PORCH)
+    {
+        sample = 2.0f * PORCH - sample;
+    }
+    else if (sample < -PORCH)
+    {
+        sample = (-2.0f * PORCH) - sample;
+    }
+    
+    return sample;
+}
+
+static float fold2(float sample)
+{
+    if (fabsf(sample) > PORCH)
+    {
+        sample = sinf(PI * 0.5f * sample);
+    }
+    
+    return sample;
+}
+
+static float fold3(float sample)
+{
+    if (sample > PORCH)
+    {
+        sample = sinf(PI * cosf(PI * sample)) + 1.0f;
+    }
+    else if (sample < -PORCH)
+    {
+        sample = -sinf(PI * cosf(PI * sample)) - 1.0f;
+    }
+    
+    return sample;
+}
+
+static float fold4(float sample)
+{
+    if (sample > porch)
+    {
+        sample = cosf((PI / 3.0f) * sinf(PI * sinf(PI * 0.5f * sample)));
+    }
+    else if (sample < -porch)
+    {
+        sample = -cosf((PI / 3.0f) * sinf(PI * sinf(PI * 0.5f * sample)));
+    }
+    
+    return sample;
+}
+
 
 float   OOPSTest_tick            (float input)
 {
-    float sample = 0;
+    float sample = tCycleTick(osc) * wfGain * SCREENDOOR;
     
-    //sample = tCycleTick(osc);
-    //sample += tLockhartWavefolderTick(folder, samp);
-    
+    porch = 1.0f;
+    for (int i = 0; i < STEPS; i++)
+    {
+        int fold = i % 4;
+        
+        switch (fold) {
+            case 0:
+                sample = fold1(sample);
+                break;
+            case 1:
+                sample = fold2(sample);
+                break;
+            case 2:
+                sample = fold3(sample);
+                break;
+            case 3:
+                sample = fold4(sample);
+                break;
+                
+            default:
+                break;
+        }
+        //porch -= 0.05f;
+    }
     
     return sample;
 }
@@ -119,64 +199,17 @@ int counter = 0;
 
 void    OOPSTest_block           (float* inL, float* inR, float* outL, float* outR, int numSamples)
 {
-    float s1 = getSliderValue("s1");
+
+
+}
+
+void    OOPSTest_block           (int numSamples)
+{
+    float s1 = getSliderValue("GAIN");
+    
+    wfGain = s1;
+    
     float s2 = getSliderValue("s2");
-    //float  period;
-    
-    
-    for (int cc=0; cc < numSamples; cc++)
-    {
-        inBuffer[cur_read_block*numSamples+cc] = inL[cc];
-    }
-    
-    //tEnvProcessBlock(env, &inBuffer[cur_read_block*numSamples]);
-    //attackDetect();
-
-    // tSNAC period detection
-
-    tFormantShifter_ioSamples(fs, &inBuffer[cur_read_block*numSamples], &outBuffer[cur_write_block*numSamples], numSamples, s1*2.0f-1.0f);
-/*
-    
-    
-#if SOLAD
-    tSOLAD_setPeriod(sola, period);
-    
-    tSOLAD_setPitchFactor(sola, s2 * 3.5f + 0.5f);
-    setTimeConstant(s1 * 20.0f + 480.0f);
-    
-    //  tSOLAD pshift works
-    tSOLAD_ioSamples(sola, &inBuffer[cur_read_block*numSamples], &outBuffer[cur_write_block*numSamples], numSamples);
-#endif */
-    /*
-    float samp;
-    tCycleSetFreq(osc, (s1 * 500.0f + 100.0f));
-    for (int cc=0; cc < numSamples; cc++)
-    {
-        //outL[cc] = (s2 * 2.0f) * tTriangleTick(osc);
-        samp = (s2 * 5.0f) * tCycleTick(osc);
-        //samp = tLockhartWavefolderTick(folder, samp);
-        outL[cc] = tLockhartWavefolderTick(folder, samp);
-        
-        //outL[cc] = samp;
-        outR[cc] = outL[cc];
-        //DBG(outL[cc]);
-        count++;
-    }
-     */
-    
-    for(int cc=0; cc < numSamples; cc++)
-    {
-        outL[cc] = s2 * 10.0f * outBuffer[cur_write_block*numSamples+cc];
-        outR[cc] = outL[cc];
-    }
-    
-    cur_read_block++;
-    if (cur_read_block >= TOTAL_BUFFERS)
-        cur_read_block=0;
-
-    cur_write_block++;
-    if (cur_write_block >= TOTAL_BUFFERS)
-        cur_write_block=0;
 }
 
 
