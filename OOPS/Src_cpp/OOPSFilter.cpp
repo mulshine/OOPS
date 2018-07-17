@@ -934,6 +934,104 @@ void tFormantShifter_ioSamples(tFormantShifter* fs, float* in, float* out, int s
 }
 #endif
 
+#if N_PITCHSHIFTER
+
+static bool pitchshifter_attackdetect(tPitchShifter* ps);
+
+tPitchShifter* tPitchShifter_init(int samplesPerBlock)
+{
+    tPitchShifter* ps = &oops.tPitchShifterRegistry[oops.registryIndex[T_PITCHSHIFTER]++];
+    
+    ps->hopSize = DEFHOPSIZE;
+    ps->windowSize = DEFWINDOWSIZE;
+    ps->fba = FBA;
+    
+    ps->env = tEnvInit(ps->windowSize, ps->hopSize);
+    ps->snac = tSNAC_init(samplesPerBlock, DEFOVERLAP);
+    ps->sola = tSOLAD_init();
+    ps->hp = tHighpassInit(HPFREQ);
+    
+    tSOLAD_setPitchFactor(ps->sola, DEFPITCHRATIO);
+    
+    tPitchShifter_setTimeConstant(ps, DEFTIMECONSTANT);
+    
+    return(ps);
+}
+
+void tPitchShifter_ioSamples(tPitchShifter* ps, float* in, float* out, int size)
+{
+    float period;
+    
+    tEnvProcessBlock(ps->env, in);
+    
+    if(pitchshifter_attackdetect(ps) == true)
+    {
+        ps->fba = 5;
+        tSOLAD_setReadLag(ps->sola, oops.blockSize);
+    }
+    
+    tSNAC_ioSamples(ps->snac, in, out, size);
+    period = tSNAC_getPeriod(ps->snac);
+    
+    tSOLAD_setPeriod(ps->sola, period);
+    tSOLAD_setPitchFactor(ps->sola, ps->pitchFactor);
+    tSOLAD_ioSamples(ps->sola, in, out, size);
+    
+    for (int cc = 0; cc < size; ++cc)
+    {
+        out[cc] = tHighpassTick(ps->hp, out[cc]);
+    }
+}
+
+void tPitchShifter_setPitchFactor(tPitchShifter* ps, float pf)
+{
+    ps->pitchFactor = pf;
+}
+
+void tPitchShifter_setTimeConstant(tPitchShifter* ps, float tc)
+{
+    ps->timeConstant = tc;
+    ps->radius = expf(-1000.0f * ps->hopSize * oops.invSampleRate / ps->timeConstant);
+}
+
+void tPitchShifter_setHopSize(tPitchShifter* ps, int hs)
+{
+    ps->hopSize = hs;
+}
+
+void tPitchShifter_setWindowSize(tPitchShifter* ps, int ws)
+{
+    ps->windowSize = ws;
+}
+
+static bool pitchshifter_attackdetect(tPitchShifter* ps)
+{
+    float envout;
+    
+    envout = tEnvTick(ps->env);
+    
+    if (envout >= 1.0f)
+    {
+        ps->lastmax = ps->max;
+        if (envout > ps->max)
+        {
+            ps->max = envout;
+        }
+        else
+        {
+            ps->deltamax = envout - ps->max;
+            ps->max = ps->max * ps->radius;
+        }
+        ps->deltamax = ps->max - ps->lastmax;
+    }
+    
+    ps->fba = ps->fba ? (ps->fba - 1) : 0;
+    
+    return (ps->fba == 0 && (ps->max > 60 && ps->deltamax > 6));
+}
+
+#endif
+
 
 
 

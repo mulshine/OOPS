@@ -69,14 +69,15 @@ void OopsAudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuffer& mi
     float* outPointerL = buffer.getWritePointer( 0);
     float* outPointerR = buffer.getWritePointer( 1);
     
-    OOPSTest_block(buffer.getNumSamples());
+    //OOPSTest_block(buffer.getNumSamples());
     
+    /*
     for (int samp = 0; samp < buffer.getNumSamples(); ++samp)
     {
         outPointerL[samp] = OOPSTest_tick( (inPointerL[samp] +inPointerR[samp]) * 0.5f);
         outPointerR[samp] = outPointerL[samp];
     }
-    
+    */
     /*
     MidiMessage m;
     int time;
@@ -101,7 +102,7 @@ void OopsAudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuffer& mi
      }
     */
     
-    //OOPSTest_block((float*)inPointerL, (float*)inPointerR, outPointerL, outPointerR, buffer.getNumSamples());
+    OOPSTest_block((float*)inPointerL, (float*)inPointerR, outPointerL, outPointerR, buffer.getNumSamples());
     
     
 }

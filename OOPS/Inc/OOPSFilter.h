@@ -114,4 +114,11 @@ tFormantShifter*    tFormantShifterInit     (void);
 float       tFormantShifterTick    (tFormantShifter* const, float input);
 void        tFormantShifter_ioSamples   (tFormantShifter* const, float* in, float* out, int size, float fwarp);
 
+tPitchShifter*    tPitchShifter_init        (int samplesPerBlock);
+void        tPitchShifter_ioSamples         (tPitchShifter* const, float* in, float* out, int size);
+void        tPitchShifter_setPitchFactor    (tPitchShifter* const, float pf);
+void        tPitchShifter_setTimeConstant   (tPitchShifter* const, float tc);
+void        tPitchShifter_setHopSize        (tPitchShifter* const, int hs);
+void        tPitchShifter_setWindowSize     (tPitchShifter* const, int ws);
+
 #endif  // OOPSFILTER_H_INCLUDED

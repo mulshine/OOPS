@@ -764,6 +764,34 @@ typedef struct _tFormantShifter
     void (*sampleRateChanged)(struct _tFormantShifter *self);
 } tFormantShifter;
 
+#define DEFPITCHRATIO 2.0f
+#define DEFTIMECONSTANT 100.0f
+#define DEFHOPSIZE 64
+#define DEFWINDOWSIZE 64
+#define FBA 20
+#define HPFREQ 40.0f
+
+typedef struct _tPitchShifter
+{
+    tEnv* env;
+    tSNAC* snac;
+    tSOLAD* sola;
+    tHighpass* hp;
+    
+    int hopSize;
+    int windowSize;
+    int fba;
+    
+    float pitchFactor;
+    float timeConstant;
+    float radius;
+    float max;
+    float lastmax;
+    float deltamax;
+    
+    void (*sampleRateChanged)(struct _tPitchShifter *self);
+} tPitchShifter;
+
 
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
 void     tPhasorSampleRateChanged (tPhasor *p);
@@ -798,6 +826,7 @@ void     tSNACSampleRateChanged(tSNAC* n);
 
 void     tLockhartWavefolderSampleRateChanged(tLockhartWavefolder* n);
 void     tFormantShifterSampleRateChanged(tFormantShifter* n);
+void     tPitchShifterSampleRateChanged(tFormantShifter* n);
 
 typedef enum OOPSRegistryIndex
 {
@@ -844,6 +873,7 @@ typedef enum OOPSRegistryIndex
     T_ATKDTK,
     T_LOCKHARTWAVEFOLDER,
     T_ENV,
+    T_PITCHSHIFTER,
     T_INDEXCNT
 }OOPSRegistryIndex;
 
@@ -1028,6 +1058,10 @@ typedef struct _OOPS
     
 #if N_ENV
     tEnv               tEnvRegistry[N_ENV];
+#endif
+    
+#if N_PITCHSHIFTER
+    tPitchShifter               tPitchShifterRegistry[N_PITCHSHIFTER];
 #endif
     
     

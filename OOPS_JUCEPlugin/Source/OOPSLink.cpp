@@ -22,7 +22,7 @@ std::vector<std::string> cButtonNames =  std::vector<std::string>
 
 std::vector<std::string> cSliderNames =  std::vector<std::string>
 {
-    "GAIN","s2"
+    "GAIN","PITCH FACTOR 1","PITCH FACTOR 2"
 };
 
 std::vector<std::string> cComboBoxNames =  std::vector<std::string>

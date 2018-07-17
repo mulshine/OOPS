@@ -11,27 +11,18 @@
 #ifndef FM_H_INCLUDED
 #define FM_H_INCLUDED
 
-tSOLAD* sola;
-tSNAC* snac;
+#define NUM_SHIFTERS 2
 
-tEnv* env;
-
-tHighpass* hp;
-
-tCycle* osc;
-tLockhartWavefolder* folder;
 float wfGain;
+float wfPitchFactor[NUM_SHIFTERS];
 
-tFormantShifter* fs;
-
-
+tPitchShifter* ps[NUM_SHIFTERS];
 
 #define MICROBLOCK_LEN 512
 #define TOTAL_BUFFERS 4
 
-
 float inBuffer[9182];
-float outBuffer[9182];
+float outBuffer[NUM_SHIFTERS][9182];
 float monoBuffer[9182];
 
 float sampleBuffer[9182];
