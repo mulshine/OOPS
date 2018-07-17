@@ -57,6 +57,8 @@ typedef enum oBool
 
 #define SOS_M 						343.0f
 
+#define TWO_TO_7 					128.f
+#define INV_TWO_TO_7 			0.0078125f
 #define TWO_TO_8 					256.f
 #define INV_TWO_TO_8 			0.00390625f
 #define TWO_TO_5 					32.0f
@@ -65,9 +67,9 @@ typedef enum oBool
 #define INV_TWO_TO_12 		0.00024414062f
 #define TWO_TO_15 				32768.f
 #define TWO_TO_16 				65536.f
-#define INV_TWO_TO_15 		0.00001525878f
+#define INV_TWO_TO_15 		0.00003051757f
+#define INV_TWO_TO_16 		0.00001525878f
 #define TWO_TO_16_MINUS_ONE 65535.0f
-
 // Erbe shaper
 float OOPS_shaper     (float input, float m_drive);
 float OOPS_reedTable  (float input, float offset, float slope);

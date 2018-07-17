@@ -936,7 +936,7 @@ void tFormantShifter_ioSamples(tFormantShifter* fs, float* in, float* out, int s
 
 #if N_PITCHSHIFTER
 
-static bool pitchshifter_attackdetect(tPitchShifter* ps);
+static int pitchshifter_attackdetect(tPitchShifter* ps);
 
 tPitchShifter* tPitchShifter_init(int samplesPerBlock)
 {
@@ -964,7 +964,7 @@ void tPitchShifter_ioSamples(tPitchShifter* ps, float* in, float* out, int size)
     
     tEnvProcessBlock(ps->env, in);
     
-    if(pitchshifter_attackdetect(ps) == true)
+    if(pitchshifter_attackdetect(ps) == 1)
     {
         ps->fba = 5;
         tSOLAD_setReadLag(ps->sola, oops.blockSize);
@@ -1004,7 +1004,7 @@ void tPitchShifter_setWindowSize(tPitchShifter* ps, int ws)
     ps->windowSize = ws;
 }
 
-static bool pitchshifter_attackdetect(tPitchShifter* ps)
+static int pitchshifter_attackdetect(tPitchShifter* ps)
 {
     float envout;
     
@@ -1027,7 +1027,7 @@ static bool pitchshifter_attackdetect(tPitchShifter* ps)
     
     ps->fba = ps->fba ? (ps->fba - 1) : 0;
     
-    return (ps->fba == 0 && (ps->max > 60 && ps->deltamax > 6));
+    return (ps->fba == 0 && (ps->max > 60 && ps->deltamax > 6)) ? 1 : 0;
 }
 
 #endif
