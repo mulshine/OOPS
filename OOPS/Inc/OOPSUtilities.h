@@ -85,6 +85,8 @@ void tPolyNoteOff(tPoly* poly, int midiNoteNumber);
 /* MPoly*/
 tMPoly*     tMPoly_init(int numVoices);
 
+void        tMPoly_tick(tMPoly* const);
+
 //ADDING A NOTE
 void        tMPoly_noteOn(tMPoly* const, int note, uint8_t vel);
 
@@ -92,7 +94,19 @@ int         tMPoly_noteOff(tMPoly* const, uint8_t note);
 
 void        tMPoly_orderedAddToStack(tMPoly* const, uint8_t noteVal);
 
-void        tMPoly_pitchBend(tMPoly* const, uint8_t bend);
+void        tMPoly_pitchBend(tMPoly* const, int pitchBend);
+
+void        tMPoly_setNumVoices(tMPoly* const, uint8_t numVoices);
+
+void        tMPoly_setPitchGlideTime(tMPoly* const, float t);
+
+int         tMPoly_getNumVoices(tMPoly* const);
+
+float       tMPoly_getPitch(tMPoly* const, uint8_t voice);
+
+int         tMPoly_getVelocity(tMPoly* const, uint8_t voice);
+
+int         tMPoly_isOn(tMPoly* const, uint8_t voice);
 
 /* tSOLAD : pitch shifting */
 tSOLAD*     tSOLAD_init(void);

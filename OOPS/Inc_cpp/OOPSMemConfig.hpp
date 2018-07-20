@@ -19,8 +19,9 @@
  *                                                                                                       *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#define NUM_VOICES 2
-#define NUM_SHIFTERS 3
+#define NUM_VOICES 5
+#define NUM_SHIFTERS 2
+#define MPOLY_NUM_MAX_VOICES 16
 
 #define SHAPER1_TABLE_SIZE 65536
 extern const float shaper1[SHAPER1_TABLE_SIZE];
@@ -61,7 +62,6 @@ extern const float shaper1[SHAPER1_TABLE_SIZE];
 #define     N_ENVELOPE           0
 #define     N_ENV                0 + (1 * N_PITCHSHIFTER)
 #define     N_ADSR               0
-#define     N_RAMP               NUM_SHIFTERS
 #define     N_ENVELOPEFOLLOW     0
 #define     N_VOCODER            0
 #define     N_TALKBOX            1
@@ -71,6 +71,7 @@ extern const float shaper1[SHAPER1_TABLE_SIZE];
 #define     N_SOLAD              0 + (1 * N_PITCHSHIFTER)
 #define     N_SNAC               0 + (1 * N_PITCHSHIFTER)
 #define     N_ATKDTK             0
+#define     N_RAMP               NUM_SHIFTERS + (N_MPOLY * MPOLY_NUM_MAX_VOICES)
 #define     N_LOCKHARTWAVEFOLDER 0
 #define     N_FORMANTSHIFTER     2
 

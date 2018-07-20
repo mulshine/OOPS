@@ -1187,10 +1187,17 @@ tMPoly* tMPoly_init(int numVoices)
         poly->notes[i][1] = -1;
     }
     
-    for (int i = 0; i < 128; i ++)
+    for (int i = 0; i < MPOLY_NUM_MAX_VOICES; ++i)
     {
         poly->voices[i][0] = -1;
+        poly->firstReceived[i] = 0;
+        poly->ramp[i] = tRampInit(1.0f, 1);
     }
+    
+    poly->glideTime = 1.0f;
+    
+    poly->pitchBend = 64;
+    poly->pitchBendAmount = 2.0f;
     
     poly->stack = tStack_init();
     poly->orderStack = tStack_init();
@@ -1198,11 +1205,19 @@ tMPoly* tMPoly_init(int numVoices)
     return poly;
 }
 
+// Only needs to be used for pitch glide
+void tMPoly_tick(tMPoly* poly)
+{
+    for (int i = 0; i < MPOLY_NUM_MAX_VOICES; ++i)
+    {
+        poly->rampVals[i] = tRampTick(poly->ramp[i]);
+    }
+}
 
 //instead of including in dacsend, should have a separate pitch bend ramp, that is added when the ramps are ticked and sent to DAC
-void tMPoly_pitchBend(tMPoly* poly, uint8_t pitchBend)
+void tMPoly_pitchBend(tMPoly* poly, int pitchBend)
 {
-
+    poly->pitchBend = pitchBend;
 }
 
 void tMPoly_noteOn(tMPoly* poly, int note, uint8_t vel)
@@ -1219,6 +1234,15 @@ void tMPoly_noteOn(tMPoly* poly, int note, uint8_t vel)
         {
             if (poly->voices[i][0] < 0)    // if inactive voice, give this note to voice
             {
+                if (poly->firstReceived[i] == 0)
+                {
+                    tRampSetTime(poly->ramp[i], 1.0f);
+                    poly->firstReceived[i] = 1;
+                }
+                else
+                {
+                    tRampSetTime(poly->ramp[i], poly->glideTime);
+                }
                 found = OTRUE;
                 
                 poly->voices[i][0] = note;
@@ -1226,6 +1250,9 @@ void tMPoly_noteOn(tMPoly* poly, int note, uint8_t vel)
                 poly->lastVoiceToChange = i;
                 poly->notes[note][0] = vel;
                 poly->notes[note][1] = i;
+                
+                tRampSetDest(poly->ramp[i], poly->voices[i][0]);
+                
                 break;
             }
         }
@@ -1246,6 +1273,10 @@ void tMPoly_noteOn(tMPoly* poly, int note, uint8_t vel)
 					poly->notes[oldNote][1] = -1; //mark the stolen voice as inactive (in the second dimension of the notes array)
 					poly->notes[note][0] = vel;
 					poly->notes[note][1] = whichVoice;
+                    
+                    tRampSetTime(poly->ramp[whichVoice], poly->glideTime);
+                    tRampSetDest(poly->ramp[whichVoice], poly->voices[whichVoice][0]);
+                    
 					break;
         		}
         	}
@@ -1296,6 +1327,7 @@ int tMPoly_noteOff(tMPoly* poly, uint8_t note)
             if (poly->notes[noteToTest][1] < 0) //if there is a stolen note waiting (marked inactive but on the stack)
             {
                 poly->voices[deactivatedVoice][0] = noteToTest; //set the newly free voice to use the old stolen note
+                tRampSetDest(poly->ramp[deactivatedVoice], poly->voices[deactivatedVoice][0]);
                 poly->voices[deactivatedVoice][1] = poly->notes[noteToTest][0]; // set the velocity of the voice to be the velocity of that note
                 poly->notes[noteToTest][1] = deactivatedVoice; //mark that it is no longer stolen and is now active
                 return -1;
@@ -1342,6 +1374,41 @@ void tMPoly_orderedAddToStack(tMPoly* poly, uint8_t noteVal)
     
     ns->size++;
     
+}
+
+void tMPoly_setNumVoices(tMPoly* poly, uint8_t numVoices)
+{
+    poly->numVoices = (numVoices > MPOLY_NUM_MAX_VOICES) ? MPOLY_NUM_MAX_VOICES : numVoices;
+}
+
+void tMPoly_setPitchGlideTime(tMPoly* poly, float t)
+{
+    poly->glideTime = t;
+    for (int i = 0; i < MPOLY_NUM_MAX_VOICES; ++i)
+    {
+        tRampSetTime(poly->ramp[i], poly->glideTime);
+    }
+}
+
+int tMPoly_getNumVoices(tMPoly* poly)
+{
+    return poly->numVoices;
+}
+
+float tMPoly_getPitch(tMPoly* poly, uint8_t voice)
+{
+    float pitchBend = ((float)(poly->pitchBend - 8192) / 8192.0f) * poly->pitchBendAmount;
+    return poly->rampVals[voice] + pitchBend;
+}
+
+int tMPoly_getVelocity(tMPoly* poly, uint8_t voice)
+{
+    return poly->voices[voice][1];
+}
+
+int tMPoly_isOn(tMPoly* poly, uint8_t voice)
+{
+    return (poly->voices[voice][0] > 0) ? 1 : 0;
 }
 
 #endif //N_MPOLY

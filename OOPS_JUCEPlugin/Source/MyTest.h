@@ -15,6 +15,7 @@ float wfGain;
 float wfPitchFactor[NUM_SHIFTERS];
 
 tPitchShifter* ps[NUM_SHIFTERS];
+tMPoly* poly;
 
 #define MICROBLOCK_LEN 512
 #define TOTAL_BUFFERS 4

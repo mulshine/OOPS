@@ -595,10 +595,18 @@ typedef struct _tStack
 /* tMPoly */
 typedef struct _tMPoly
 {
-    int numVoices;
-    int numVoicesActive;
+    tStack* stack;
+    tStack* orderStack;
     
-    int voices[128][2];
+    tRamp* ramp[MPOLY_NUM_MAX_VOICES];
+    
+    float rampVals[MPOLY_NUM_MAX_VOICES];
+    uint8_t firstReceived[MPOLY_NUM_MAX_VOICES];
+    float glideTime;
+    
+    int numVoices;
+    
+    int voices[MPOLY_NUM_MAX_VOICES][2];
     
     int notes[128][2];
     
@@ -608,10 +616,8 @@ typedef struct _tMPoly
     
     int lastVoiceToChange;
     
-    tStack* stack;
-    tStack* orderStack;
-    
     int32_t pitchBend;
+    float pitchBendAmount;
     
     int currentNote;
     int currentVoice;

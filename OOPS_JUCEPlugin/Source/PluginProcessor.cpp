@@ -78,29 +78,29 @@ void OopsAudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuffer& mi
         outPointerR[samp] = outPointerL[samp];
     }
     */
-    /*
+    
     MidiMessage m;
     int time;
     
     for (MidiBuffer::Iterator i (midiMessages); i.getNextEvent (m, time);)
     {
-        int noteNumber = m.getNoteNumber();
-        float velocity = m.getFloatVelocity();
-        
         if (m.isNoteOn())
         {
+            int noteNumber = m.getNoteNumber();
+            float velocity = m.getFloatVelocity();
             OOPSTest_noteOn(noteNumber, velocity);
         }
         else if (m.isNoteOff())
         {
+            int noteNumber = m.getNoteNumber();
             OOPSTest_noteOff(noteNumber);
         }
-        else
+        else if (m.isPitchWheel())
         {
-            
+            int pitchBend  = m.getPitchWheelValue();
+            OOPSTest_pitchBendInput(pitchBend);
         }
      }
-    */
     
     OOPSTest_block((float*)inPointerL, (float*)inPointerR, outPointerL, outPointerR, buffer.getNumSamples());
     

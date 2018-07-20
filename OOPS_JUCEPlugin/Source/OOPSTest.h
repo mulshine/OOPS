@@ -26,5 +26,6 @@ void    OOPSTest_block           (int numSamples);
 
 void    OOPSTest_noteOn          (int midiNoteNumber, float velocity);
 void    OOPSTest_noteOff         (int midiNoteNumber);
+void    OOPSTest_pitchBendInput  (int pitchBend);
 
 #endif  // OOPSTEST1_H_INCLUDED

@@ -24,6 +24,9 @@ void    OOPSTest_init            (float sampleRate, int samplesPerBlock)
         ps[i] = tPitchShifter_init(samplesPerBlock);
     }
     
+    poly = tMPoly_init(NUM_SHIFTERS);
+    tMPoly_setPitchGlideTime(poly, 500.0f);
+    
     setSliderValue("GAIN", 0.0f);
     setSliderValue("PITCH FACTOR 1", 1.0f/7.0f);
     setSliderValue("PITCH FACTOR 2", 1.0f/7.0f);
@@ -50,9 +53,20 @@ void    OOPSTest_block           (float* inL, float* inR, float* outL, float* ou
     
     for (int i = 0; i < NUM_SHIFTERS; ++i)
     {
-        tPitchShifter_setPitchFactor(ps[i], wfPitchFactor[i]);
-        //tPitchShifter_setTimeConstant(ps[i], 100.0f);
-        tPitchShifter_ioSamples(ps[i], &inBuffer[cur_read_block*numSamples], &outBuffer[i][cur_write_block*numSamples], numSamples);
+        for (int cc = 0; cc < numSamples; ++cc)
+        {
+            tMPoly_tick(poly);
+        }
+        if (tMPoly_isOn(poly, i))
+        {
+            float freq = OOPS_midiToFrequency(tMPoly_getPitch(poly, i)) * oops.invSampleRate;
+            tPitchShifter_ioSamples_toFreq(ps[i], &inBuffer[cur_read_block*numSamples], &outBuffer[i][cur_write_block*numSamples], numSamples, freq);
+        }
+        else
+        {
+            tPitchShifter_setPitchFactor(ps[i], 1.0f);
+            tPitchShifter_ioSamples(ps[i], &inBuffer[cur_read_block*numSamples], &outBuffer[i][cur_write_block*numSamples], numSamples);
+        }
     }
     
     /* MONO */
@@ -95,18 +109,18 @@ void    OOPSTest_controllerInput (int controller, float value)
 
 void    OOPSTest_pitchBendInput  (int pitchBend)
 {
-
+    tMPoly_pitchBend(poly, pitchBend);
 }
 
 void    OOPSTest_noteOn          (int midiNoteNumber, float velocity)
 {
-
+    tMPoly_noteOn(poly, midiNoteNumber, velocity);
 }
 
 
 void    OOPSTest_noteOff         (int midiNoteNumber)
 {
-
+    tMPoly_noteOff(poly, midiNoteNumber);
 }
 
 
