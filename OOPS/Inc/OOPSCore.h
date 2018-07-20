@@ -598,7 +598,7 @@ typedef struct _tMPoly
     int numVoices;
     int numVoicesActive;
     
-    int voices[NUM_VOICES][2];
+    int voices[128][2];
     
     int notes[128][2];
     
@@ -630,8 +630,8 @@ typedef struct _tMPoly
 /* tSoladPS : pitch shifting algorithm */
 typedef struct _tSOLAD
 {
-    int timeindex;              // current reference time, write index
-    int blocksize;              // signal input / output block size
+	uint16_t timeindex;              // current reference time, write index
+	uint16_t blocksize;              // signal input / output block size
     float pitchfactor;        // pitch factor between 0.25 and 4
     float readlag;            // read pointer's lag behind write pointer
     float period;             // period length in input signal
@@ -656,10 +656,10 @@ typedef struct _tSNAC
     float *spectrumbuf;
     float *biasbuf;
     
-    int timeindex;
-    int framesize;
-    int overlap;
-    int periodindex;
+    uint16_t timeindex;
+    uint16_t framesize;
+    uint16_t overlap;
+    uint16_t periodindex;
     
     float periodlength;
     float fidelity;
@@ -722,15 +722,15 @@ typedef struct _tLockhartWavefolder
 typedef struct tEnv
 {
     float buf[5000];
-    int x_phase;                    /* number of points since last output */
-    int x_period;                   /* requested period of output */
-    int x_realperiod;               /* period rounded up to vecsize multiple */
-    int x_npoints;                  /* analysis window size in samples */
+    uint16_t x_phase;                    /* number of points since last output */
+    uint16_t x_period;                   /* requested period of output */
+    uint16_t x_realperiod;               /* period rounded up to vecsize multiple */
+    uint16_t x_npoints;                  /* analysis window size in samples */
     float x_result;                 /* result to output */
     float x_sumbuf[MAXOVERLAP];     /* summing buffer */
     float x_f;
-    int windowSize, hopSize;
-    int x_allocforvs;               /* extra buffer for DSP vector size */
+    uint16_t windowSize, hopSize;
+    uint16_t x_allocforvs;               /* extra buffer for DSP vector size */
 } tEnv;
 
 #define FORD 10
@@ -778,9 +778,9 @@ typedef struct _tPitchShifter
     tSOLAD* sola;
     tHighpass* hp;
     
-    int hopSize;
-    int windowSize;
-    int fba;
+    uint16_t hopSize;
+    uint16_t windowSize;
+    uint8_t fba;
     
     float pitchFactor;
     float timeConstant;

@@ -967,7 +967,7 @@ void tPitchShifter_ioSamples(tPitchShifter* ps, float* in, float* out, int size)
     if(pitchshifter_attackdetect(ps) == 1)
     {
         ps->fba = 5;
-        tSOLAD_setReadLag(ps->sola, oops.blockSize);
+        tSOLAD_setReadLag(ps->sola, ps->windowSize);
     }
     
     tSNAC_ioSamples(ps->snac, in, out, size);
@@ -977,6 +977,85 @@ void tPitchShifter_ioSamples(tPitchShifter* ps, float* in, float* out, int size)
     tSOLAD_setPitchFactor(ps->sola, ps->pitchFactor);
     tSOLAD_ioSamples(ps->sola, in, out, size);
     
+    for (int cc = 0; cc < size; ++cc)
+    {
+        out[cc] = tHighpassTick(ps->hp, out[cc]);
+    }
+}
+
+
+void tPitchShifter_ioSamples_toFreq(tPitchShifter* ps, float* in, float* out, int size, float toFreq)
+{
+    float period;
+
+    tEnvProcessBlock(ps->env, in);
+
+    if(pitchshifter_attackdetect(ps) == 1)
+    {
+        ps->fba = 5;
+        tSOLAD_setReadLag(ps->sola, ps->windowSize);
+    }
+
+    tSNAC_ioSamples(ps->snac, in, out, size);
+    period = tSNAC_getPeriod(ps->snac);
+
+    tSOLAD_setPeriod(ps->sola, period);
+    ps->pitchFactor = period*toFreq;
+    tSOLAD_setPitchFactor(ps->sola, ps->pitchFactor);
+    tSOLAD_ioSamples(ps->sola, in, out, size);
+
+    for (int cc = 0; cc < size; ++cc)
+    {
+        out[cc] = tHighpassTick(ps->hp, out[cc]);
+    }
+}
+
+void tPitchShifter_ioSamples_toPeriod(tPitchShifter* ps, float* in, float* out, int size, float toPeriod)
+{
+    float period;
+
+    tEnvProcessBlock(ps->env, in);
+
+    if(pitchshifter_attackdetect(ps) == 1)
+    {
+        ps->fba = 5;
+        tSOLAD_setReadLag(ps->sola, ps->windowSize);
+    }
+
+    tSNAC_ioSamples(ps->snac, in, out, size);
+    period = tSNAC_getPeriod(ps->snac);
+
+    tSOLAD_setPeriod(ps->sola, period);
+    ps->pitchFactor = period/toPeriod;
+    tSOLAD_setPitchFactor(ps->sola, ps->pitchFactor);
+    tSOLAD_ioSamples(ps->sola, in, out, size);
+
+    for (int cc = 0; cc < size; ++cc)
+    {
+        out[cc] = tHighpassTick(ps->hp, out[cc]);
+    }
+}
+
+void tPitchShifter_ioSamples_toFunc(tPitchShifter* ps, float* in, float* out, int size, float (*fun)(float))
+{
+    float period;
+
+    tEnvProcessBlock(ps->env, in);
+
+    if(pitchshifter_attackdetect(ps) == 1)
+    {
+        ps->fba = 5;
+        tSOLAD_setReadLag(ps->sola, ps->windowSize);
+    }
+
+    tSNAC_ioSamples(ps->snac, in, out, size);
+    period = tSNAC_getPeriod(ps->snac);
+
+    tSOLAD_setPeriod(ps->sola, period);
+    ps->pitchFactor = period/fun(period);
+    tSOLAD_setPitchFactor(ps->sola, ps->pitchFactor);
+    tSOLAD_ioSamples(ps->sola, in, out, size);
+
     for (int cc = 0; cc < size; ++cc)
     {
         out[cc] = tHighpassTick(ps->hp, out[cc]);
@@ -1002,6 +1081,11 @@ void tPitchShifter_setHopSize(tPitchShifter* ps, int hs)
 void tPitchShifter_setWindowSize(tPitchShifter* ps, int ws)
 {
     ps->windowSize = ws;
+}
+
+float tPitchShifter_getPeriod(tPitchShifter* ps)
+{
+    return tSNAC_getPeriod(ps->snac);
 }
 
 static int pitchshifter_attackdetect(tPitchShifter* ps)

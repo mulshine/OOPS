@@ -20,6 +20,7 @@
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 #define NUM_VOICES 5
+#define NUM_SHIFTERS 2
 
 #define SHAPER1_TABLE_SIZE 65536
 extern const float shaper1[SHAPER1_TABLE_SIZE];
@@ -34,13 +35,14 @@ extern const float shaper1[SHAPER1_TABLE_SIZE];
 #define     N_COMPRESSOR         0
 #define     N_PRCREV             0
 #define     N_NREV               0
+#define     N_PITCHSHIFTER       NUM_SHIFTERS
 #define     N_PLUCK              0
 #define     N_STIFKARP           0
 #define     N_NEURON             0
 #define     N_PHASOR             0
-#define     N_CYCLE              1
-#define     N_SAWTOOTH           1
-#define     N_TRIANGLE           1
+#define     N_CYCLE              0
+#define     N_SAWTOOTH           NUM_VOICES
+#define     N_TRIANGLE           0
 #define     N_SQUARE             0
 #define     N_NOISE              0 + (1 * N_STIFKARP) + (1 * N_PLUCK) // StifKarp and Pluck each contain 1 Noise component.
 #define     N_ONEPOLE            0 + (1 * N_PLUCK)
@@ -52,26 +54,25 @@ extern const float shaper1[SHAPER1_TABLE_SIZE];
 #define     N_BIQUAD             0 + (4 * N_STIFKARP)
 #define     N_SVF                0 + 32*N_BUTTERWORTH
 #define     N_SVFE               0
-#define     N_HIGHPASS           1 + (1 * N_PITCHSHIFTER)
+#define     N_HIGHPASS           0 + (1 * N_PITCHSHIFTER)
 #define     N_DELAY              0 + (14 * N_NREV) + (3 * N_PRCREV)
 #define     N_DELAYL             0 + (1 * N_STIFKARP) + (1 * N_PLUCK)
 #define     N_DELAYA             0 + (1 * N_PRCREV) + (1 * N_STIFKARP)
 #define     N_ENVELOPE           0
-#define     N_ENV                1 + (1 * N_PITCHSHIFTER)
+#define     N_ENV                0 + (1 * N_PITCHSHIFTER)
 #define     N_ADSR               0
-#define     N_RAMP               0
+#define     N_RAMP               NUM_SHIFTERS
 #define     N_ENVELOPEFOLLOW     0
 #define     N_VOCODER            0
-#define     N_TALKBOX            0
-#define     N_POLY               0
-#define     N_STACK              0
-#define     N_MPOLY              0
-#define     N_SOLAD              1 + (1 * N_PITCHSHIFTER)
-#define     N_SNAC               1 + (1 * N_PITCHSHIFTER)
+#define     N_TALKBOX            1
+#define     N_POLY               1
+#define     N_MPOLY              1
+#define     N_STACK              0 + (2 * N_MPOLY)
+#define     N_SOLAD              0 + (1 * N_PITCHSHIFTER)
+#define     N_SNAC               0 + (1 * N_PITCHSHIFTER)
 #define     N_ATKDTK             0
-#define     N_LOCKHARTWAVEFOLDER 1
-#define     N_FORMANTSHIFTER     1
-#define     N_PITCHSHIFTER       1
+#define     N_LOCKHARTWAVEFOLDER 0
+#define     N_FORMANTSHIFTER     2
 
 #define     DELAY_LENGTH        16000   // The maximum delay length of all Delay/DelayL/DelayA components.
                                             // Feel free to change to suit memory constraints or desired delay max length / functionality.

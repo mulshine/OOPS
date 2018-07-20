@@ -11,8 +11,6 @@
 #ifndef FM_H_INCLUDED
 #define FM_H_INCLUDED
 
-#define NUM_SHIFTERS 2
-
 float wfGain;
 float wfPitchFactor[NUM_SHIFTERS];
 

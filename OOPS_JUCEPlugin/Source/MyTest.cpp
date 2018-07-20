@@ -52,11 +52,6 @@ void    OOPSTest_block           (float* inL, float* inR, float* outL, float* ou
     {
         tPitchShifter_setPitchFactor(ps[i], wfPitchFactor[i]);
         //tPitchShifter_setTimeConstant(ps[i], 100.0f);
-    }
-    
-    
-    for (int i = 0; i < NUM_SHIFTERS; ++i)
-    {
         tPitchShifter_ioSamples(ps[i], &inBuffer[cur_read_block*numSamples], &outBuffer[i][cur_write_block*numSamples], numSamples);
     }
     

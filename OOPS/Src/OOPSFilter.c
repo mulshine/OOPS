@@ -792,5 +792,330 @@ int     tSVFESetQ(tSVFE* const svf, float Q)
 }
 #endif
 
+#if N_FORMANTSHIFTER
+tFormantShifter* tFormantShifterInit()
+{
+    tFormantShifter* fs = &oops.tFormantShifterRegistry[oops.registryIndex[T_FORMANTSHIFTER]++];
+    
+    fs->ford = FORD;
+    fs->falph = powf(0.001f, 80.0f / (oops.sampleRate));
+    fs->flamb = -(0.8517f*sqrt(atanf(0.06583f*oops.sampleRate))-0.1916f); // or about -0.88 @ 44.1kHz
+    fs->fhp = 0.0f;
+    fs->flp = 0.0f;
+    fs->flpa = powf(0.001f, 10.0f / (oops.sampleRate));
+    fs->fmute = 1.0f;
+    fs->fmutealph = powf(0.001f, 1.0f / (oops.sampleRate));
+    fs->cbiwr = 0;
+    fs->cbord = 0;
+    
+    return(fs);
+}
+
+/*
+float tFormantShifterTick(<#tFormantShifter *const#>, <#float input#>)
+{
+    
+}
+*/
+void tFormantShifter_ioSamples(tFormantShifter* fs, float* in, float* out, int size, float fwarp)
+{
+    float fa, fb, fc, foma, falph, ford, flpa, flamb, tf, fk, tf2, f0resp, f1resp, frlamb;
+    int outindex = 0;
+    int ti4;
+    ford = fs->ford;
+    falph = fs->falph;
+    foma = (1.0f - falph);
+    flpa = fs->flpa;
+    flamb = fs->flamb;
+    tf = exp2(fwarp/2.0f) * (1+flamb)/(1-flamb);
+    frlamb = (tf-1)/(tf+1);
+    while(size--)
+    {
+        tf = (*in++ * 2.0f);
+        ti4 = fs->cbiwr;
+        
+        fa = tf - fs->fhp;
+        fs->fhp = tf;
+        fb = fa;
+        for(int i = 0; i < ford; i++)
+        {
+            fs->fsig[i] = fa*fa*foma + fs->fsig[i]*falph;
+            fc = (fb - fs->fc[i])*flamb + fs->fb[i];
+            fs->fc[i] = fc;
+            fs->fb[i] = fb;
+            fk = fa*fc*foma + fs->fk[i]*falph;
+            fs->fk[i] = fk;
+            tf = fk/(fs->fsig[i] + 0.000001f);
+            tf = tf*foma + fs->fsmooth[i]*falph;
+            fs->fsmooth[i] = tf;
+            fs->fbuff[i][ti4] = tf;
+            fb = fc - tf*fa;
+            fa = fa - tf*fc;
+        }
+        fs->cbiwr++;
+        if(fs->cbiwr >= CBSIZE)
+        {
+            fs->cbiwr = 0;
+        }
+
+        tf2 = fa;
+        fa = 0;
+        fb = fa;
+        for (int i=0; i<ford; i++) {
+            fc = (fb-fs->frc[i])*frlamb + fs->frb[i];
+            tf = fs->fbuff[i][ti4];
+            fb = fc - tf*fa;
+            fs->ftvec[i] = tf*fc;
+            fa = fa - fs->ftvec[i];
+        }
+        tf = -fa;
+        for (int i=ford-1; i>=0; i--) {
+            tf = tf + fs->ftvec[i];
+        }
+        f0resp = tf;
+        
+        //  second time: compute 1-response
+        fa = 1;
+        fb = fa;
+        for (int i=0; i<ford; i++) {
+            fc = (fb-fs->frc[i])*frlamb + fs->frb[i];
+            tf = fs->fbuff[i][ti4];
+            fb = fc - tf*fa;
+            fs->ftvec[i] = tf*fc;
+            fa = fa - fs->ftvec[i];
+        }
+        tf = -fa;
+        for (int i=ford-1; i>=0; i--) {
+            tf = tf + fs->ftvec[i];
+        }
+        f1resp = tf;
+        
+        //  now solve equations for output, based on 0-response and 1-response
+        tf = (float)2*tf2;
+        tf2 = tf;
+        tf = ((float)1 - f1resp + f0resp);
+        if (tf!=0) {
+            tf2 = (tf2 + f0resp) / tf;
+        }
+        else {
+            tf2 = 0;
+        }
+        
+        //  third time: update delay registers
+        fa = tf2;
+        fb = fa;
+        for (int i=0; i<ford; i++) {
+            fc = (fb-fs->frc[i])*frlamb + fs->frb[i];
+            fs->frc[i] = fc;
+            fs->frb[i] = fb;
+            tf = fs->fbuff[i][ti4];
+            fb = fc - tf*fa;
+            fa = fa - tf*fc;
+        }
+        tf = tf2;
+        tf = tf + flpa * fs->flp;  // lowpass post-emphasis filter
+        fs->flp = tf;
+        
+        // Bring up the gain slowly when formant correction goes from disabled
+        // to enabled, while things stabilize.
+        if (fs->fmute>0.5) {
+            tf = tf*(fs->fmute - 0.5)*2;
+        }
+        else {
+            tf = 0;
+        }
+        tf2 = fs->fmutealph;
+        fs->fmute = (1-tf2) + tf2*fs->fmute;
+        // now tf is signal output
+        // ...and we're done messing with formants
+        
+        out[outindex++] = tf;
+    }
+}
+#endif
+
+#if N_PITCHSHIFTER
+
+static int pitchshifter_attackdetect(tPitchShifter* ps);
+
+tPitchShifter* tPitchShifter_init(int samplesPerBlock)
+{
+    tPitchShifter* ps = &oops.tPitchShifterRegistry[oops.registryIndex[T_PITCHSHIFTER]++];
+    
+    ps->hopSize = DEFHOPSIZE;
+    ps->windowSize = DEFWINDOWSIZE;
+    ps->fba = FBA;
+    
+    ps->env = tEnvInit(ps->windowSize, ps->hopSize);
+    ps->snac = tSNAC_init(samplesPerBlock, DEFOVERLAP);
+    ps->sola = tSOLAD_init();
+    ps->hp = tHighpassInit(HPFREQ);
+    
+    tSOLAD_setPitchFactor(ps->sola, DEFPITCHRATIO);
+    
+    tPitchShifter_setTimeConstant(ps, DEFTIMECONSTANT);
+    
+    return(ps);
+}
+
+void tPitchShifter_ioSamples(tPitchShifter* ps, float* in, float* out, int size)
+{
+    float period;
+    
+    tEnvProcessBlock(ps->env, in);
+    
+    if(pitchshifter_attackdetect(ps) == 1)
+    {
+        ps->fba = 5;
+        tSOLAD_setReadLag(ps->sola, ps->windowSize);
+    }
+    
+    tSNAC_ioSamples(ps->snac, in, out, size);
+    period = tSNAC_getPeriod(ps->snac);
+    
+    tSOLAD_setPeriod(ps->sola, period);
+    tSOLAD_setPitchFactor(ps->sola, ps->pitchFactor);
+    tSOLAD_ioSamples(ps->sola, in, out, size);
+    
+    for (int cc = 0; cc < size; ++cc)
+    {
+        out[cc] = tHighpassTick(ps->hp, out[cc]);
+    }
+}
+
+
+void tPitchShifter_ioSamples_toFreq(tPitchShifter* ps, float* in, float* out, int size, float toFreq)
+{
+    float period;
+
+    tEnvProcessBlock(ps->env, in);
+
+    if(pitchshifter_attackdetect(ps) == 1)
+    {
+        ps->fba = 5;
+        tSOLAD_setReadLag(ps->sola, ps->windowSize);
+    }
+
+    tSNAC_ioSamples(ps->snac, in, out, size);
+    period = tSNAC_getPeriod(ps->snac);
+
+    tSOLAD_setPeriod(ps->sola, period);
+    ps->pitchFactor = period*toFreq;
+    tSOLAD_setPitchFactor(ps->sola, ps->pitchFactor);
+    tSOLAD_ioSamples(ps->sola, in, out, size);
+
+    for (int cc = 0; cc < size; ++cc)
+    {
+        out[cc] = tHighpassTick(ps->hp, out[cc]);
+    }
+}
+
+void tPitchShifter_ioSamples_toPeriod(tPitchShifter* ps, float* in, float* out, int size, float toPeriod)
+{
+    float period;
+
+    tEnvProcessBlock(ps->env, in);
+
+    if(pitchshifter_attackdetect(ps) == 1)
+    {
+        ps->fba = 5;
+        tSOLAD_setReadLag(ps->sola, ps->windowSize);
+    }
+
+    tSNAC_ioSamples(ps->snac, in, out, size);
+    period = tSNAC_getPeriod(ps->snac);
+
+    tSOLAD_setPeriod(ps->sola, period);
+    ps->pitchFactor = period/toPeriod;
+    tSOLAD_setPitchFactor(ps->sola, ps->pitchFactor);
+    tSOLAD_ioSamples(ps->sola, in, out, size);
+
+    for (int cc = 0; cc < size; ++cc)
+    {
+        out[cc] = tHighpassTick(ps->hp, out[cc]);
+    }
+}
+
+void tPitchShifter_ioSamples_toFunc(tPitchShifter* ps, float* in, float* out, int size, float (*fun)(float))
+{
+    float period;
+
+    tEnvProcessBlock(ps->env, in);
+
+    if(pitchshifter_attackdetect(ps) == 1)
+    {
+        ps->fba = 5;
+        tSOLAD_setReadLag(ps->sola, ps->windowSize);
+    }
+
+    tSNAC_ioSamples(ps->snac, in, out, size);
+    period = tSNAC_getPeriod(ps->snac);
+
+    tSOLAD_setPeriod(ps->sola, period);
+    ps->pitchFactor = period/fun(period);
+    tSOLAD_setPitchFactor(ps->sola, ps->pitchFactor);
+    tSOLAD_ioSamples(ps->sola, in, out, size);
+
+    for (int cc = 0; cc < size; ++cc)
+    {
+        out[cc] = tHighpassTick(ps->hp, out[cc]);
+    }
+}
+
+void tPitchShifter_setPitchFactor(tPitchShifter* ps, float pf)
+{
+    ps->pitchFactor = pf;
+}
+
+void tPitchShifter_setTimeConstant(tPitchShifter* ps, float tc)
+{
+    ps->timeConstant = tc;
+    ps->radius = expf(-1000.0f * ps->hopSize * oops.invSampleRate / ps->timeConstant);
+}
+
+void tPitchShifter_setHopSize(tPitchShifter* ps, int hs)
+{
+    ps->hopSize = hs;
+}
+
+void tPitchShifter_setWindowSize(tPitchShifter* ps, int ws)
+{
+    ps->windowSize = ws;
+}
+
+float tPitchShifter_getPeriod(tPitchShifter* ps)
+{
+    return tSNAC_getPeriod(ps->snac);
+}
+
+static int pitchshifter_attackdetect(tPitchShifter* ps)
+{
+    float envout;
+    
+    envout = tEnvTick(ps->env);
+    
+    if (envout >= 1.0f)
+    {
+        ps->lastmax = ps->max;
+        if (envout > ps->max)
+        {
+            ps->max = envout;
+        }
+        else
+        {
+            ps->deltamax = envout - ps->max;
+            ps->max = ps->max * ps->radius;
+        }
+        ps->deltamax = ps->max - ps->lastmax;
+    }
+    
+    ps->fba = ps->fba ? (ps->fba - 1) : 0;
+    
+    return (ps->fba == 0 && (ps->max > 60 && ps->deltamax > 6)) ? 1 : 0;
+}
+
+#endif
+
+
 
 

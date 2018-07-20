@@ -1168,12 +1168,11 @@ tStack* tStack_init(void)
 
 #if N_MPOLY
 
-tMPoly* tMPoly_init(void)
+tMPoly* tMPoly_init(int numVoices)
 {
     tMPoly* poly = &oops.tMPolyRegistry[oops.registryIndex[T_MPOLY]++];
     
-    poly->numVoices = NUM_VOICES;
-    poly->numVoicesActive = NUM_VOICES;
+    poly->numVoices = numVoices;
     poly->lastVoiceToChange = 0;
     
     // Arp mode stuff
@@ -1185,10 +1184,10 @@ tMPoly* tMPoly_init(void)
     for (int i = 0; i < 128; i++)
     {
         poly->notes[i][0] = 0;
-        poly->notes[i][1] = 0;
+        poly->notes[i][1] = -1;
     }
     
-    for (int i = 0; i < NUM_VOICES; i ++)
+    for (int i = 0; i < 128; i ++)
     {
         poly->voices[i][0] = -1;
     }
@@ -1226,35 +1225,43 @@ void tMPoly_noteOn(tMPoly* poly, int note, uint8_t vel)
                 poly->voices[i][1] = vel;
                 poly->lastVoiceToChange = i;
                 poly->notes[note][0] = vel;
-                poly->notes[note][1] = 1;
+                poly->notes[note][1] = i;
                 break;
             }
         }
         
         if (!found) //steal
         {
-            int whichVoice = poly->lastVoiceToChange;
-            int oldNote = poly->voices[whichVoice][0];
-            poly->voices[whichVoice][0] = note;
-            poly->voices[whichVoice][1] = vel;
-            poly->notes[oldNote][1] = 0; //mark the stolen voice as inactive (in the second dimension of the notes array)
-            
-            poly->notes[note][0] = vel;
-            poly->notes[note][1] = OTRUE;
+        	int whichVoice, whichNote;
+        	for (int j = tStack_getSize(poly->stack) - 1; j >= 0; j--)
+        	{
+        		whichNote = tStack_get(poly->stack, j);
+        		whichVoice = poly->notes[whichNote][1];
+        		if (whichVoice >= 0)
+        		{
+        			poly->lastVoiceToChange = j;
+					int oldNote = poly->voices[whichVoice][0];
+					poly->voices[whichVoice][0] = note;
+					poly->voices[whichVoice][1] = vel;
+					poly->notes[oldNote][1] = -1; //mark the stolen voice as inactive (in the second dimension of the notes array)
+					poly->notes[note][0] = vel;
+					poly->notes[note][1] = whichVoice;
+					break;
+        		}
+        	}
         }
-        
     }
 }
 
 
 int16_t noteToTest = -1;
 
-void tMPoly_noteOff(tMPoly* poly, uint8_t note)
+int tMPoly_noteOff(tMPoly* poly, uint8_t note)
 {
     tStack_remove(poly->stack, note);
     tStack_remove(poly->orderStack, note);
     poly->notes[note][0] = 0;
-    poly->notes[note][1] = 0;
+    poly->notes[note][1] = -1;
     
     int deactivatedVoice = -1;
     for (int i = 0; i < poly->numVoices; i++)
@@ -1268,6 +1275,7 @@ void tMPoly_noteOff(tMPoly* poly, uint8_t note)
             break;
         }
     }
+    /*
     //monophonic handling
     if ((poly->numVoices == 1) && (tStack_getSize(poly->stack) > 0))
     {
@@ -1276,29 +1284,25 @@ void tMPoly_noteOff(tMPoly* poly, uint8_t note)
         poly->voices[0][1] = poly->notes[oldNote][0];
         poly->lastVoiceToChange = 0;
     }
+    */
     
     //grab old notes off the stack if there are notes waiting to replace the free voice
-    else if (deactivatedVoice != -1)
+    if (deactivatedVoice >= 0)
     {
-        int i = 0;
-        
-        while (1)
+        for (int j = 0; j < tStack_getSize(poly->stack); ++j)
         {
-            noteToTest = tStack_get(poly->stack, i++);
-            if (noteToTest < 0 ) break;
+            noteToTest = tStack_get(poly->stack, j);
             
-            if (poly->notes[noteToTest][1] == 0) //if there is a stolen note waiting (marked inactive but on the stack)
+            if (poly->notes[noteToTest][1] < 0) //if there is a stolen note waiting (marked inactive but on the stack)
             {
                 poly->voices[deactivatedVoice][0] = noteToTest; //set the newly free voice to use the old stolen note
                 poly->voices[deactivatedVoice][1] = poly->notes[noteToTest][0]; // set the velocity of the voice to be the velocity of that note
-                poly->notes[noteToTest][1] = 1; //mark that it is no longer stolen and is now active
-                poly->lastVoiceToChange = deactivatedVoice; // mark the voice that was just changed as the last voice to change
-                break;
+                poly->notes[noteToTest][1] = deactivatedVoice; //mark that it is no longer stolen and is now active
+                return -1;
             }
         }
     }
-    
-    
+    return deactivatedVoice;
 }
 
 void tMPoly_orderedAddToStack(tMPoly* poly, uint8_t noteVal)

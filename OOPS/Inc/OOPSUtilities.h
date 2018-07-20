@@ -83,12 +83,12 @@ void tPolyNoteOn(tPoly* poly, int midiNoteNumber, float velocity);
 void tPolyNoteOff(tPoly* poly, int midiNoteNumber);
 
 /* MPoly*/
-tMPoly*     tMPoly_init(void);
+tMPoly*     tMPoly_init(int numVoices);
 
 //ADDING A NOTE
 void        tMPoly_noteOn(tMPoly* const, int note, uint8_t vel);
 
-void        tMPoly_noteOff(tMPoly* const, uint8_t note);
+int         tMPoly_noteOff(tMPoly* const, uint8_t note);
 
 void        tMPoly_orderedAddToStack(tMPoly* const, uint8_t noteVal);
 

@@ -598,7 +598,7 @@ typedef struct _tMPoly
     int numVoices;
     int numVoicesActive;
     
-    int voices[NUM_VOICES][2];
+    int voices[128][2];
     
     int notes[128][2];
     
@@ -619,6 +619,178 @@ typedef struct _tMPoly
     int maxLength;
     
 } tMPoly;
+
+#define LOOPSIZE (4096*2)           // loop size must be power of two
+#define LOOPMASK (LOOPSIZE - 1)
+#define PITCHFACTORDEFAULT 1.0f
+#define INITPERIOD 64.0f
+#define MAXPERIOD (float)((LOOPSIZE - w->blocksize) * 0.8f)
+#define MINPERIOD 8.0f
+
+/* tSoladPS : pitch shifting algorithm */
+typedef struct _tSOLAD
+{
+	uint16_t timeindex;              // current reference time, write index
+	uint16_t blocksize;              // signal input / output block size
+    float pitchfactor;        // pitch factor between 0.25 and 4
+    float readlag;            // read pointer's lag behind write pointer
+    float period;             // period length in input signal
+    float jump;               // read pointer jump length and direction
+    float xfadelength;        // crossfade length expressed at input sample rate
+    float xfadevalue;         // crossfade phase and value
+    float delaybuf[LOOPSIZE+16];
+    
+    void (*sampleRateChanged)(struct _tSOLAD *self);
+} tSOLAD;
+
+#define DEFFRAMESIZE 1024           // default analysis framesize
+#define DEFOVERLAP 1                // default overlap
+#define DEFBIAS 0.2f        // default bias
+#define DEFMINRMS 0.003f   // default minimum RMS
+#define SEEK 0.85f       // seek-length as ratio of framesize
+
+typedef struct _tSNAC
+{
+    float *inputbuf;
+    float *processbuf;
+    float *spectrumbuf;
+    float *biasbuf;
+    
+    uint16_t timeindex;
+    uint16_t framesize;
+    uint16_t overlap;
+    uint16_t periodindex;
+    
+    float periodlength;
+    float fidelity;
+    float biasfactor;
+    float minrms;
+    
+    void (*sampleRateChanged)(struct _tSNAC *self);
+} tSNAC;
+
+#define DEFSAMPLERATE 44100
+#define DEFBLOCKSIZE 1024
+#define DEFTHRESHOLD 6
+#define DEFATTACK    10
+#define DEFRELEASE    10
+
+typedef struct _tAtkDtk
+{
+    float env;
+    
+    //Attack & Release times in msec
+    int atk;
+    int rel;
+    
+    //Attack & Release coefficients based on times
+    float atk_coeff;
+    float rel_coeff;
+    
+    int blocksize;
+    int samplerate;
+    
+    //RMS amplitude of previous block - used to decide if attack is present
+    float prevAmp;
+    
+    float threshold;
+} tAtkDtk;
+
+#define THRESH 10e-10
+#define ILL_THRESH 10e-10
+#define LOCKHART_RL 7.5e3
+#define LOCKHART_R 15e3
+#define LOCKHART_VT 26e-3
+#define LOCKHART_Is 10e-16
+#define LOCKHART_A 2.0*LOCKHART_RL/LOCKHART_R
+#define LOCKHART_B (LOCKHART_R+2.0*LOCKHART_RL)/(LOCKHART_VT*LOCKHART_R)
+#define LOCKHART_D (LOCKHART_RL*LOCKHART_Is)/LOCKHART_VT
+#define VT_DIV_B LOCKHART_VT/LOCKHART_B
+
+typedef struct _tLockhartWavefolder
+{
+    double Ln1;
+    double Fn1;
+    double xn1;
+    
+    void (*sampleRateChanged)(struct _tLockhartWavefolder *self);
+} tLockhartWavefolder;
+
+#define MAXOVERLAP 32
+#define INITVSTAKEN 64
+
+typedef struct tEnv
+{
+    float buf[5000];
+    uint16_t x_phase;                    /* number of points since last output */
+    uint16_t x_period;                   /* requested period of output */
+    uint16_t x_realperiod;               /* period rounded up to vecsize multiple */
+    uint16_t x_npoints;                  /* analysis window size in samples */
+    float x_result;                 /* result to output */
+    float x_sumbuf[MAXOVERLAP];     /* summing buffer */
+    float x_f;
+    uint16_t windowSize, hopSize;
+    uint16_t x_allocforvs;               /* extra buffer for DSP vector size */
+} tEnv;
+
+#define FORD 10
+#define CBSIZE 2048
+
+typedef struct _tFormantShifter
+{
+    int ford;
+    float falph;
+    float flamb;
+    float fk[FORD];
+    float fb[FORD];
+    float fc[FORD];
+    float frb[FORD];
+    float frc[FORD];
+    float fsig[FORD];
+    float fsmooth[FORD];
+    float fhp;
+    float flp;
+    float flpa;
+    float fbuff[FORD][CBSIZE];
+    float ftvec[FORD];
+    float fmute;
+    float fmutealph;
+    unsigned int cbiwr;
+    float cbi[CBSIZE];
+    float cbf[CBSIZE];
+    float cbo [CBSIZE];
+    unsigned int cbord;
+    
+    void (*sampleRateChanged)(struct _tFormantShifter *self);
+} tFormantShifter;
+
+#define DEFPITCHRATIO 2.0f
+#define DEFTIMECONSTANT 100.0f
+#define DEFHOPSIZE 64
+#define DEFWINDOWSIZE 64
+#define FBA 20
+#define HPFREQ 40.0f
+
+typedef struct _tPitchShifter
+{
+    tEnv* env;
+    tSNAC* snac;
+    tSOLAD* sola;
+    tHighpass* hp;
+    
+    uint16_t hopSize;
+    uint16_t windowSize;
+    uint8_t fba;
+    
+    float pitchFactor;
+    float timeConstant;
+    float radius;
+    float max;
+    float lastmax;
+    float deltamax;
+    
+    void (*sampleRateChanged)(struct _tPitchShifter *self);
+} tPitchShifter;
 
 
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
@@ -642,11 +814,19 @@ void     tNeuronSampleRateChanged(tNeuron* n);
 void     tCompressorSampleRateChanged(tCompressor* n);
 void     tButterworthSampleRateChanged(tButterworth* n);
 
+void     tTalkboxSampleRateChanged(tVocoder* n);
 void     tVocoderSampleRateChanged(tVocoder* n);
 
 void     t808SnareSampleRateChanged(t808Snare* n);
 void     t808HihatSampleRateChanged(t808Hihat* n);
 void     t808CowbellSampleRateChanged(t808Cowbell* n);
+
+void     tSOLADSampleRateChanged(tSOLAD* n);
+void     tSNACSampleRateChanged(tSNAC* n);
+
+void     tLockhartWavefolderSampleRateChanged(tLockhartWavefolder* n);
+void     tFormantShifterSampleRateChanged(tFormantShifter* n);
+void     tPitchShifterSampleRateChanged(tFormantShifter* n);
 
 typedef enum OOPSRegistryIndex
 {
@@ -665,6 +845,7 @@ typedef enum OOPSRegistryIndex
     T_SVF,
     T_SVFE,
     T_HIGHPASS,
+    T_FORMANTSHIFTER,
     T_DELAY,
     T_DELAYL,
     T_DELAYA,
@@ -687,12 +868,19 @@ typedef enum OOPSRegistryIndex
     T_808HIHAT,
     T_808COWBELL,
     T_STACK,
+    T_SOLAD,
+    T_SNAC,
+    T_ATKDTK,
+    T_LOCKHARTWAVEFOLDER,
+    T_ENV,
+    T_PITCHSHIFTER,
     T_INDEXCNT
 }OOPSRegistryIndex;
 
 typedef struct _OOPS
 {
     float sampleRate, invSampleRate;
+    int blockSize;
     
     float   (*random)(void);
     
@@ -760,6 +948,10 @@ typedef struct _OOPS
 #if N_HIGHPASS
     tHighpass          tHighpassRegistry        [N_HIGHPASS];
 #endif
+    
+#if N_FORMANTSHIFTER
+    tFormantShifter    tFormantShifterRegistry  [N_FORMANTSHIFTER];
+#endif
         
 #if N_DELAY
     tDelay             tDelayRegistry           [N_DELAY];
@@ -824,16 +1016,32 @@ typedef struct _OOPS
 #endif
 
 #if N_POLY
-    tPoly  tPolyRegistry     [N_POLY];
+    tPoly               tPolyRegistry     [N_POLY];
 #endif
     
     
 #if N_MPOLY
-    tMPoly  tMPolyRegistry     [N_MPOLY];
+    tMPoly              tMPolyRegistry     [N_MPOLY];
+#endif
+    
+#if N_SOLAD
+    tSOLAD              tSOLADRegistry   [N_SOLAD];
+#endif
+    
+#if N_SNAC
+    tSNAC               tSNACRegistry   [N_SNAC];
+#endif
+    
+#if N_ATKDTK
+    tAtkDtk            tAtkDtkRegistry   [N_ATKDTK];
+#endif
+    
+#if N_LOCKHARTWAVEFOLDER
+    tLockhartWavefolder tLockhartWavefolderRegistry [N_LOCKHARTWAVEFOLDER];
 #endif
     
 #if N_808SNARE
-    t808Snare        t808SnareRegistry      [N_808SNARE];
+    t808Snare           t808SnareRegistry      [N_808SNARE];
 #endif
     
 #if N_808HIHAT
@@ -846,6 +1054,14 @@ typedef struct _OOPS
     
 #if N_STACK
     tStack            tStackRegistry      [N_STACK];
+#endif
+    
+#if N_ENV
+    tEnv               tEnvRegistry[N_ENV];
+#endif
+    
+#if N_PITCHSHIFTER
+    tPitchShifter               tPitchShifterRegistry[N_PITCHSHIFTER];
 #endif
     
     

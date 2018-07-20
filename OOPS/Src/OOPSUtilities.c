@@ -14,14 +14,14 @@
 #include "..\Inc\OOPSUtilities.h"
 #include "..\Inc\OOPSWavetables.h"
 #include "..\Inc\OOPS.h"
-#include "..\Externals\d_fft_mayer.h"
+#include "..\Inc\d_fft_mayer.h"
 
 #else
 
 #include "../Inc/OOPSUtilities.h"
 #include "../Inc/OOPSWavetables.h"
 #include "../Inc/OOPS.h"
-#include "../Externals/d_fft_mayer.h"
+#include "../Inc/d_fft_mayer.h"
 
 
 #endif
@@ -1168,12 +1168,11 @@ tStack* tStack_init(void)
 
 #if N_MPOLY
 
-tMPoly* tMPoly_init(void)
+tMPoly* tMPoly_init(int numVoices)
 {
     tMPoly* poly = &oops.tMPolyRegistry[oops.registryIndex[T_MPOLY]++];
     
-    poly->numVoices = NUM_VOICES;
-    poly->numVoicesActive = NUM_VOICES;
+    poly->numVoices = numVoices;
     poly->lastVoiceToChange = 0;
     
     // Arp mode stuff
@@ -1185,10 +1184,10 @@ tMPoly* tMPoly_init(void)
     for (int i = 0; i < 128; i++)
     {
         poly->notes[i][0] = 0;
-        poly->notes[i][1] = 0;
+        poly->notes[i][1] = -1;
     }
     
-    for (int i = 0; i < NUM_VOICES; i ++)
+    for (int i = 0; i < 128; i ++)
     {
         poly->voices[i][0] = -1;
     }
@@ -1226,35 +1225,43 @@ void tMPoly_noteOn(tMPoly* poly, int note, uint8_t vel)
                 poly->voices[i][1] = vel;
                 poly->lastVoiceToChange = i;
                 poly->notes[note][0] = vel;
-                poly->notes[note][1] = 1;
+                poly->notes[note][1] = i;
                 break;
             }
         }
         
         if (!found) //steal
         {
-            int whichVoice = poly->lastVoiceToChange;
-            int oldNote = poly->voices[whichVoice][0];
-            poly->voices[whichVoice][0] = note;
-            poly->voices[whichVoice][1] = vel;
-            poly->notes[oldNote][1] = 0; //mark the stolen voice as inactive (in the second dimension of the notes array)
-            
-            poly->notes[note][0] = vel;
-            poly->notes[note][1] = OTRUE;
+        	int whichVoice, whichNote;
+        	for (int j = tStack_getSize(poly->stack) - 1; j >= 0; j--)
+        	{
+        		whichNote = tStack_get(poly->stack, j);
+        		whichVoice = poly->notes[whichNote][1];
+        		if (whichVoice >= 0)
+        		{
+        			poly->lastVoiceToChange = j;
+					int oldNote = poly->voices[whichVoice][0];
+					poly->voices[whichVoice][0] = note;
+					poly->voices[whichVoice][1] = vel;
+					poly->notes[oldNote][1] = -1; //mark the stolen voice as inactive (in the second dimension of the notes array)
+					poly->notes[note][0] = vel;
+					poly->notes[note][1] = whichVoice;
+					break;
+        		}
+        	}
         }
-        
     }
 }
 
 
 int16_t noteToTest = -1;
 
-void tMPoly_noteOff(tMPoly* poly, uint8_t note)
+int tMPoly_noteOff(tMPoly* poly, uint8_t note)
 {
     tStack_remove(poly->stack, note);
     tStack_remove(poly->orderStack, note);
     poly->notes[note][0] = 0;
-    poly->notes[note][1] = 0;
+    poly->notes[note][1] = -1;
     
     int deactivatedVoice = -1;
     for (int i = 0; i < poly->numVoices; i++)
@@ -1268,6 +1275,7 @@ void tMPoly_noteOff(tMPoly* poly, uint8_t note)
             break;
         }
     }
+    /*
     //monophonic handling
     if ((poly->numVoices == 1) && (tStack_getSize(poly->stack) > 0))
     {
@@ -1276,29 +1284,25 @@ void tMPoly_noteOff(tMPoly* poly, uint8_t note)
         poly->voices[0][1] = poly->notes[oldNote][0];
         poly->lastVoiceToChange = 0;
     }
+    */
     
     //grab old notes off the stack if there are notes waiting to replace the free voice
-    else if (deactivatedVoice != -1)
+    if (deactivatedVoice >= 0)
     {
-        int i = 0;
-        
-        while (1)
+        for (int j = 0; j < tStack_getSize(poly->stack); ++j)
         {
-            noteToTest = tStack_get(poly->stack, i++);
-            if (noteToTest < 0 ) break;
+            noteToTest = tStack_get(poly->stack, j);
             
-            if (poly->notes[noteToTest][1] == 0) //if there is a stolen note waiting (marked inactive but on the stack)
+            if (poly->notes[noteToTest][1] < 0) //if there is a stolen note waiting (marked inactive but on the stack)
             {
                 poly->voices[deactivatedVoice][0] = noteToTest; //set the newly free voice to use the old stolen note
                 poly->voices[deactivatedVoice][1] = poly->notes[noteToTest][0]; // set the velocity of the voice to be the velocity of that note
-                poly->notes[noteToTest][1] = 1; //mark that it is no longer stolen and is now active
-                poly->lastVoiceToChange = deactivatedVoice; // mark the voice that was just changed as the last voice to change
-                break;
+                poly->notes[noteToTest][1] = deactivatedVoice; //mark that it is no longer stolen and is now active
+                return -1;
             }
         }
     }
-    
-    
+    return deactivatedVoice;
 }
 
 void tMPoly_orderedAddToStack(tMPoly* poly, uint8_t noteVal)
@@ -2150,3 +2154,106 @@ static void atkdtk_envelope(tAtkDtk *a, float *in)
 }
 #endif //N_ATKDTK
 
+#if N_LOCKHARTWAVEFOLDER
+
+tLockhartWavefolder* tLockhartWavefolderInit(void)
+{
+    tLockhartWavefolder *w = &oops.tLockhartWavefolderRegistry[oops.registryIndex[T_LOCKHARTWAVEFOLDER]++];
+    
+    w->Ln1 = 0.0;
+    w->Fn1 = 0.0;
+    w->xn1 = 0.0;
+    
+    return w;
+}
+
+double tLockhartWavefolderLambert(double x, double ln)
+{
+    double w = ln;
+    double expw, p, r, s, err, q;
+    
+    for (int i = 0; i < 1000; i++)
+    {
+        //err = x * (logf(x) - logf(w));
+        
+        /*
+        r = logf(x / w) - w;
+        q = 2.0f * (1.0f+w) * (1.0f + w + 0.666666666f*r);
+        err = (r / (1.0f+w)) * ((q - r) / (q - 2*r));
+        */
+        expw = exp(w);
+        
+        p = (w * expw) - x;
+        r = (w + 1.0) * expw;
+        s = (w + 2.0) / (2.0 * (w + 1.0));
+        err = (p/(r-(p*s)));
+        
+        if (fabs(err) < THRESH) break;
+        
+        w -= err;
+        //w = w * (1 + err);
+        //w = w - err;
+    }
+    
+    return w;
+}
+
+float tLockhartWavefolderTick(tLockhartWavefolder* const w, float samp)
+{
+    int l;
+    double u, Ln, Fn, xn;
+    float o;
+    
+    samp=(double)samp;
+    // Compute Antiderivative
+    if (samp > 0) l = 1;
+    else if (samp < 0) l = -1;
+    else l = 0;
+    
+    u = LOCKHART_D * exp(l*LOCKHART_B*samp);
+    Ln = tLockhartWavefolderLambert(u, w->Ln1);
+    Fn = (0.5 * VT_DIV_B) * (Ln*(Ln + 2.0)) - 0.5*LOCKHART_A*samp*samp;
+    
+    // Check for ill-conditioning
+    if (fabs(samp - w->xn1) < ILL_THRESH)
+    {
+        // Compute Averaged Wavefolder Output
+        xn = 0.5*(samp + w->xn1);
+        u = LOCKHART_D*exp(l*LOCKHART_B*xn);
+        Ln = tLockhartWavefolderLambert(u, w->Ln1);
+        o = (float)((l*LOCKHART_VT*Ln) - (LOCKHART_A*xn));
+    }
+    else
+    {
+        // Apply AA Form
+        o = (float)((Fn - w->Fn1)/(samp - w->xn1));
+    }
+    
+    /*
+    // Check for ill-conditioning
+    if (abs(in1-xn1)<thresh) {
+        
+        // Compute Averaged Wavefolder Output
+        xn = 0.5*(in1+xn1);
+        u = d*pow(e,l*b*xn);
+        Ln = Lambert_W(u,Ln1);
+        out1 = l*VT*Ln - a*xn;
+        
+    }
+    else {
+        
+        // Apply AA Form
+        out1 = (Fn-Fn1)/(in1-xn1);
+        
+    }
+     */
+    
+    // Update States
+    w->Ln1 = Ln;
+    w->Fn1 = Fn;
+    w->xn1 = samp;
+    
+    return o;
+}
+
+#endif

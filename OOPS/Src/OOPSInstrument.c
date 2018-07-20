@@ -242,8 +242,6 @@ void        tVocoderUpdate      (tVocoder* const v)
     
     int32_t i;
     
-    v->swap = 1; if(v->param[0]>0.5f) v->swap = 0;
-    
     v->gain = (float)pow(10.0f, 2.0f * v->param[1] - 3.0f * v->param[5] - 2.0f);
     
     v->thru = (float)pow(10.0f, 0.5f + 2.0f * v->param[1]);
@@ -319,12 +317,10 @@ void        tVocoderUpdate      (tVocoder* const v)
 float       tVocoderTick        (tVocoder* const v, float synth, float voice)
 {
     float a, b, o=0.0f, aa, bb, oo = v->kout, g = v->gain, ht = v->thru, hh = v->high, tmp;
-    uint32_t i, k = v->kval, sw = v->swap, nb = v->nbnd;
+    uint32_t i, k = v->kval, nb = v->nbnd;
 
     a = voice; //speech
     b = synth; //synth
-    
-    if(sw==0) { tmp=a; a=b; b=tmp; } //swap channels
     
     tmp = a - v->f[0][7]; //integrate modulator for HF band and filter bank pre-emphasis
     v->f[0][7] = a;
