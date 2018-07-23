@@ -114,8 +114,8 @@ tFormantShifter*    tFormantShifterInit     (void);
 float       tFormantShifterTick    (tFormantShifter* const, float input);
 void        tFormantShifter_ioSamples   (tFormantShifter* const, float* in, float* out, int size, float fwarp);
 
-tPitchShifter*    tPitchShifter_init        (int samplesPerBlock);
-void        tPitchShifter_ioSamples         (tPitchShifter* const, float* in, float* out, int size);
+tPitchShifter*    tPitchShifter_init        (float* in, float* out, int bufSize);
+float       tPitchShifter_tick              (tPitchShifter* const, float sample, float freq);
 void        tPitchShifter_ioSamples_toFreq  (tPitchShifter* const, float* in, float* out, int size, float toFreq);
 void        tPitchShifter_ioSamples_toPeriod(tPitchShifter* const, float* in, float* out, int size, float toPeriod);
 void        tPitchShifter_ioSamples_toFunc  (tPitchShifter* const, float* in, float* out, int size, float (*fun)(float));

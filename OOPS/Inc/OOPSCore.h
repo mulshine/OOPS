@@ -784,6 +784,12 @@ typedef struct _tPitchShifter
     tSOLAD* sola;
     tHighpass* hp;
     
+    float* inBuffer;
+    float* outBuffer;
+    int bufSize;
+    int inIndex;
+    int outIndex;
+    
     uint16_t hopSize;
     uint16_t windowSize;
     uint8_t fba;

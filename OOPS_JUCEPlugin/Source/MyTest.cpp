@@ -21,9 +21,10 @@ void    OOPSTest_init            (float sampleRate, int samplesPerBlock)
 
     for (int i = 0; i < NUM_SHIFTERS; ++i)
     {
-        ps[i] = tPitchShifter_init(samplesPerBlock);
+        ps[i] = tPitchShifter_init(inBuffer, outBuffer, 9182);
     }
-    
+    saw = tSawtoothInit();
+    tSawtoothSetFreq(saw, 200.0f);
     poly = tMPoly_init(NUM_SHIFTERS);
     tMPoly_setPitchGlideTime(poly, 500.0f);
     
@@ -45,48 +46,44 @@ void    OOPSTest_block           (float* inL, float* inR, float* outL, float* ou
     wfPitchFactor[0] = (s2 * 3.5f) + 0.5f;
     float s3 = getSliderValue("PITCH FACTOR 2");
     wfPitchFactor[1] = (s3 * 3.5f) + 0.5f;
-    
-    for (int cc = 0; cc < numSamples; ++cc)
-    {
-        inBuffer[cur_read_block*numSamples+cc] = inL[cc];
-    }
-    
+    /*
     for (int i = 0; i < NUM_SHIFTERS; ++i)
     {
         for (int cc = 0; cc < numSamples; ++cc)
         {
+            outL[cc] = 0;
             tMPoly_tick(poly);
+            if (tMPoly_isOn(poly, i))
+            {
+                float freq = OOPS_midiToFrequency(tMPoly_getPitch(poly, i));
+                outL[cc] += tPitchShifter_tick(ps[i], inL[cc], freq) * wfGain;
+            //tPitchShifter_ioSamples_toFreq(ps[i], &inBuffer[cur_read_block*numSamples], &outBuffer[i][cur_write_block*numSamples], numSamples, freq);
+            }
+            if (i == 0)
+            {
+                outL[cc] += inL[cc];
+            }
+            outR[cc] = outL[cc];
         }
-        if (tMPoly_isOn(poly, i))
+    }
+    */
+    /* STEREO */
+    for (int cc = 0; cc < numSamples; ++cc)
+    {
+        tMPoly_tick(poly);
+        if (tMPoly_isOn(poly, 0))
         {
-            float freq = OOPS_midiToFrequency(tMPoly_getPitch(poly, i)) * oops.invSampleRate;
-            tPitchShifter_ioSamples_toFreq(ps[i], &inBuffer[cur_read_block*numSamples], &outBuffer[i][cur_write_block*numSamples], numSamples, freq);
+            float freq = OOPS_midiToFrequency(tMPoly_getPitch(poly, 0));
+            outL[cc] = tPitchShifter_tick(ps[0], inL[cc], freq) * wfGain;
+            //tPitchShifter_ioSamples_toFreq(ps[i], &inBuffer[cur_read_block*numSamples], &outBuffer[i][cur_write_block*numSamples], numSamples, freq);
         }
         else
         {
-            tPitchShifter_setPitchFactor(ps[i], 1.0f);
-            tPitchShifter_ioSamples(ps[i], &inBuffer[cur_read_block*numSamples], &outBuffer[i][cur_write_block*numSamples], numSamples);
-        }
-    }
-    
-    /* MONO */
-    for (int i = 0; i < NUM_SHIFTERS; ++i)
-    {
-        for (int cc = 0; cc < numSamples; ++cc)
-        {
-            if (i == 0) outL[cc] = outBuffer[i][cur_write_block*numSamples+cc]*wfGain;
-            else outL[cc] += outBuffer[i][cur_write_block*numSamples+cc]*wfGain;
+            outL[cc] = inL[cc];
             outR[cc] = outL[cc];
         }
     }
     
-    /* STEREO
-    for (int cc = 0; cc < numSamples; ++cc)
-    {
-        outL[cc] = outBuffer[0][cur_write_block*numSamples+cc]*wfGain;
-        outR[cc] = outBuffer[1][cur_write_block*numSamples+cc]*wfGain;
-    }
-    */
     cur_read_block++;
     if (cur_read_block >= TOTAL_BUFFERS)
         cur_read_block = 0;

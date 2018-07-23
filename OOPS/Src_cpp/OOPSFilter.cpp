@@ -938,16 +938,22 @@ void tFormantShifter_ioSamples(tFormantShifter* fs, float* in, float* out, int s
 
 static int pitchshifter_attackdetect(tPitchShifter* ps);
 
-tPitchShifter* tPitchShifter_init(int samplesPerBlock)
+tPitchShifter* tPitchShifter_init(float* in, float* out, int bufSize)
 {
     tPitchShifter* ps = &oops.tPitchShifterRegistry[oops.registryIndex[T_PITCHSHIFTER]++];
+    
+    ps->inBuffer = in;
+    ps->outBuffer = out;
+    ps->bufSize = bufSize;
+    ps->inIndex = 0;
+    ps->outIndex = 0;
     
     ps->hopSize = DEFHOPSIZE;
     ps->windowSize = DEFWINDOWSIZE;
     ps->fba = FBA;
     
     ps->env = tEnvInit(ps->windowSize, ps->hopSize);
-    ps->snac = tSNAC_init(samplesPerBlock, DEFOVERLAP);
+    ps->snac = tSNAC_init(DEFFRAMESIZE, DEFOVERLAP);
     ps->sola = tSOLAD_init();
     ps->hp = tHighpassInit(HPFREQ);
     
@@ -958,29 +964,48 @@ tPitchShifter* tPitchShifter_init(int samplesPerBlock)
     return(ps);
 }
 
-void tPitchShifter_ioSamples(tPitchShifter* ps, float* in, float* out, int size)
+float tPitchShifter_tick(tPitchShifter* ps, float sample, float freq)
 {
     float period;
     
-    tEnvProcessBlock(ps->env, in);
-    
-    if(pitchshifter_attackdetect(ps) == 1)
+    if (ps->inIndex >= ps->bufSize)
     {
-        ps->fba = 5;
-        tSOLAD_setReadLag(ps->sola, ps->windowSize);
+        for (int i = 0; i < ps->bufSize - 1; ++i)
+        {
+            ps->inBuffer[i] = ps->inBuffer[i+1];
+        }
+        ps->inIndex = ps->bufSize - 1;
+    }
+    ps->inBuffer[ps->inIndex++] = sample;
+    
+    if (ps->inIndex == ps->bufSize)
+    {
+        tEnvProcessBlock(ps->env, ps->inBuffer);
+        
+        if(pitchshifter_attackdetect(ps) == 1)
+        {
+            ps->fba = 5;
+            tSOLAD_setReadLag(ps->sola, ps->windowSize);
+        }
+        
+        tSNAC_ioSamples(ps->snac, ps->inBuffer, ps->outBuffer, ps->bufSize);
+        period = tSNAC_getPeriod(ps->snac);
+        
+        tSOLAD_setPeriod(ps->sola, period);
+        
+        ps->pitchFactor = period*freq*oops.invSampleRate;
+        tSOLAD_setPitchFactor(ps->sola, ps->pitchFactor);
+        tSOLAD_ioSamples(ps->sola, ps->inBuffer, ps->outBuffer, ps->bufSize);
+        
+        for (int cc = 0; cc < ps->bufSize; ++cc)
+        {
+            ps->outBuffer[cc] = tHighpassTick(ps->hp, ps->outBuffer[cc]);
+        }
+        if (ps->outIndex >= ps->bufSize) ps->outIndex = ps->bufSize - 1;
+        return ps->outBuffer[ps->outIndex++];
     }
     
-    tSNAC_ioSamples(ps->snac, in, out, size);
-    period = tSNAC_getPeriod(ps->snac);
-    
-    tSOLAD_setPeriod(ps->sola, period);
-    tSOLAD_setPitchFactor(ps->sola, ps->pitchFactor);
-    tSOLAD_ioSamples(ps->sola, in, out, size);
-    
-    for (int cc = 0; cc < size; ++cc)
-    {
-        out[cc] = tHighpassTick(ps->hp, out[cc]);
-    }
+    return sample;
 }
 
 

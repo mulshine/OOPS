@@ -16,12 +16,13 @@ float wfPitchFactor[NUM_SHIFTERS];
 
 tPitchShifter* ps[NUM_SHIFTERS];
 tMPoly* poly;
+tSawtooth* saw;
 
 #define MICROBLOCK_LEN 512
 #define TOTAL_BUFFERS 4
 
 float inBuffer[9182];
-float outBuffer[NUM_SHIFTERS][9182];
+float outBuffer[9182];
 float monoBuffer[9182];
 
 float sampleBuffer[9182];

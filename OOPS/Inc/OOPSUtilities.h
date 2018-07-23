@@ -55,6 +55,8 @@ int                     tRampSetTime(tRamp*  const, float time);
 
 int                     tRampSetDest(tRamp*  const, float dest);
 
+int                     tRampSetVal(tRamp*  const, float val);
+
 /* Envelope Follower */
 tEnvelopeFollower*      tEnvelopeFollowerInit           (float attackThreshold, float decayCoeff);
 float                   tEnvelopeFollowerTick           (tEnvelopeFollower*  const, float x);
