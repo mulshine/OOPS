@@ -172,7 +172,7 @@ float tLockhartWavefolderTick(tLockhartWavefolder* const, float samp);
 
 
 // ENV~ from PD, modified for OOPS
-tEnv* tEnvInit(int windowSize, int hopSize);
+tEnv* tEnvInit(int windowSize, int hopSize, int blockSize);
 float tEnvTick (tEnv* x);
 void tEnvProcessBlock(tEnv* x, float* in);
 

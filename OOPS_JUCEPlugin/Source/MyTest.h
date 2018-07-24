@@ -17,6 +17,8 @@ float wfPitchFactor[NUM_SHIFTERS];
 tPitchShifter* ps[NUM_SHIFTERS];
 tMPoly* poly;
 tSawtooth* saw;
+tRamp* ramp;
+tFormantShifter* fs;
 
 #define MICROBLOCK_LEN 512
 #define TOTAL_BUFFERS 4

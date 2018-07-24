@@ -725,7 +725,7 @@ typedef struct _tLockhartWavefolder
 #define MAXOVERLAP 32
 #define INITVSTAKEN 64
 
-typedef struct tEnv
+typedef struct _tEnv
 {
     float buf[5000];
     uint16_t x_phase;                    /* number of points since last output */
@@ -735,7 +735,7 @@ typedef struct tEnv
     float x_result;                 /* result to output */
     float x_sumbuf[MAXOVERLAP];     /* summing buffer */
     float x_f;
-    uint16_t windowSize, hopSize;
+    uint16_t windowSize, hopSize, blockSize;
     uint16_t x_allocforvs;               /* extra buffer for DSP vector size */
 } tEnv;
 
@@ -786,9 +786,12 @@ typedef struct _tPitchShifter
     
     float* inBuffer;
     float* outBuffer;
+    int frameSize;
     int bufSize;
-    int inIndex;
-    int outIndex;
+    int framesPerBuffer;
+    int curBlock;
+    int lastBlock;
+    int index;
     
     uint16_t hopSize;
     uint16_t windowSize;

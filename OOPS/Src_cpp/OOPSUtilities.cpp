@@ -86,7 +86,7 @@ float dbtorms(float f)
 #if N_ENV
 
 /* ---------------- env~ - simple envelope follower. ----------------- */
-tEnv* tEnvInit(int ws, int hs)
+tEnv* tEnvInit(int ws, int hs, int bs)
 {
     tEnv* x = &oops.tEnvRegistry[oops.registryIndex[T_ENV]++];
     
@@ -105,6 +105,7 @@ tEnv* tEnvInit(int ws, int hs)
     
     x->windowSize = npoints;
     x->hopSize = period;
+    x->blockSize = bs;
     
     for (i = 0; i < MAXOVERLAP; i++) x->x_sumbuf[i] = 0;
     for (i = 0; i < npoints; i++)
@@ -116,9 +117,9 @@ tEnv* tEnvInit(int ws, int hs)
     x->x_allocforvs = INITVSTAKEN;
     
     // ~ ~ ~ dsp ~ ~ ~
-    if (x->x_period % oops.blockSize)
+    if (x->x_period % x->blockSize)
     {
-        x->x_realperiod = x->x_period + oops.blockSize - (x->x_period % oops.blockSize);
+        x->x_realperiod = x->x_period + x->blockSize - (x->x_period % x->blockSize);
     }
     else
     {
@@ -136,7 +137,7 @@ float tEnvTick (tEnv* x)
 
 void tEnvProcessBlock(tEnv* x, float* in)
 {
-    int n = oops.blockSize;
+    int n = x->blockSize;
     
     int count;
     t_sample *sump;
