@@ -13,59 +13,30 @@
 #define MYTEST 0
 #define FM     1
 
-std::vector<std::string> cButtonNames =  std::vector<std::string>
+std::vector<juce::String> cButtonNames =  std::vector<juce::String>
 {
     
 };
 
-std::vector<std::string> cSliderNames =  std::vector<std::string>
+std::vector<juce::String> cSliderNames =  std::vector<juce::String>
 {
     "K","C","L","N","V1","V2","V3","TimeStep","Gain"
 };
 
-std::vector<std::string> cComboBoxNames =  std::vector<std::string>
+std::vector<juce::String> cComboBoxNames =  std::vector<juce::String>
 {
     
 };
 
-std::vector<std::string> cWaveformTypes =  std::vector<std::string>
+std::vector<juce::String> cWaveformTypes =  std::vector<juce::String>
 {
     
 };
-
-#if 0
-std::vector<std::string> cButtonNames =
-{
-
-};
-
-std::vector<std::string> cSliderNames =
-{
-
-};
-
-std::vector<std::string> cComboBoxNames =
-{
-    "Waveform"
-};
-
-std::vector<std::string> cWaveformTypes =
-{
-    "Sine",
-    "Triangle",
-    "Sawtooth",
-    "Square"
-};
-#endif
-
 
 std::vector<float> cSliderModelValues(cSliderNames.size());
 std::vector<float> cSliderValues(cSliderNames.size());
 std::vector<bool> cButtonStates(cButtonNames.size());
 std::vector<int> cComboBoxStates(cComboBoxNames.size());
-
-
-
 
 void setSliderModelValue(String name, float val)
 {
@@ -83,7 +54,7 @@ void printSliderValues(void)
 {
     for (int i = 0; i < cSliderNames.size(); i++)
     {
-        DBG(cSliderNames[i] + ": " + String(cSliderValues[i]));
+        DBG(String(cSliderNames[i]) + ": " + String(cSliderValues[i]));
     }
 }
 

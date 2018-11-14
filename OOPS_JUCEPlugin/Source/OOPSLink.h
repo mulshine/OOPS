@@ -23,13 +23,13 @@ typedef enum WaveformType {
     WaveformTypeNil
 }WaveformType;
 
-extern std::vector<std::string> cSliderNames;
+extern std::vector<juce::String> cSliderNames;
 
-extern std::vector<std::string> cButtonNames;
+extern std::vector<juce::String> cButtonNames;
 
-extern std::vector<std::string> cComboBoxNames;
+extern std::vector<juce::String> cComboBoxNames;
 
-extern std::vector<std::string> cWaveformTypes;
+extern std::vector<juce::String> cWaveformTypes;
 
 extern std::vector<float> cSliderValues;
 

@@ -26,6 +26,7 @@
 		6773B2DF5D085D75E75BB601 = {isa = PBXBuildFile; fileRef = 9B20EF2878EA8500C0196ADD; };
 		5A31359B7CAAD0588F30BBAF = {isa = PBXBuildFile; fileRef = C873E3AFC2F0FE9D5EA525FB; };
 		244DB847FA5C0CFAD5B8D956 = {isa = PBXBuildFile; fileRef = C42D2057B94F6108F5C220C1; };
+		BD73EFFB37E06D2EC731F34F = {isa = PBXBuildFile; fileRef = C5D7066C37078A71CC22AF49; };
 		74A8BA285EE4559A4E58210D = {isa = PBXBuildFile; fileRef = 0557885C9ACED62A0045A756; };
 		132756642BC91326824613FB = {isa = PBXBuildFile; fileRef = BF72FC9BC327F7A95DD606E2; };
 		C6F8F6F4F2CB26CF9387D319 = {isa = PBXBuildFile; fileRef = 0086C2959AAF02116DDE4E3C; };
@@ -95,6 +96,7 @@
 		69DC01360E4EB898248D7700 = {isa = PBXFileReference; lastKnownFileType = file; name = "juce_audio_plugin_client"; path = "../../../../JUCE/modules/juce_audio_plugin_client"; sourceTree = "SOURCE_ROOT"; };
 		6C12BCC639D3C78FADF8C940 = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = OOPSMath.cpp; path = "../../../OOPS/Src_cpp/OOPSMath.cpp"; sourceTree = "SOURCE_ROOT"; };
 		6C81E61C80496614A178854D = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = "include_juce_audio_plugin_client_utils.cpp"; path = "../../JuceLibraryCode/include_juce_audio_plugin_client_utils.cpp"; sourceTree = "SOURCE_ROOT"; };
+		6CDCA2A32A3E51A180AEFBF5 = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = mpool.h; path = ../../../OOPS/Externals/mpool.h; sourceTree = "SOURCE_ROOT"; };
 		6DC5C57042D12719DBFF0FEE = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = OOPSCore.h; path = ../../../OOPS/Inc/OOPSCore.h; sourceTree = "SOURCE_ROOT"; };
 		7300FCF182C12A53375D80BC = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = "include_juce_core.mm"; path = "../../JuceLibraryCode/include_juce_core.mm"; sourceTree = "SOURCE_ROOT"; };
 		7459A4D17DE85FC946CC70A0 = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreImage.framework; path = System/Library/Frameworks/CoreImage.framework; sourceTree = SDKROOT; };
@@ -135,6 +137,7 @@
 		C2E5C98A8A6008748FF9630F = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = OOPSLink.cpp; path = ../../Source/OOPSLink.cpp; sourceTree = "SOURCE_ROOT"; };
 		C42D2057B94F6108F5C220C1 = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = "d_fft_mayer.cpp"; path = "../../../OOPS/Externals/d_fft_mayer.cpp"; sourceTree = "SOURCE_ROOT"; };
 		C4F718BFA5AD28988DC8D2BB = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = OOPSWavetables.h; path = ../../../OOPS/Inc/OOPSWavetables.h; sourceTree = "SOURCE_ROOT"; };
+		C5D7066C37078A71CC22AF49 = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = mpool.c; path = ../../../OOPS/Externals/mpool.c; sourceTree = "SOURCE_ROOT"; };
 		C86BBF785DDDD1525B3F5B8B = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = MyTest.h; path = ../../Source/MyTest.h; sourceTree = "SOURCE_ROOT"; };
 		C873E3AFC2F0FE9D5EA525FB = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = OOPS/Images.xcassets; sourceTree = "SOURCE_ROOT"; };
 		D4C3DE7EEE9FDF78B092A983 = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
@@ -150,7 +153,9 @@
 		FE54422729D5282705DA0B82 = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = OOPSWavetables.cpp; path = "../../../OOPS/Src_cpp/OOPSWavetables.cpp"; sourceTree = "SOURCE_ROOT"; };
 		508E1C89C09D65220D8B65B9 = {isa = PBXGroup; children = (
 					C42D2057B94F6108F5C220C1,
-					B88B7643BE8584B8305DFCAB, ); name = Externals; sourceTree = "<group>"; };
+					B88B7643BE8584B8305DFCAB,
+					C5D7066C37078A71CC22AF49,
+					6CDCA2A32A3E51A180AEFBF5, ); name = Externals; sourceTree = "<group>"; };
 		2883A33A79CDB252CDB261CB = {isa = PBXGroup; children = (
 					770DC48EAB2B94D1EA448F11,
 					6DC5C57042D12719DBFF0FEE,
@@ -592,6 +597,7 @@
 					2FBCC90B16F562BBCBFE564E, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Debug; };
 		34EF69715757D8C9AE5B2BD8 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (
 					244DB847FA5C0CFAD5B8D956,
+					BD73EFFB37E06D2EC731F34F,
 					74A8BA285EE4559A4E58210D,
 					132756642BC91326824613FB,
 					C6F8F6F4F2CB26CF9387D319,
