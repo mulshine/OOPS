@@ -31,7 +31,7 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-/* written by C99 style */
+/* written with C99 style */
 
 #include "mpool.h"
 
@@ -40,19 +40,48 @@
  */
 static inline size_t mpool_align(size_t siz);
 
+
+/**
+ * create memory pool
+ */
+mpool_t* mpool_create (size_t siz)
+{
+    if (siz > MPOOL_POOL_SIZE) siz = MPOOL_POOL_SIZE;
+    
+    mpool_t* pool = oops_pool;
+    
+    pool->mpool = *memory;
+    
+    pool->mpool->pool = *memory;
+    
+    pool->mpool->next = NULL;
+    
+    pool->begin = pool->mpool->pool;
+    pool->head  = pool->mpool;
+    pool->usiz  = 0;
+    pool->msiz  = siz;
+    
+    return pool;
+}
+
 /**
  * allocate memory from memory pool
  */
-void *mpool_alloc(size_t siz, mpool_t *pool) {
+void* mpool_alloc(size_t siz)
+{
+    mpool_t* pool = oops_pool;
+    
     mpool_pool_t **p = &pool->mpool;
     mpool_pool_t *pp = *p;
     size_t usiz = mpool_align(pool->usiz + siz);
     size_t msiz = pool->msiz;
     void     *d = pool->begin;
+    
     if ((usiz + siz) > msiz)
     {
         return NULL;
-    } else
+    }
+    else
     {
         pool->usiz = usiz;
         pool->begin += mpool_align(siz);
@@ -64,7 +93,10 @@ void *mpool_alloc(size_t siz, mpool_t *pool) {
 /**
  * release all memory pool
  */
-void mpool_destroy (mpool_t *pool) {
+void mpool_destroy (void)
+{
+    mpool_t* pool = oops_pool;
+    
     for (mpool_pool_t *cur = pool->head, *next; cur; cur = next){
         next = cur->next;
     }

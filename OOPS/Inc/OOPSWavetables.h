@@ -13,11 +13,6 @@
 
 #include "OOPSMemConfig.h"
 
-
-
-
-
-
 #define SINE_TABLE_SIZE 2048
 #define SAW_TABLE_SIZE 2048
 #define SQR_TABLE_SIZE 2048
@@ -64,21 +59,12 @@ extern const float tanh1[TANH1_TABLE_SIZE];
 #endif
 
 /* Sine wave table ripped from http://aquaticus.info/pwm-sine-wave. */
-
-#if N_CYCLE
 extern const float sinewave[SINE_TABLE_SIZE];
-#endif
 
-#if N_SAWTOOTH
 extern const float sawtooth[11][SAW_TABLE_SIZE];
-#endif
 
-#if N_TRIANGLE
 extern const float triangle[11][TRI_TABLE_SIZE];
-#endif
 
-#if N_SQUARE
 extern const float squarewave[11][SQR_TABLE_SIZE];
-#endif
 
 #endif  // WAVETABLES_H_INCLUDED

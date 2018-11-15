@@ -44,7 +44,7 @@
 #define MPOOL_POOL_SIZE   10000
 #define MPOOL_ALIGN_SIZE (8)
 
-void* mempool[MPOOL_POOL_SIZE];
+//#define size_t unsigned long
       
 /**
  * memory pool structure
@@ -52,18 +52,38 @@ void* mempool[MPOOL_POOL_SIZE];
 typedef struct mpool_pool_t {
     void                *pool;     // memory pool field
     struct mpool_pool_t *next;     // next memory pool's pointer
+    struct mpool_pool_t *prev;
+    size_t siz;
 } mpool_pool_t;
 
 typedef struct mpool_t {
     mpool_pool_t *head;       // memory pool's head
+    mpool_pool_t *tail;       // memory pool's tail
     void         *begin;      // data for internal conduct
     size_t        usiz;       // used pool size of current pool
     size_t        msiz;       // max pool size of current pool
     mpool_pool_t *mpool;      // memory pool
 } mpool_t;
 
-void *mpool_alloc(size_t siz, mpool_t *pool);
-void mpool_destroy (mpool_t *pool);
+
+void mpool_create (size_t siz, mpool_t* pool);
+
+void *mpool_alloc(size_t siz, mpool_t* pool);
+void mpool_free(void* ptr, mpool_t* pool);
+
+size_t mpool_get_size(mpool_t* pool);
+size_t mpool_get_used(mpool_t* pool);
+
+
+void oops_pool_init(size_t siz);
+
+void* oops_alloc(size_t siz);
+void oops_free(void* ptr);
+
+size_t oops_pool_get_size(void);
+size_t oops_pool_get_used(void);
+
+
 
 #endif
 

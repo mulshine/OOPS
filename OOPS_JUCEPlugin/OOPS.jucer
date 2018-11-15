@@ -18,7 +18,7 @@
         <GROUP id="{335C972C-09DA-14F2-680A-9F81FF0D71F3}" name="Externals">
           <FILE id="VPDEfk" name="d_fft_mayer.cpp" compile="1" resource="0" file="../OOPS/Externals/d_fft_mayer.cpp"/>
           <FILE id="CW7W1M" name="d_fft_mayer.h" compile="0" resource="0" file="../OOPS/Externals/d_fft_mayer.h"/>
-          <FILE id="vRkoVl" name="mpool.c" compile="1" resource="0" file="../OOPS/Externals/mpool.c"/>
+          <FILE id="VH0Rsx" name="mpool.cpp" compile="1" resource="0" file="../OOPS/Externals/mpool.cpp"/>
           <FILE id="ItEOXY" name="mpool.h" compile="0" resource="0" file="../OOPS/Externals/mpool.h"/>
         </GROUP>
         <GROUP id="{694B3407-585A-447D-9843-F414A9411E1A}" name="Inc">

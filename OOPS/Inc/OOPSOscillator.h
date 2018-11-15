@@ -29,7 +29,7 @@ void        tNeuronSetV3(tNeuron* const, float V3);
 void        tNeuronSetTimeStep(tNeuron* const, float timestep);
 
 /* tCycle: Cycle/Sine waveform */
-tCycle*     tCycleInit         (void);
+void        tCycleInit         (tCycle* const);
 float       tCycleTick         (tCycle*  const);
 
 // Set frequency in Hz.

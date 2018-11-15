@@ -222,19 +222,12 @@ void        tNeuronSetCurrent  (tNeuron* const n, float current)
 #endif
 
 
-#if N_CYCLE
 // Cycle
-tCycle*    tCycleInit(void)
+void    tCycleInit(tCycle* const c)
 {
-    tCycle* c = &oops.tCycleRegistry[oops.registryIndex[T_CYCLE]++];
-    
     c->inc      =  0.0f;
     c->phase    =  0.0f;
     c->sampleRateChanged = &tCycleSampleRateChanged;
-    
-    
-    
-    return c;
 }
 
 int     tCycleSetFreq(tCycle* const c, float freq)
@@ -267,7 +260,6 @@ void     tCycleSampleRateChanged (tCycle* const c)
 {
     c->inc = c->freq * oops.invSampleRate;
 }
-#endif //N_CYCLE
 
 #if N_PHASOR
 /* Phasor */
