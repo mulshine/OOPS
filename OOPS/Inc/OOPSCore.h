@@ -14,6 +14,7 @@
 #include "OOPSMemConfig.h"
 
 #include "OOPSMath.h"
+
 typedef struct _tCompressor
 {
     float tauAttack, tauRelease;
@@ -21,9 +22,8 @@ typedef struct _tCompressor
     
     float x_G[2], y_G[2], x_T[2], y_T[2];
 	
-	  oBool isActive;
+    oBool isActive;
     
-    void (*sampleRateChanged)(struct _tCompressor *self);
     
 }tCompressor;
 
@@ -31,8 +31,6 @@ typedef struct _tPhasor
 {
     float phase;
     float inc,freq;
-    
-    void (*sampleRateChanged)(struct _tPhasor *self);
     
 } tPhasor;
 
@@ -44,11 +42,8 @@ typedef struct _tCycle
     float phase;
     float inc,freq;
     
-    void (*sampleRateChanged)(struct _tCycle *self);
-    
+    tPhasor phasor;
 } tCycle;
-
-#define TCYCLE_SIZE sizeof(tCycle)
 
 // Sawtooth waveform
 typedef struct _tSawtooth
@@ -56,8 +51,6 @@ typedef struct _tSawtooth
     // Underlying phasor
     float phase;
     float inc,freq;
-    
-    void (*sampleRateChanged)(struct _tSawtooth *self);
     
 } tSawtooth;
 
@@ -68,8 +61,6 @@ typedef struct _tTriangle
     float phase;
     float inc,freq;
     
-    void (*sampleRateChanged)(struct _tTriangle *self);
-    
 } tTriangle;
 
 // Square waveform
@@ -78,8 +69,6 @@ typedef struct _tSquare
     // Underlying phasor
     float phase;
     float inc,freq;
-    
-    void (*sampleRateChanged)(struct _tSquare *self);
     
 } tSquare;
 
@@ -125,8 +114,6 @@ typedef struct _tTwoPole
     
     float lastOut[2];
     
-    void (*sampleRateChanged)(struct _tTwoPole *self);
-    
 } tTwoPole;
 
 // OneZero filter
@@ -147,8 +134,6 @@ typedef struct _tTwoZero
     float frequency, radius;
     
     float lastIn[2];
-    
-    void (*sampleRateChanged)(struct _tTwoZero *self);
     
 } tTwoZero;
 
@@ -176,7 +161,6 @@ typedef struct _tBiQuad
     float frequency, radius;
     oBool normalize;
     
-    void (*sampleRateChanged)(struct _tBiQuad *self);
     
     
 } tBiQuad;
@@ -209,19 +193,17 @@ typedef struct _tSVFE {
 } tSVFE;
 
 // Butterworth Filter
-#define NUM_SVF_BW 8
+#define NUM_SVF_BW 16
 typedef struct _tButterworth
 {
     float gain;
 	
-		float N;
-	
-		tSVF* low[NUM_SVF_BW];
-		tSVF* high[NUM_SVF_BW];
-	
-		float f1,f2;
-	
-		void (*sampleRateChanged)(struct _tButterworth *self);
+    float N;
+
+    tSVF low[NUM_SVF_BW];
+    tSVF high[NUM_SVF_BW];
+
+    float f1,f2;
     
 } tButterworth;
 
@@ -231,7 +213,6 @@ typedef struct _tHighpass
     float xs, ys, R;
     float frequency;
     
-    void (*sampleRateChanged)(struct _tHighpass *self);
     
 } tHighpass;
 
@@ -244,7 +225,6 @@ typedef struct _tRamp {
     float time;
     int samples_per_tick;
     
-    void (*sampleRateChanged)(struct _tRamp *self);
     
 } tRamp;
 
@@ -339,7 +319,6 @@ typedef struct _tADSR
     
     float attackPhase, decayPhase, releasePhase, rampPhase;
     
-    void (*sampleRateChanged)(struct _tADSR *self);
     
 } tADSR;
 
@@ -356,8 +335,6 @@ typedef struct _tPluck
     float lastFreq;
     
     float sr;
-    
-    void (*sampleRateChanged)(struct _tPluck *self);
     
 } tPluck;
 
@@ -380,8 +357,6 @@ typedef struct _tStifKarp
     float pickupPosition;
     
     float lastOut;
-    
-    void (*sampleRateChanged)(struct _tStifKarp *self);
     
 } tStifKarp;
 
@@ -410,8 +385,6 @@ typedef struct _tPRCRev
     
     float lastIn, lastOut;
     
-    void (*sampleRateChanged)(struct _tPRCRev *self);
-    
 } tPRCRev;
 
 // NRev: Reverb
@@ -428,8 +401,6 @@ typedef struct _tNRev
     float lowpassState;
     
     float lastIn, lastOut;
-    
-    void (*sampleRateChanged)(struct _tNRev *self);
     
 } tNRev;
 
@@ -458,7 +429,6 @@ typedef struct _tNeuron
     float P[3];
     float gK, gN, gL, C;
     
-    void (*sampleRateChanged)(struct _tNeuron *self);
     
 } tNeuron;
 
@@ -478,10 +448,10 @@ typedef struct _tVocoder
     //filter coeffs and buffers - seems it's faster to leave this global than make local copy
     float f[NBANDS][13]; //[0-8][0 1 2 | 0 1 2 3 | 0 1 2 3 | val rate]
     
-    void (*sampleRateChanged)(struct _tVocoder *self);
 } tVocoder;
 
 #define NUM_TALKBOX_PARAM 4
+#define TALKBOX_BUFFER_LENGTH 1024 //1600
 
 typedef struct _tTalkbox
 {
@@ -498,7 +468,6 @@ typedef struct _tTalkbox
     float d0, d1, d2, d3, d4;
     float u0, u1, u2, u3, u4;
     
-    void (*sampleRateChanged)(struct _tTalkbox *self);
 } tTalkbox;
 
 typedef struct _tMidiNote
@@ -597,10 +566,18 @@ typedef struct _tStack
 /* tMPoly */
 typedef struct _tMPoly
 {
-    int numVoices;
-    int numVoicesActive;
+    tStack* stack;
+    tStack* orderStack;
     
-    int voices[NUM_VOICES][2];
+    tRamp* ramp[MPOLY_NUM_MAX_VOICES];
+    
+    float rampVals[MPOLY_NUM_MAX_VOICES];
+    uint8_t firstReceived[MPOLY_NUM_MAX_VOICES];
+    float glideTime;
+    
+    int numVoices;
+    
+    int voices[MPOLY_NUM_MAX_VOICES][2];
     
     int notes[128][2];
     
@@ -610,10 +587,8 @@ typedef struct _tMPoly
     
     int lastVoiceToChange;
     
-    tStack* stack;
-    tStack* orderStack;
-    
     int32_t pitchBend;
+    float pitchBendAmount;
     
     int currentNote;
     int currentVoice;
@@ -622,7 +597,7 @@ typedef struct _tMPoly
     
 } tMPoly;
 
-#define LOOPSIZE 4096           // loop size must be power of two
+#define LOOPSIZE (2048*2)      // (4096*2) // loop size must be power of two
 #define LOOPMASK (LOOPSIZE - 1)
 #define PITCHFACTORDEFAULT 1.0f
 #define INITPERIOD 64.0f
@@ -632,8 +607,8 @@ typedef struct _tMPoly
 /* tSoladPS : pitch shifting algorithm */
 typedef struct _tSOLAD
 {
-    int timeindex;              // current reference time, write index
-    int blocksize;              // signal input / output block size
+	uint16_t timeindex;              // current reference time, write index
+	uint16_t blocksize;              // signal input / output block size
     float pitchfactor;        // pitch factor between 0.25 and 4
     float readlag;            // read pointer's lag behind write pointer
     float period;             // period length in input signal
@@ -642,10 +617,9 @@ typedef struct _tSOLAD
     float xfadevalue;         // crossfade phase and value
     float delaybuf[LOOPSIZE+16];
     
-    void (*sampleRateChanged)(struct _tSOLAD *self);
 } tSOLAD;
 
-#define DEFFRAMESIZE 1024           // default analysis framesize
+#define SNAC_FRAME_SIZE 1024           // default analysis framesize // should be the same as (or smaller than?) PS_FRAME_SIZE
 #define DEFOVERLAP 1                // default overlap
 #define DEFBIAS 0.2f        // default bias
 #define DEFMINRMS 0.003f   // default minimum RMS
@@ -653,25 +627,23 @@ typedef struct _tSOLAD
 
 typedef struct _tSNAC
 {
-    float *inputbuf;
-    float *processbuf;
-    float *spectrumbuf;
-    float *biasbuf;
+    float inputbuf[SNAC_FRAME_SIZE];
+    float processbuf[SNAC_FRAME_SIZE * 2];
+    float spectrumbuf[SNAC_FRAME_SIZE / 2];
+    float biasbuf[SNAC_FRAME_SIZE];
     
-    int timeindex;
-    int framesize;
-    int overlap;
-    int periodindex;
+    uint16_t timeindex;
+    uint16_t framesize;
+    uint16_t overlap;
+    uint16_t periodindex;
     
     float periodlength;
     float fidelity;
     float biasfactor;
     float minrms;
     
-    void (*sampleRateChanged)(struct _tSNAC *self);
 } tSNAC;
 
-#define DEFSAMPLERATE 44100
 #define DEFBLOCKSIZE 1024
 #define DEFTHRESHOLD 6
 #define DEFATTACK    10
@@ -698,42 +670,160 @@ typedef struct _tAtkDtk
     float threshold;
 } tAtkDtk;
 
-// ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
-void     tPhasorSampleRateChanged (tPhasor *p);
-void     tCycleSampleRateChanged (tCycle *c);
-void     tSawtoothSampleRateChanged (tSawtooth *c);
-void     tTriangleSampleRateChanged (tTriangle *c);
-void     tSquareSampleRateChanged (tSquare *c);
-void     tRampSampleRateChanged(tRamp *r);
-void     tTwoPoleSampleRateChanged (tTwoPole *c);
-void     tTwoZeroSampleRateChanged (tTwoZero *c);
-void     tBiQuadSampleRateChanged (tBiQuad *c);
-void     tHighpassSampleRateChanged (tHighpass *c);
-void     tADSRSampleRateChanged (tADSR *c);
-void     tPRCRevSampleRateChanged (tPRCRev *c);
-void     tNRevSampleRateChanged (tNRev *c);
-void     tPluckSampleRateChanged (tPluck *c);
-void     tStifKarpSampleRateChanged (tStifKarp *c);
+#define THRESH 10e-10
+#define ILL_THRESH 10e-10
+#define LOCKHART_RL 7.5e3
+#define LOCKHART_R 15e3
+#define LOCKHART_VT 26e-3
+#define LOCKHART_Is 10e-16
+#define LOCKHART_A 2.0*LOCKHART_RL/LOCKHART_R
+#define LOCKHART_B (LOCKHART_R+2.0*LOCKHART_RL)/(LOCKHART_VT*LOCKHART_R)
+#define LOCKHART_D (LOCKHART_RL*LOCKHART_Is)/LOCKHART_VT
+#define VT_DIV_B LOCKHART_VT/LOCKHART_B
 
-void     tNeuronSampleRateChanged(tNeuron* n);
-void     tCompressorSampleRateChanged(tCompressor* n);
-void     tButterworthSampleRateChanged(tButterworth* n);
+typedef struct _tLockhartWavefolder
+{
+    double Ln1;
+    double Fn1;
+    double xn1;
+    
+} tLockhartWavefolder;
 
-void     tVocoderSampleRateChanged(tVocoder* n);
+#define MAXOVERLAP 32
+#define INITVSTAKEN 64
 
-void     t808SnareSampleRateChanged(t808Snare* n);
-void     t808HihatSampleRateChanged(t808Hihat* n);
-void     t808CowbellSampleRateChanged(t808Cowbell* n);
+typedef struct _tEnv
+{
+    float buf[ENV_WINDOW_SIZE + INITVSTAKEN];
+    uint16_t x_phase;                    /* number of points since last output */
+    uint16_t x_period;                   /* requested period of output */
+    uint16_t x_realperiod;               /* period rounded up to vecsize multiple */
+    uint16_t x_npoints;                  /* analysis window size in samples */
+    float x_result;                 /* result to output */
+    float x_sumbuf[MAXOVERLAP];     /* summing buffer */
+    float x_f;
+    uint16_t windowSize, hopSize, blockSize;
+    uint16_t x_allocforvs;               /* extra buffer for DSP vector size */
+} tEnv;
 
-void     tSOLADSampleRateChanged(tSOLAD* n);
-void     tSNACSampleRateChanged(tSNAC* n);
+#define FORD 7
+#define FORMANT_BUFFER_SIZE 2048
+
+typedef struct _tFormantShifter
+{
+    int ford;
+    float falph;
+    float flamb;
+    float fk[FORD];
+    float fb[FORD];
+    float fc[FORD];
+    float frb[FORD];
+    float frc[FORD];
+    float fsig[FORD];
+    float fsmooth[FORD];
+    float fhp;
+    float flp;
+    float flpa;
+    float fbuff[FORD][FORMANT_BUFFER_SIZE];
+    float ftvec[FORD];
+    float fmute;
+    float fmutealph;
+    unsigned int cbi;
+    
+} tFormantShifter;
+
+#define DEFPITCHRATIO 2.0f
+#define DEFTIMECONSTANT 100.0f
+#define DEFHOPSIZE 64
+#define DEFWINDOWSIZE 64
+#define FBA 20
+#define HPFREQ 40.0f
+
+typedef struct _tPitchShifter
+{
+    tEnv* env;
+    tSNAC* snac;
+    tSOLAD* sola;
+    tHighpass* hp;
+    
+    float* inBuffer;
+    float* outBuffer;
+    int frameSize;
+    int bufSize;
+    int framesPerBuffer;
+    int curBlock;
+    int lastBlock;
+    int index;
+    
+    uint16_t hopSize;
+    uint16_t windowSize;
+    uint8_t fba;
+    
+    float pitchFactor;
+    float timeConstant;
+    float radius;
+    float max;
+    float lastmax;
+    float deltamax;
+    
+} tPitchShifter;
+
+typedef struct _tPeriod
+{
+	tEnv* env;
+	tSNAC* snac;
+	float* inBuffer;
+	float* outBuffer;
+	int frameSize;
+	int bufSize;
+	int framesPerBuffer;
+	int curBlock;
+	int lastBlock;
+	int i;
+	int indexstore;
+	int iLast;
+	int index;
+	float period;
+
+	uint16_t hopSize;
+	uint16_t windowSize;
+	uint8_t fba;
+
+	float timeConstant;
+	float radius;
+	float max;
+	float lastmax;
+	float deltamax;
+
+}tPeriod;
+
+typedef struct _tPitchShift
+{
+	tSOLAD* sola;
+	tHighpass* hp;
+	tPeriod* p;
+
+	float* outBuffer;
+	int frameSize;
+	int bufSize;
+
+	int framesPerBuffer;
+	int curBlock;
+	int lastBlock;
+	int index;
+
+	float pitchFactor;
+	float timeConstant;
+	float radius;
+}tPitchShift;
 
 typedef struct _OOPS
 {
-    float sampleRate, invSampleRate;
+    float   sampleRate;
+    float   invSampleRate;
+    int     blockSize;
     
     float   (*random)(void);
-		
 } OOPS;
 
 extern OOPS oops;

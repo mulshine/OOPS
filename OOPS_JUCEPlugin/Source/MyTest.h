@@ -11,9 +11,6 @@
 #ifndef FM_H_INCLUDED
 #define FM_H_INCLUDED
 
-tNeuron* neuron;
-tRamp* env;
-
 
 
 #endif  // FM_H_INCLUDED

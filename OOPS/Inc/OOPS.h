@@ -15,20 +15,15 @@
 
 #include "OOPSCore.h"
 
-void        OOPSInit            (float sampleRate, float(*randomNumberFunction)(void));
+void        OOPSInit            (float sampleRate, int blocksize, float(*randomNumberFunction)(void));
 void        OOPSSetSampleRate   (float sampleRate);
 float       OOPSGetSampleRate   (void);
 
-#include "OOPSUtilities.h"
-
-#include "OOPSDelay.h"
-
+//#include "OOPSUtilities.h"
+//#include "OOPSDelay.h"
 #include "OOPSFilter.h"
-
 #include "OOPSOscillator.h"
-
-#include "OOPSReverb.h"
-
-#include "OOPSInstrument.h"
+//#include "OOPSReverb.h"
+//#include "OOPSInstrument.h"
 
 #endif  // OOPSCORE_H_INCLUDED

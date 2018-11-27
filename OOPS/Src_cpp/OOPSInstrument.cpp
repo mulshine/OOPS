@@ -27,20 +27,15 @@
  *
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-#if N_TALKBOX
 
-tTalkbox* tTalkboxInit()
+void tTalkboxInit(tTalkbox* const v)
 {
-    tTalkbox* v = &oops.tTalkboxRegistry[oops.registryIndex[T_TALKBOX]++];
-
     v->param[0] = 0.5f;  //wet
     v->param[1] = 0.0f;  //dry
     v->param[2] = 0; // Swap
     v->param[3] = 1.0f;  //quality
     
     tTalkboxUpdate(v);
-    
-    return v;
 }
 
 void tTalkboxUpdate(tTalkbox* const v) ///update internal parameters...
@@ -69,7 +64,6 @@ void tTalkboxUpdate(tTalkbox* const v) ///update internal parameters...
     v->wet = 0.5f * v->param[0] * v->param[0];
     v->dry = 2.0f * v->param[1] * v->param[1];
 }
-
 
 void tTalkboxSuspend(tTalkbox* const v) ///clear any buffers...
 {
@@ -210,9 +204,12 @@ float tTalkboxTick(tTalkbox* const v, float synth, float voice)
     return o;
 }
 
-#endif
+void tTalkboxSetQuality(tTalkbox* const v, float quality)
+{
+	v->param[3] = quality;
+	v->O = (int32_t)((0.0001f + 0.0004f * v->param[3]) * oops.sampleRate);
+}
 
-#if N_VOCODER
 
 tVocoder*   tVocoderInit        (void)
 {
@@ -241,8 +238,6 @@ void        tVocoderUpdate      (tVocoder* const v)
     float sh;
     
     int32_t i;
-    
-    v->swap = 1; if(v->param[0]>0.5f) v->swap = 0;
     
     v->gain = (float)pow(10.0f, 2.0f * v->param[1] - 3.0f * v->param[5] - 2.0f);
     
@@ -319,12 +314,10 @@ void        tVocoderUpdate      (tVocoder* const v)
 float       tVocoderTick        (tVocoder* const v, float synth, float voice)
 {
     float a, b, o=0.0f, aa, bb, oo = v->kout, g = v->gain, ht = v->thru, hh = v->high, tmp;
-    uint32_t i, k = v->kval, sw = v->swap, nb = v->nbnd;
+    uint32_t i, k = v->kval, nb = v->nbnd;
 
     a = voice; //speech
     b = synth; //synth
-    
-    if(sw==0) { tmp=a; a=b; b=tmp; } //swap channels
     
     tmp = a - v->f[0][7]; //integrate modulator for HF band and filter bank pre-emphasis
     v->f[0][7] = a;
@@ -390,10 +383,7 @@ void        tVocoderSuspend     (tVocoder* const v)
     v->kval = 0;
 }
 
-#endif
 
- 
-#if N_PLUCK
 /* ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ tPluck ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ */
 tPluck*    tPluckInit         (float lowestFrequency,  float delayBuff[DELAY_LENGTH])
 {
@@ -483,10 +473,6 @@ void tPluckSampleRateChanged(tPluck* const p)
     //tPluckSetFrequency(p, p->lastFreq);
 }
 
-#endif
-/* ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ */
-
-#if N_STIFKARP
 /* ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ tStifKarp ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ */
 tStifKarp*    tStifKarpInit          (float lowestFrequency, float delayBuff[2][DELAY_LENGTH])
 {
@@ -658,9 +644,6 @@ void    tStifKarpSampleRateChanged (tStifKarp* const c)
     tStifKarpSetStretch(c, c->stretching);
 }
 
-#endif //N_STIFKARP
-
-#if N_808COWBELL
 #define USE_STICK 0
 void t808CowbellOn(t808Cowbell* const cowbell, float vel)
 {
@@ -751,10 +734,6 @@ t808Cowbell* t808CowbellInit(void) {
     
     return cowbell;
 }
-
-#endif
-
-#if N_808HIHAT
 
 void t808HihatOn(t808Hihat* const hihat, float vel) {
     
@@ -854,8 +833,6 @@ t808Hihat* t808HihatInit(void)
     return hihat;
 }
 #endif
-
-#if N_808SNARE
 
 void t808SnareOn(t808Snare* const snare, float vel)
 {
@@ -960,5 +937,3 @@ t808Snare* t808SnareInit(void)
     
     return snare;
 }
-
-#endif

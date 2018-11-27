@@ -20,14 +20,9 @@
 
 #endif
 
-
-
-#if N_DELAY
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ Delay ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
-tDelay*    tDelayInit (uint32_t delay)
+void    tDelayInit (tDelay*  const d, uint32_t delay)
 {
-    tDelay* d = &oops.tDelayRegistry[oops.registryIndex[T_DELAY]++];
-    
     d->maxDelay = DELAY_LENGTH;
     
     if (delay < 0.0f)               d->delay = 0.0f;
@@ -43,9 +38,6 @@ tDelay*    tDelayInit (uint32_t delay)
     d->gain = 1.0f;
     
     tDelaySetDelay(d, d->delay);
-    
-    return d;
-    
 }
 
 float   tDelayTick (tDelay* const d, float input)
@@ -131,14 +123,10 @@ float tDelayGetGain (tDelay* const d)
 {
     return d->gain;
 }
-#endif //N_DELAY
 
-#if N_DELAYL
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ DelayL ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
-tDelayL*    tDelayLInit (float delay)
+void   tDelayLInit (tDelayL* const d, float delay)
 {
-    tDelayL* d = &oops.tDelayLRegistry[oops.registryIndex[T_DELAYL]++];
-    
     d->maxDelay = DELAY_LENGTH;
     
     if (delay < 0.0f)               d->delay = 0.0f;
@@ -154,8 +142,6 @@ tDelayL*    tDelayLInit (float delay)
     d->outPoint = 0;
     
     tDelayLSetDelay(d, d->delay);
-    
-    return d;
 }
 
 float   tDelayLTick (tDelayL* const d, float input)
@@ -258,14 +244,10 @@ float tDelayLGetGain (tDelayL* const d)
 {
     return d->gain;
 }
-#endif //N_DELAYL
 
-#if N_DELAYA
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ DelayA ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
-tDelayA*    tDelayAInit (float delay)
+void  tDelayAInit (tDelayA* const d, float delay)
 {
-    tDelayA* d = &oops.tDelayARegistry[oops.registryIndex[T_DELAYA]++];
-    
     d->maxDelay = DELAY_LENGTH;
     
     if (delay < 0.0f)               d->delay = 0.0f;
@@ -283,9 +265,6 @@ tDelayA*    tDelayAInit (float delay)
     tDelayASetDelay(d, d->delay);
     
     d->apInput = 0.0f;
-    
-    return d;
-    
 }
 
 float   tDelayATick (tDelayA* const d, float input)
@@ -400,4 +379,3 @@ float tDelayAGetGain (tDelayA* const d)
     return d->gain;
 }
 
-#endif // N_DELAYA

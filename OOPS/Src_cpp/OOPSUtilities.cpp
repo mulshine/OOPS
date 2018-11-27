@@ -14,7 +14,7 @@
 #include "..\Inc\OOPSUtilities.h"
 #include "..\Inc\OOPSWavetables.h"
 #include "..\Inc\OOPS.h"
-#include "..\Externals\d_fft_mayer.h"
+#include "..\Inc\d_fft_mayer.h"
 
 #else
 
@@ -26,29 +26,148 @@
 
 #endif
 
-float last;
+#define LOGTEN 2.302585092994
 
-float peakEnvelope(float input, float timeConstant)
+float mtof(float f)
 {
-    float thing = -1000.0f * 64.0f * oops.invSampleRate / timeConstant;
-    float thru;
-    
-    thing = exp(thing);
-    
-    if (thing > last)   thru = thing;
-    else                thru = last;
-    
-    last = thing;
-    
-    if (input >= 1)
-    {
-        
-    }
-    return 0.0f;
+    if (f <= -1500.0f) return(0);
+    else if (f > 1499.0f) return(mtof(1499.0f));
+    else return (8.17579891564f * exp(0.0577622650f * f));
 }
 
+float ftom(float f)
+{
+    return (f > 0 ? 17.3123405046f * log(.12231220585f * f) : -1500.0f);
+}
 
-#if N_COMPRESSOR
+float powtodb(float f)
+{
+    if (f <= 0) return (0);
+    else
+    {
+        float val = 100 + 10.f/LOGTEN * log(f);
+        return (val < 0 ? 0 : val);
+    }
+}
+
+float rmstodb(float f)
+{
+    if (f <= 0) return (0);
+    else
+    {
+        float val = 100 + 20.f/LOGTEN * log(f);
+        return (val < 0 ? 0 : val);
+    }
+}
+
+float dbtopow(float f)
+{
+    if (f <= 0)
+        return(0);
+    else
+    {
+        if (f > 870.0f)
+            f = 870.0f;
+        return (exp((LOGTEN * 0.1f) * (f-100.0f)));
+    }
+}
+
+float dbtorms(float f)
+{
+    if (f <= 0)
+        return(0);
+    else
+    {
+        if (f > 485.0f)
+            f = 485.0f;
+    }
+    return (exp((LOGTEN * 0.05f) * (f-100.0f)));
+}
+
+/* ---------------- env~ - simple envelope follower. ----------------- */
+tEnv* tEnvInit(int ws, int hs, int bs)
+{
+    tEnv* x = &oops.tEnvRegistry[oops.registryIndex[T_ENV]++];
+    
+    int period = hs, npoints = ws;
+    
+    int i;
+    
+    if (npoints < 1) npoints = 1024;
+    if (period < 1) period = npoints/2;
+    if (period < npoints / MAXOVERLAP + 1)
+        period = npoints / MAXOVERLAP + 1;
+
+    x->x_npoints = npoints;
+    x->x_phase = 0;
+    x->x_period = period;
+    
+    x->windowSize = npoints;
+    x->hopSize = period;
+    x->blockSize = bs;
+    
+    for (i = 0; i < MAXOVERLAP; i++) x->x_sumbuf[i] = 0;
+    for (i = 0; i < npoints; i++)
+        x->buf[i] = (1.0f - cos((2 * PI * i) / npoints))/npoints;
+    for (; i < npoints+INITVSTAKEN; i++) x->buf[i] = 0;
+    
+    x->x_f = 0;
+    
+    x->x_allocforvs = INITVSTAKEN;
+    
+    // ~ ~ ~ dsp ~ ~ ~
+    if (x->x_period % x->blockSize)
+    {
+        x->x_realperiod = x->x_period + x->blockSize - (x->x_period % x->blockSize);
+    }
+    else
+    {
+        x->x_realperiod = x->x_period;
+    }
+    // ~ ~ ~ ~ ~ ~ ~ ~
+    
+    return (x);
+}
+
+float tEnvTick (tEnv* x)
+{
+    return powtodb(x->x_result);
+}
+
+void tEnvProcessBlock(tEnv* x, float* in)
+{
+    int n = x->blockSize;
+    
+    int count;
+    t_sample *sump;
+    in += n;
+    for (count = x->x_phase, sump = x->x_sumbuf;
+         count < x->x_npoints; count += x->x_realperiod, sump++)
+    {
+        t_sample *hp = x->buf + count;
+        t_sample *fp = in;
+        t_sample sum = *sump;
+        int i;
+        
+        for (i = 0; i < n; i++)
+        {
+            fp--;
+            sum += *hp++ * (*fp * *fp);
+        }
+        *sump = sum;
+    }
+    sump[0] = 0;
+    x->x_phase -= n;
+    if (x->x_phase < 0)
+    {
+        x->x_result = x->x_sumbuf[0];
+        for (count = x->x_realperiod, sump = x->x_sumbuf;
+             count < x->x_npoints; count += x->x_realperiod, sump++)
+            sump[0] = sump[1];
+        sump[0] = 0;
+        x->x_phase = x->x_realperiod - n;
+    }
+}
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ Compressor ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
 
 /*
@@ -149,9 +268,6 @@ float tCompressorTick(tCompressor* c, float in)
 
 }
 
-
-#endif
-#if N_ENVELOPE
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ Envelope ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
 tEnvelope*    tEnvelopeInit(float attack, float decay, oBool loop)
 {
@@ -330,9 +446,6 @@ float   tEnvelopeTick(tEnvelope* const env)
     return env->next;
 }
 
-#endif // N_ENVELOPE
-
-#if N_ADSR
 /* ADSR */
 tADSR*    tADSRInit(float attack, float decay, float sustain, float release)
 {
@@ -570,9 +683,6 @@ float   tADSRTick(tADSR* const adsr)
     return adsr->next;
 }
 
-#endif // N_ADSR
-
-#if N_ENVELOPEFOLLOW
 /* Envelope Follower */
 tEnvelopeFollower*    tEnvelopeFollowerInit(float attackThreshold, float decayCoeff)
 {
@@ -610,16 +720,14 @@ int     tEnvelopeFollowerAttackThresh(tEnvelopeFollower* const ef, float attackT
 {
     return ef->a_thresh = attackThresh;
 }
-#endif // N_ENVELOPEFOLLOW
 
-#if N_RAMP
 /* Ramp */
 tRamp*    tRampInit(float time, int samples_per_tick)
 {
     tRamp* ramp = &oops.tRampRegistry[oops.registryIndex[T_RAMP]];
     
     ramp->inv_sr_ms = 1.0f/(oops.sampleRate*0.001f);
-		ramp->minimum_time = ramp->inv_sr_ms * samples_per_tick;
+	ramp->minimum_time = ramp->inv_sr_ms * samples_per_tick;
     ramp->curr = 0.0f;
     ramp->dest = 0.0f;
 		if (time < ramp->minimum_time)
@@ -642,16 +750,14 @@ tRamp*    tRampInit(float time, int samples_per_tick)
 
 int     tRampSetTime(tRamp* const r, float time)
 {
-		if (time < r->minimum_time)
-		{
-			r->time = r->minimum_time;
-		}
-		else
-		{
-			r->time = time;
-		}
-		
+	if (time < r->minimum_time)
+	{
+		r->time = r->minimum_time;
+	}
+	else
+	{
 		r->time = time;
+	}
     r->inc = ((r->dest-r->curr)/r->time * r->inv_sr_ms) * ((float)r->samples_per_tick);
     return 0;
 }
@@ -659,6 +765,13 @@ int     tRampSetTime(tRamp* const r, float time)
 int     tRampSetDest(tRamp* const r, float dest)
 {
     r->dest = dest;
+    r->inc = ((r->dest-r->curr)/r->time * r->inv_sr_ms) * ((float)r->samples_per_tick);
+    return 0;
+}
+
+int     tRampSetVal(tRamp* const r, float val)
+{
+    r->curr = val;
     r->inc = ((r->dest-r->curr)/r->time * r->inv_sr_ms) * ((float)r->samples_per_tick);
     return 0;
 }
@@ -683,11 +796,7 @@ void    tRampSampleRateChanged(tRamp* const r)
     r->inc = ((r->dest-r->curr)/r->time * r->inv_sr_ms)*((float)r->samples_per_tick);
 }
 
-#endif //N_RAMP
-
-#if N_POLY
 /* Poly Handler */
-
 static void nodeListInit(tPoly* poly)
 {
     for (int16_t i = 0; i < 128; i++)
@@ -831,9 +940,6 @@ void tPolyNoteOff(tPoly* poly, int midiNoteNumber)
     prependNoteToOffList(poly, midiNoteNumber);
 }
 
-#endif // N_POLYHANDLER
-
-#if N_STACK
 // If stack contains note, returns index. Else returns -1;
 int tStack_contains(tStack* const ns, uint16_t noteVal)
 {
@@ -1042,16 +1148,11 @@ tStack* tStack_init(void)
     return ns;
 }
 
-#endif // N_STACK
-
-#if N_MPOLY
-
-tMPoly* tMPoly_init(void)
+tMPoly* tMPoly_init(int numVoices)
 {
     tMPoly* poly = &oops.tMPolyRegistry[oops.registryIndex[T_MPOLY]++];
     
-    poly->numVoices = NUM_VOICES;
-    poly->numVoicesActive = NUM_VOICES;
+    poly->numVoices = numVoices;
     poly->lastVoiceToChange = 0;
     
     // Arp mode stuff
@@ -1063,13 +1164,20 @@ tMPoly* tMPoly_init(void)
     for (int i = 0; i < 128; i++)
     {
         poly->notes[i][0] = 0;
-        poly->notes[i][1] = 0;
+        poly->notes[i][1] = -1;
     }
     
-    for (int i = 0; i < NUM_VOICES; i ++)
+    for (int i = 0; i < MPOLY_NUM_MAX_VOICES; ++i)
     {
         poly->voices[i][0] = -1;
+        poly->firstReceived[i] = 0;
+        poly->ramp[i] = tRampInit(5.0f, 1);
     }
+    
+    poly->glideTime = 5.0f;
+    
+    poly->pitchBend = 64;
+    poly->pitchBendAmount = 2.0f;
     
     poly->stack = tStack_init();
     poly->orderStack = tStack_init();
@@ -1077,62 +1185,100 @@ tMPoly* tMPoly_init(void)
     return poly;
 }
 
-
-//instead of including in dacsend, should have a separate pitch bend ramp, that is added when the ramps are ticked and sent to DAC
-void tMPoly_pitchBend(tMPoly* poly, uint8_t pitchBend)
+// Only needs to be used for pitch glide
+void tMPoly_tick(tMPoly* poly)
 {
-
+    for (int i = 0; i < MPOLY_NUM_MAX_VOICES; ++i)
+    {
+    	tRampTick(poly->ramp[i]);
+    }
 }
 
-void tMPoly_noteOn(tMPoly* poly, int note, uint8_t vel)
+//instead of including in dacsend, should have a separate pitch bend ramp, that is added when the ramps are ticked and sent to DAC
+void tMPoly_pitchBend(tMPoly* poly, int pitchBend)
+{
+    poly->pitchBend = pitchBend;
+}
+
+int tMPoly_noteOn(tMPoly* poly, int note, uint8_t vel)
 {
     // if not in keymap or already on stack, dont do anything. else, add that note.
-    if (tStack_contains(poly->stack, note) >= 0) return;
+    if (tStack_contains(poly->stack, note) >= 0) return -1;
     else
     {
         tMPoly_orderedAddToStack(poly, note);
         tStack_add(poly->stack, note);
         
+        int alteredVoice = -1;
         oBool found = OFALSE;
         for (int i = 0; i < poly->numVoices; i++)
         {
             if (poly->voices[i][0] < 0)    // if inactive voice, give this note to voice
             {
+                if (poly->firstReceived[i] == 0)
+                {
+                    tRampSetVal(poly->ramp[i], note); // can't be 1.0f, causes first note to be off pitch
+                    poly->firstReceived[i] = 1;
+                }
+                else
+                {
+                    tRampSetTime(poly->ramp[i], poly->glideTime);
+                }
+
                 found = OTRUE;
                 
                 poly->voices[i][0] = note;
                 poly->voices[i][1] = vel;
                 poly->lastVoiceToChange = i;
                 poly->notes[note][0] = vel;
-                poly->notes[note][1] = 1;
+                poly->notes[note][1] = i;
+                
+                tRampSetDest(poly->ramp[i], poly->voices[i][0]);
+                
+                alteredVoice = i;
                 break;
             }
         }
         
         if (!found) //steal
         {
-            int whichVoice = poly->lastVoiceToChange;
-            int oldNote = poly->voices[whichVoice][0];
-            poly->voices[whichVoice][0] = note;
-            poly->voices[whichVoice][1] = vel;
-            poly->notes[oldNote][1] = 0; //mark the stolen voice as inactive (in the second dimension of the notes array)
-            
-            poly->notes[note][0] = vel;
-            poly->notes[note][1] = OTRUE;
+        	int whichVoice, whichNote;
+        	for (int j = tStack_getSize(poly->stack) - 1; j >= 0; j--)
+        	{
+        		whichNote = tStack_get(poly->stack, j);
+        		whichVoice = poly->notes[whichNote][1];
+        		if (whichVoice >= 0)
+        		{
+        			poly->lastVoiceToChange = j;
+					int oldNote = poly->voices[whichVoice][0];
+					poly->voices[whichVoice][0] = note;
+					poly->voices[whichVoice][1] = vel;
+					poly->notes[oldNote][1] = -1; //mark the stolen voice as inactive (in the second dimension of the notes array)
+					poly->notes[note][0] = vel;
+					poly->notes[note][1] = whichVoice;
+                    
+                    tRampSetTime(poly->ramp[whichVoice], poly->glideTime);
+                    tRampSetDest(poly->ramp[whichVoice], poly->voices[whichVoice][0]);
+                    
+                    alteredVoice = whichVoice;
+
+					break;
+        		}
+        	}
         }
-        
+        return alteredVoice;
     }
 }
 
 
 int16_t noteToTest = -1;
 
-void tMPoly_noteOff(tMPoly* poly, uint8_t note)
+int tMPoly_noteOff(tMPoly* poly, uint8_t note)
 {
     tStack_remove(poly->stack, note);
     tStack_remove(poly->orderStack, note);
     poly->notes[note][0] = 0;
-    poly->notes[note][1] = 0;
+    poly->notes[note][1] = -1;
     
     int deactivatedVoice = -1;
     for (int i = 0; i < poly->numVoices; i++)
@@ -1146,6 +1292,7 @@ void tMPoly_noteOff(tMPoly* poly, uint8_t note)
             break;
         }
     }
+    /*
     //monophonic handling
     if ((poly->numVoices == 1) && (tStack_getSize(poly->stack) > 0))
     {
@@ -1154,29 +1301,26 @@ void tMPoly_noteOff(tMPoly* poly, uint8_t note)
         poly->voices[0][1] = poly->notes[oldNote][0];
         poly->lastVoiceToChange = 0;
     }
+    */
     
     //grab old notes off the stack if there are notes waiting to replace the free voice
-    else if (deactivatedVoice != -1)
+    if (deactivatedVoice >= 0)
     {
-        int i = 0;
-        
-        while (1)
+        for (int j = 0; j < tStack_getSize(poly->stack); ++j)
         {
-            noteToTest = tStack_get(poly->stack, i++);
-            if (noteToTest < 0 ) break;
+            noteToTest = tStack_get(poly->stack, j);
             
-            if (poly->notes[noteToTest][1] == 0) //if there is a stolen note waiting (marked inactive but on the stack)
+            if (poly->notes[noteToTest][1] < 0) //if there is a stolen note waiting (marked inactive but on the stack)
             {
                 poly->voices[deactivatedVoice][0] = noteToTest; //set the newly free voice to use the old stolen note
+                tRampSetDest(poly->ramp[deactivatedVoice], poly->voices[deactivatedVoice][0]);
                 poly->voices[deactivatedVoice][1] = poly->notes[noteToTest][0]; // set the velocity of the voice to be the velocity of that note
-                poly->notes[noteToTest][1] = 1; //mark that it is no longer stolen and is now active
-                poly->lastVoiceToChange = deactivatedVoice; // mark the voice that was just changed as the last voice to change
-                break;
+                poly->notes[noteToTest][1] = deactivatedVoice; //mark that it is no longer stolen and is now active
+                return -1;
             }
         }
     }
-    
-    
+    return deactivatedVoice;
 }
 
 void tMPoly_orderedAddToStack(tMPoly* poly, uint8_t noteVal)
@@ -1218,9 +1362,43 @@ void tMPoly_orderedAddToStack(tMPoly* poly, uint8_t noteVal)
     
 }
 
-#endif //N_MPOLY
+void tMPoly_setNumVoices(tMPoly* poly, uint8_t numVoices)
+{
+    poly->numVoices = (numVoices > MPOLY_NUM_MAX_VOICES) ? MPOLY_NUM_MAX_VOICES : numVoices;
+}
 
-#if N_SOLAD
+void tMPoly_setPitchGlideTime(tMPoly* poly, float t)
+{
+	if (poly->glideTime == t) return;
+    poly->glideTime = t;
+    for (int i = 0; i < MPOLY_NUM_MAX_VOICES; ++i)
+    {
+        tRampSetTime(poly->ramp[i], poly->glideTime);
+    }
+}
+
+int tMPoly_getNumVoices(tMPoly* poly)
+{
+    return poly->numVoices;
+}
+
+float tMPoly_getPitch(tMPoly* poly, uint8_t voice)
+{
+    //float pitchBend = ((float)(poly->pitchBend - 8192) / 8192.0f) * poly->pitchBendAmount;
+    return tRampSample(poly->ramp[voice]);// + pitchBend;
+	return poly->voices[voice][0];
+}
+
+int tMPoly_getVelocity(tMPoly* poly, uint8_t voice)
+{
+    return poly->voices[voice][1];
+}
+
+int tMPoly_isOn(tMPoly* poly, uint8_t voice)
+{
+    return (poly->voices[voice][0] > 0) ? 1 : 0;
+}
+
 
 /******************************************************************************/
 /***************** static function declarations *******************************/
@@ -1244,7 +1422,7 @@ tSOLAD*     tSOLAD_init(void)
     
     solad_init(w);
     
-    return(w);
+    return w;
 }
 
 // send one block of input samples, receive one block of output samples
@@ -1536,10 +1714,6 @@ static void solad_init(tSOLAD *w)
     w->blocksize = INITPERIOD;
 }
 
-
-#endif // N_SOLAD
-
-#if N_SNAC
 /******************************************************************************/
 /***************************** private procedures *****************************/
 /******************************************************************************/
@@ -1561,26 +1735,23 @@ static float snac_spectralpeak(tSNAC *s, float periodlength);
 /******************************************************************************/
 
 
-tSNAC* tSNAC_init(int framearg, int overlaparg)
+tSNAC* tSNAC_init(int overlaparg)
 {
     
     tSNAC *s = &oops.tSNACRegistry[oops.registryIndex[T_SNAC]++];
 
-    s->inputbuf = NULL;
-    s->processbuf = NULL;
-    s->spectrumbuf = NULL;
-    s->biasbuf = NULL;
     s->biasfactor = DEFBIAS;
     s->timeindex = 0;
     s->periodindex = 0;
     s->periodlength = 0.;
     s->fidelity = 0.;
     s->minrms = DEFMINRMS;
+    s->framesize = SNAC_FRAME_SIZE;
     
-    tSNAC_setFramesize(s, framearg);
+    snac_biasbuf(s);
     tSNAC_setOverlap(s, overlaparg);
     
-    return(s);
+    return s;
 }
 /******************************************************************************/
 /************************** public access functions****************************/
@@ -1607,34 +1778,6 @@ void tSNAC_ioSamples(tSNAC *s, float *in, float *out, int size)
     s->timeindex = timeindex;
     return;
 }
-
-
-// set framesize and (re)allocate buffers accordingly
-void tSNAC_setFramesize(tSNAC *s, int frame)
-{
-    int n;
-    
-    if(!((frame==128)|(frame==256)|(frame==512)|(frame==1024)|(frame==2048)))
-        frame = DEFFRAMESIZE;
-    s->framesize = n = frame;
-    
-    s->inputbuf = (float*)realloc(s->inputbuf, s->framesize * sizeof(float));
-    float *inputbuf = s->inputbuf;
-    while(n--) *inputbuf++ = 0;
-    
-    s->processbuf = (float*)realloc(s->processbuf,
-                                      s->framesize * 2 * sizeof(float));
-    
-    s->spectrumbuf = (float*)realloc(s->spectrumbuf,
-                                       s->framesize * 0.5 * sizeof(float));
-    
-    s->biasbuf = (float*)realloc(s->biasbuf, s->framesize * sizeof(float));
-    snac_biasbuf(s);
-    
-    s->timeindex = 0;
-    return;
-}
-
 
 void tSNAC_setOverlap(tSNAC *s, int lap)
 {
@@ -1898,10 +2041,7 @@ static void snac_biasbuf(tSNAC *s)
         biasbuf[n] = 1.0f - (float)log(n - 4) * bias;
     }
 }
-#endif // N_SNAC
 
-
-#if N_ATKDTK
 /********Private function prototypes**********/
 static void atkdtk_init(tAtkDtk *a, int blocksize, int atk, int rel);
 static void atkdtk_envelope(tAtkDtk *a, float *in);
@@ -1913,7 +2053,7 @@ tAtkDtk* tAtkDtk_init(int blocksize)
     tAtkDtk *a = &oops.tAtkDtkRegistry[oops.registryIndex[T_ATKDTK]++];
     
     atkdtk_init(a, blocksize, DEFATTACK, DEFRELEASE);
-    return (a);
+    return a;
     
 }
 
@@ -2003,7 +2143,7 @@ static void atkdtk_init(tAtkDtk *a, int blocksize, int atk, int rel)
     a->env = 0;
     a->blocksize = blocksize;
     a->threshold = DEFTHRESHOLD;
-    a->samplerate = DEFSAMPLERATE;
+    a->samplerate = oops.SampleRate;
     a->prevAmp = 0;
     
     a->env = 0;
@@ -2026,5 +2166,105 @@ static void atkdtk_envelope(tAtkDtk *a, float *in)
     }
     
 }
-#endif //N_ATKDTCT
 
+tLockhartWavefolder* tLockhartWavefolderInit(void)
+{
+    tLockhartWavefolder *w = &oops.tLockhartWavefolderRegistry[oops.registryIndex[T_LOCKHARTWAVEFOLDER]++];
+    
+    w->Ln1 = 0.0;
+    w->Fn1 = 0.0;
+    w->xn1 = 0.0;
+    
+    return w;
+}
+
+double tLockhartWavefolderLambert(double x, double ln)
+{
+    double w = ln;
+    double expw, p, r, s, err, q;
+    
+    for (int i = 0; i < 1000; i++)
+    {
+        //err = x * (logf(x) - logf(w));
+        
+        /*
+        r = logf(x / w) - w;
+        q = 2.0f * (1.0f+w) * (1.0f + w + 0.666666666f*r);
+        err = (r / (1.0f+w)) * ((q - r) / (q - 2*r));
+        */
+        expw = exp(w);
+        
+        p = (w * expw) - x;
+        r = (w + 1.0) * expw;
+        s = (w + 2.0) / (2.0 * (w + 1.0));
+        err = (p/(r-(p*s)));
+        
+        if (fabs(err) < THRESH) break;
+        
+        w -= err;
+        //w = w * (1 + err);
+        //w = w - err;
+    }
+    
+    return w;
+}
+
+float tLockhartWavefolderTick(tLockhartWavefolder* const w, float samp)
+{
+    int l;
+    double u, Ln, Fn, xn;
+    float o;
+    
+    samp=(double)samp;
+    // Compute Antiderivative
+    if (samp > 0) l = 1;
+    else if (samp < 0) l = -1;
+    else l = 0;
+    
+    u = LOCKHART_D * exp(l*LOCKHART_B*samp);
+    Ln = tLockhartWavefolderLambert(u, w->Ln1);
+    Fn = (0.5 * VT_DIV_B) * (Ln*(Ln + 2.0)) - 0.5*LOCKHART_A*samp*samp;
+    
+    // Check for ill-conditioning
+    if (fabs(samp - w->xn1) < ILL_THRESH)
+    {
+        // Compute Averaged Wavefolder Output
+        xn = 0.5*(samp + w->xn1);
+        u = LOCKHART_D*exp(l*LOCKHART_B*xn);
+        Ln = tLockhartWavefolderLambert(u, w->Ln1);
+        o = (float)((l*LOCKHART_VT*Ln) - (LOCKHART_A*xn));
+    }
+    else
+    {
+        // Apply AA Form
+        o = (float)((Fn - w->Fn1)/(samp - w->xn1));
+    }
+    
+    /*
+    // Check for ill-conditioning
+    if (abs(in1-xn1)<thresh) {
+        
+        // Compute Averaged Wavefolder Output
+        xn = 0.5*(in1+xn1);
+        u = d*pow(e,l*b*xn);
+        Ln = Lambert_W(u,Ln1);
+        out1 = l*VT*Ln - a*xn;
+        
+    }
+    else {
+        
+        // Apply AA Form
+        out1 = (Fn-Fn1)/(in1-xn1);
+        
+    }
+     */
+    
+    // Update States
+    w->Ln1 = Ln;
+    w->Fn1 = Fn;
+    w->xn1 = samp;
+    
+    return o;
+}
+
+#endif

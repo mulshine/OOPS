@@ -20,7 +20,7 @@ std::vector<juce::String> cButtonNames =  std::vector<juce::String>
 
 std::vector<juce::String> cSliderNames =  std::vector<juce::String>
 {
-    
+    "centroid","spread"
 };
 
 std::vector<juce::String> cComboBoxNames =  std::vector<juce::String>

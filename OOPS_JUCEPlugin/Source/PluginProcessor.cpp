@@ -48,7 +48,7 @@ void OopsAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
     start = false;
     ramp = false;
     
-    OOPSTest_init(sampleRate);
+    OOPSTest_init(sampleRate, samplesPerBlock);
 }
 
 

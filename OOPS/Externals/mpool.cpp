@@ -1,3 +1,6 @@
+
+/** mpool source significantly modified by Mike Mulshine, Jeff Snyder, et al., Princeton University Music Department **/
+
 /**
    In short, mpool is distributed under so called "BSD license",
    
@@ -38,173 +41,113 @@
 //#include "../../JuceLibraryCode/JuceHeader.h"
 #include "../../OOPS_JUCEPlugin/JuceLibraryCode/JuceHeader.h"
 
+#define NUM_BLOCKS 50
+
 char memory[MPOOL_POOL_SIZE];
+mpool_pool_t blocks[NUM_BLOCKS]; // 
 mpool_t oops_pool;
 
 /**
  * private function
  */
-static inline size_t mpool_align(size_t siz);
+static inline size_t mpool_align(size_t size);
 
 
 /**
  * create memory pool
  */
-void mpool_create (size_t siz, mpool_t* pool)
+void mpool_create (size_t size, mpool_t* pool)
 {
-    if (siz > MPOOL_POOL_SIZE) siz = MPOOL_POOL_SIZE;
+    if (size > MPOOL_POOL_SIZE) size = MPOOL_POOL_SIZE;
     
-    pool->mpool = (mpool_pool_t*)(void*)memory;
+    pool->mpool = &blocks[0];
     
     pool->mpool->pool = (void*)memory;
-    pool->mpool->siz = 0;
-    pool->mpool->next = NULL;
+    pool->mpool->size = size;
+    pool->mpool->used = 0;
     
-    pool->begin = pool->mpool->pool;
-    pool->head  = pool->mpool;
-    pool->usiz  = 0;
-    pool->msiz  = siz;
+    pool->usize  = 0;
+    pool->msize  = size;
+    
+    for (int i = 0; i < MPOOL_POOL_SIZE; i++) memory[i]=0;
 }
 
-void oops_pool_init(size_t siz)
+void oops_pool_init(size_t size)
 {
-    mpool_create(siz, &oops_pool);
+    mpool_create(size, &oops_pool);
 }
-
-
-/**
- * extend memory pool
- */
-/*
-static inline bool mpool_extend(mpool_pool_t *p, size_t siz, mpool_t *pool) {
-    siz = mpool_decide_create_siz(siz);
-    mpool_pool_t *pp;
-    
-    pp = malloc(sizeof(*pp));
-    if (pp == NULL) {
-        return false;
-    }
-    
-    pp->pool = malloc(siz);
-    if (pp->pool == NULL) {
-        return false;
-    }
-    
-    memset(pp->pool, 0, siz);
-    
-    pp->next = NULL;
-    
-    p->next = pp;
-    
-    pool->begin = pp->pool;
-    
-    return true;
-}
- */
-
-
 
 /**
  * allocate memory from memory pool
  */
-void* mpool_alloc(size_t siz, mpool_t* pool)
+void* mpool_alloc(size_t size, mpool_t* pool)
 {
-    mpool_pool_t **p = &pool->mpool;
-    mpool_pool_t *pp = *p;
-    size_t usiz = mpool_align(pool->usiz + siz);
-    size_t msiz = pool->msiz;
-    void     *d = pool->begin;
+    pool->next += 1;
     
-    if (usiz > msiz)
+    if (pool->next >= NUM_BLOCKS) return NULL;
+    
+    mpool_pool_t* new_chunk = &blocks[pool->next];
+    new_chunk->size = mpool_align(size);
+    
+    int idx = pool->next - 1;
+    for (mpool_pool_t *old_chunk = &blocks[idx]; idx >= 0; old_chunk = &blocks[--idx])
     {
-        return NULL;
+        if (old_chunk->used == 0)
+        {
+            if (new_chunk->size < old_chunk->size)
+            {
+                // set memory start pointer of this chunk to that of old chunk, mark new chunk used
+                new_chunk->pool = old_chunk->pool;
+                new_chunk->used = 1;
+                
+                // increment memory start pointer of old chunk
+                char* ptr = (char*)old_chunk->pool;
+                ptr += new_chunk->size;
+                old_chunk->pool = (void*)ptr;
+                
+                // decrement size of old chunk by size of new chunk
+                old_chunk->size -= new_chunk->size;
+                
+                // increment used size of whole mempool by size of new chunk
+                pool->usize += new_chunk->size;
+                
+                // return memory pointer of new chunk
+                return new_chunk->pool;
+            }
+        }
     }
-    else
-    {
-        pool->usiz = usiz;
     
-        mpool_pool_t* chunk = (mpool_pool_t*)d;
-        chunk->siz = siz;
-        chunk->pool = (void*)d;
-        chunk->next = NULL;
-        chunk->prev = NULL;
-        
-    
-        // originally was just
-        // pool->begin += mpool_align(siz);
-        // but can't do void pointer arithmetic in C++ on some compilers
-        // stackoverflow.com/questions/3377977/void-pointer-arithmetic
-        char* ptr = (char*)pool->begin;
-        ptr += mpool_align(siz);
-        pool->begin = (void*)ptr;
-        
-        return chunk;
-    }
-    
-    
+    // if not enough space anywhere, return NULL
+    return NULL;
 }
 
-void* oops_alloc(size_t siz)
+void* oops_alloc(size_t size)
 {
-    return mpool_alloc(siz, &oops_pool);
+    return mpool_alloc(size, &oops_pool);
 }
 
 void mpool_free(void* ptr, mpool_t* pool)
 {
-    printf("finding %p\n", ptr);
-    for (mpool_pool_t *cur = pool->head, *next; cur; cur = next)
+    //printf("finding %p\n", ptr);
+    
+    int idx = 0;
+    for (mpool_pool_t *block = &blocks[0]; idx < NUM_BLOCKS; block = &blocks[++idx])
     {
-        next = cur->next;
-        
-        if (cur->pool == ptr)
+        if (block->pool == ptr)
         {
-            DBG("found it");
+            // Mark unused
+            block->used = 0;
             
-            // unlink this menu item AND copy memory after this item backwards to this item
             
-            // copy all memory in range [cur->next->pool, pool->begin] to cur->pool [copy mem after this item to mem where this item is]
-            // set each item's pool to previous (iterate forward... item->pool = item->next->pool;
-            // cur = cur->next [set this item to be next item]
-            
-            mpool_pool_t* prev = cur->prev;
-            
-            if (cur->next) // if not last item
+            // Format to all zeros (kinda arbitrary, but possibly handy / needed)
+            char* buff = (char*)block->pool;
+            for (int i = 0; i < block->size; i++)
             {
-                size_t len_to_end = (size_t)((char*)pool->begin - (char*)cur->next->pool);
-                
-                char* write = (char*) cur->pool;
-                char* read = (char*) cur->next->pool;
-                
-                // copy all memory in range [cur->next->pool, pool->begin] to cur->pool
-                for (int i = 0; i < len_to_end; i++)
-                {
-                    write[i] = read[i];
-                }
-                
-                
-                // subtract siz of removed item from pool address of all items after
-                for (mpool_pool_t* item = cur->next, *nextItem; nextItem; item = nextItem)
-                {
-                    nextItem = item->next;
-                    
-                    char* ptr = (char*)item->pool;
-                    ptr -= cur->siz;
-                    item->pool = (void*)ptr;
-                }
-                
-                // cut this item off from chain
-                prev->next = cur->next;
-            }
-            else
-            {
-                prev->next = NULL;
+                buff[i] = 0;
             }
             
-            pool->usiz -= cur->siz;
-            
-            char* ptr = (char*)pool->begin;
-            ptr -= cur->siz;
-            pool->begin = (void*)ptr;
+            // decrement overall pool size
+            pool->usize -= block->size;
         
             break;
         }
@@ -218,7 +161,7 @@ void oops_free(void* ptr)
 
 size_t mpool_get_size(mpool_t* pool)
 {
-    return pool->msiz;
+    return pool->msize;
 }
 
 size_t oops_pool_get_size(void)
@@ -228,7 +171,7 @@ size_t oops_pool_get_size(void)
 
 size_t mpool_get_used(mpool_t* pool)
 {
-    return pool->usiz;
+    return pool->usize;
 }
 
 size_t oops_pool_get_used(void)
@@ -236,10 +179,17 @@ size_t oops_pool_get_used(void)
     return mpool_get_used(&oops_pool);
 }
 
+void* oops_pool_get_pool(void)
+{
+    float* buff = (float*)memory;
+    
+    return buff;
+}
+
 /**
  * align byte boundary
  */
-static inline size_t mpool_align(size_t siz) {
-    return (siz + (MPOOL_ALIGN_SIZE - 1)) & ~(MPOOL_ALIGN_SIZE - 1);
+static inline size_t mpool_align(size_t size) {
+    return (size + (MPOOL_ALIGN_SIZE - 1)) & ~(MPOOL_ALIGN_SIZE - 1);
 }
 

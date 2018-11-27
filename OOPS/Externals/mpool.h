@@ -41,7 +41,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-#define MPOOL_POOL_SIZE   10000
+#define MPOOL_POOL_SIZE   2000
 #define MPOOL_ALIGN_SIZE (8)
 
 //#define size_t unsigned long
@@ -52,37 +52,40 @@
 typedef struct mpool_pool_t {
     void                *pool;     // memory pool field
     struct mpool_pool_t *next;     // next memory pool's pointer
-    struct mpool_pool_t *prev;
-    size_t siz;
+    size_t size;
+    int used; // used flag
 } mpool_pool_t;
 
 typedef struct mpool_t {
     mpool_pool_t *head;       // memory pool's head
-    mpool_pool_t *tail;       // memory pool's tail
-    void         *begin;      // data for internal conduct
-    size_t        usiz;       // used pool size of current pool
-    size_t        msiz;       // max pool size of current pool
+    //void         *begin;
+    void** begins;      // data for internal conduct
+    int bidx;
+    size_t        usize;       // used pool size of current pool
+    size_t        msize;       // max pool size of current pool
     mpool_pool_t *mpool;      // memory pool
+    int next;
 } mpool_t;
 
 
-void mpool_create (size_t siz, mpool_t* pool);
+void mpool_create (size_t size, mpool_t* pool);
 
-void *mpool_alloc(size_t siz, mpool_t* pool);
+void *mpool_alloc(size_t size, mpool_t* pool);
 void mpool_free(void* ptr, mpool_t* pool);
 
 size_t mpool_get_size(mpool_t* pool);
 size_t mpool_get_used(mpool_t* pool);
 
 
-void oops_pool_init(size_t siz);
+void oops_pool_init(size_t size);
 
-void* oops_alloc(size_t siz);
+void* oops_alloc(size_t size);
 void oops_free(void* ptr);
 
 size_t oops_pool_get_size(void);
 size_t oops_pool_get_used(void);
 
+void* oops_pool_get_pool(void);
 
 
 #endif

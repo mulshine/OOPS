@@ -15,7 +15,7 @@
 #include "OOPSCore.h"
 
 /* Non-interpolating delay, reimplemented from STK (Cook and Scavone). */
-tDelay*  tDelayInit      (uint32_t delay);
+void     tDelayInit      (tDelay*  const, uint32_t delay);
 int      tDelaySetDelay  (tDelay*  const, uint32_t delay);
 uint32_t tDelayGetDelay  (tDelay*  const);
 void     tDelayTapIn     (tDelay*  const, float in, uint32_t tapDelay);
@@ -26,7 +26,7 @@ float    tDelayGetLastOut(tDelay*  const);
 float    tDelayGetLastIn (tDelay*  const);
 
 /* Linearly-interpolating delay, reimplemented from STK (Cook and Scavone). */
-tDelayL* tDelayLInit      (float delay);
+void     tDelayLInit      (tDelayL*  const, float delay);
 int      tDelayLSetDelay  (tDelayL*  const, float delay);
 float    tDelayLGetDelay  (tDelayL*  const);
 void     tDelayLTapIn     (tDelayL*  const, float in, uint32_t tapDelay);
@@ -37,7 +37,7 @@ float    tDelayLGetLastOut(tDelayL*  const);
 float    tDelayLGetLastIn (tDelayL*  const);
 
 /* Allpass-interpolating delay, reimplemented from STK (Cook and Scavone). */
-tDelayA* tDelayAInit      (float delay);
+void     tDelayAInit      (tDelayA*  const, float delay);
 int      tDelayASetDelay  (tDelayA*  const, float delay);
 float    tDelayAGetDelay  (tDelayA*  const);
 void     tDelayATapIn     (tDelayA*  const, float in, uint32_t tapDelay);

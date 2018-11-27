@@ -22,20 +22,17 @@
 
 #endif
 
-
-#if N_NEURON
-
 void     tNeuronSampleRateChanged(tNeuron* n)
 {
     
 }
 
-tNeuron*    tNeuronInit(void)
+void    tNeuron_init(tNeuron* const n)
 {
-    tNeuron* n = &oops.tNeuronRegistry[oops.registryIndex[T_CYCLE]++];
-
-    n->f = tPoleZeroInit();
-    tPoleZeroSetBlockZero(n->f, 0.99f);
+    n->f = (tPoleZero*) oops_alloc(sizeof(tPoleZero));
+    tPoleZero_init(n->f);
+    
+    tPoleZero_setBlockZero(n->f, 0.99f);
     
     n->timeStep = 1.0f / 50.0f;
     
@@ -58,15 +55,12 @@ tNeuron*    tNeuronInit(void)
     n->C = 1.0f;
     
     n->rate[2] = n->gL/n->C;
-    
-    n->sampleRateChanged = &tNeuronSampleRateChanged;
-    return n;
 }
 
-void   tNeuronReset(tNeuron* const n)
+void   tNeuron_reset(tNeuron* const n)
 {
     
-    tPoleZeroSetBlockZero(n->f, 0.99f);
+    tPoleZero_setBlockZero(n->f, 0.99f);
     
     n->timeStep = 1.0f / 50.0f;
     
@@ -92,50 +86,50 @@ void   tNeuronReset(tNeuron* const n)
 }
 
 
-void        tNeuronSetV1(tNeuron* const n, float V1)
+void        tNeuron_setV1(tNeuron* const n, float V1)
 {
     n->V[0] = V1;
 }
 
 
-void        tNeuronSetV2(tNeuron* const n, float V2)
+void        tNeuron_setV2(tNeuron* const n, float V2)
 {
     n->V[1] = V2;
 }
 
-void        tNeuronSetV3(tNeuron* const n, float V3)
+void        tNeuron_setV3(tNeuron* const n, float V3)
 {
     n->V[2] = V3;
 }
 
-void        tNeuronSetTimeStep(tNeuron* const n, float timeStep)
+void        tNeuron_setTimeStep(tNeuron* const n, float timeStep)
 {
     n->timeStep = timeStep;
 }
 
-void        tNeuronSetK(tNeuron* const n, float K)
+void        tNeuron_setK(tNeuron* const n, float K)
 {
     n->gK = K;
 }
 
-void        tNeuronSetL(tNeuron* const n, float L)
+void        tNeuron_setL(tNeuron* const n, float L)
 {
     n->gL = L;
     n->rate[2] = n->gL/n->C;
 }
 
-void        tNeuronSetN(tNeuron* const n, float N)
+void        tNeuron_setN(tNeuron* const n, float N)
 {
     n->gN = N;
 }
 
-void        tNeuronSetC(tNeuron* const n, float C)
+void        tNeuron_setC(tNeuron* const n, float C)
 {
     n->C = C;
     n->rate[2] = n->gL/n->C;
 }
 
-float   tNeuronTick(tNeuron* const n)
+float   tNeuron_tick(tNeuron* const n)
 {
     float output = 0.0f;
     float voltage = n->voltage;
@@ -203,34 +197,30 @@ float   tNeuronTick(tNeuron* const n)
     //set the output voltage to the "step" ugen, which controls the DAC.
     output = n->voltage * 0.01f; // volts
     
-    output = tPoleZeroTick(n->f, output);
+    output = tPoleZero_tick(n->f, output);
     
     return output;
 
 }
 
-void        tNeuronSetMode  (tNeuron* const n, NeuronMode mode)
+void        tNeuron_setMode  (tNeuron* const n, NeuronMode mode)
 {
     n->mode = mode;
 }
 
-void        tNeuronSetCurrent  (tNeuron* const n, float current)
+void        tNeuron_setCurrent  (tNeuron* const n, float current)
 {
     n->current = current;
 }
 
-#endif
-
-
 // Cycle
-void    tCycleInit(tCycle* const c)
+void    tCycle_init(tCycle* const c)
 {
     c->inc      =  0.0f;
     c->phase    =  0.0f;
-    c->sampleRateChanged = &tCycleSampleRateChanged;
 }
 
-int     tCycleSetFreq(tCycle* const c, float freq)
+int     tCycle_setFreq(tCycle* const c, float freq)
 {
     if (freq < 0.0f) freq = 0.0f;
     
@@ -240,7 +230,7 @@ int     tCycleSetFreq(tCycle* const c, float freq)
     return 0;
 }
 
-float   tCycleTick(tCycle* const c)
+float   tCycle_tick(tCycle* const c)
 {
     // Phasor increment
     c->phase += c->inc;
@@ -261,14 +251,13 @@ void     tCycleSampleRateChanged (tCycle* const c)
     c->inc = c->freq * oops.invSampleRate;
 }
 
-#if N_PHASOR
 /* Phasor */
 void     tPhasorSampleRateChanged (tPhasor* const p)
 {
     p->inc = p->freq * oops.invSampleRate;
 };
 
-int     tPhasorSetFreq(tPhasor* const p, float freq)
+int     tPhasor_setFreq(tPhasor* const p, float freq)
 {
     if (freq < 0.0f) freq = 0.0f;
     
@@ -278,7 +267,7 @@ int     tPhasorSetFreq(tPhasor* const p, float freq)
     return 0;
 }
 
-float   tPhasorTick(tPhasor* const p)
+float   tPhasor_tick(tPhasor* const p)
 {
     p->phase += p->inc;
     
@@ -287,38 +276,19 @@ float   tPhasorTick(tPhasor* const p)
     return p->phase;
 }
 
-tPhasor*    tPhasorInit(void)
+void    tPhasor_init(tPhasor* const p)
 {
-    if (oops.registryIndex[T_PHASOR] >= N_PHASOR) return NULL;
-    
-    tPhasor* p = &oops.tPhasorRegistry[oops.registryIndex[T_PHASOR]++];
-    
     p->phase = 0.0f;
     p->inc = 0.0f;
-    
-    p->sampleRateChanged = &tPhasorSampleRateChanged;
-    
-    return p;
-    
 }
-#endif //N_PHASOR
 
-#if N_SAWTOOTH
-tSawtooth*    tSawtoothInit(void)
+void    tSawtooth_init(tSawtooth* const c)
 {
-    if (oops.registryIndex[T_SAWTOOTH] >= N_SAWTOOTH) return NULL;
-    
-    tSawtooth* c = &oops.tSawtoothRegistry[oops.registryIndex[T_SAWTOOTH]++];
-    
     c->inc      = 0.0f;
     c->phase    = 0.0f;
-    
-    c->sampleRateChanged = &tSawtoothSampleRateChanged;
-    
-    return c;
 }
 
-int     tSawtoothSetFreq(tSawtooth* const c, float freq)
+int     tSawtooth_setFreq(tSawtooth* const c, float freq)
 {
     if (freq < 0.0f) freq = 0.0f;
     
@@ -328,7 +298,7 @@ int     tSawtoothSetFreq(tSawtooth* const c, float freq)
     return 0;
 }
 
-float   tSawtoothTick(tSawtooth* const c)
+float   tSawtooth_tick(tSawtooth* const c)
 {
     // Phasor increment
     c->phase += c->inc;
@@ -407,30 +377,20 @@ void     tSawtoothSampleRateChanged (tSawtooth* const c)
 {
     c->inc = c->freq * oops.invSampleRate;
 }
-#endif //N_SAWTOOTH
 
-#if N_TRIANGLE
 /* Triangle */
-void    tTriangleStart(tTriangle* const c)
+void    tTriangle_start(tTriangle* const c)
 {
     
 }
 
-tTriangle*    tTriangleInit(void)
+void   tTriangle_init(tTriangle* const c)
 {
-    if (oops.registryIndex[T_TRIANGLE] >= N_TRIANGLE) return NULL;
-    
-    tTriangle* c = &oops.tTriangleRegistry[oops.registryIndex[T_TRIANGLE]++];
-    
     c->inc      =  0.0f;
     c->phase    =  0.0f;
-    
-    c->sampleRateChanged = &tTriangleSampleRateChanged;
-    
-    return c;
 }
 
-int tTriangleSetFreq(tTriangle* const c, float freq)
+int tTriangle_setFreq(tTriangle* const c, float freq)
 {
     if (freq < 0.0f) freq = 0.0f;
     
@@ -441,7 +401,7 @@ int tTriangleSetFreq(tTriangle* const c, float freq)
 }
 
 
-float   tTriangleTick(tTriangle* const c)
+float   tTriangle_tick(tTriangle* const c)
 {
     // Phasor increment
     c->phase += c->inc;
@@ -520,24 +480,15 @@ void     tTriangleSampleRateChanged (tTriangle*  const c)
 {
     c->inc = c->freq * oops.invSampleRate;
 }
-#endif //N_TRIANGLE
 
-#if N_SQUARE
 /* Square */
-tSquare*    tSquareInit(void)
+void   tSquare_init(tSquare* const c)
 {
-    if (oops.registryIndex[T_SQUARE] >= N_SQUARE) return NULL;
-    
-    tSquare* c = &oops.tSquareRegistry[oops.registryIndex[T_SQUARE]++];
-    
     c->inc      =  0.0f;
     c->phase    =  0.0f;
-    c->sampleRateChanged = &tSquareSampleRateChanged;
-    
-    return c;
 }
 
-int     tSquareSetFreq(tSquare*  const c, float freq)
+int     tSquare_setFreq(tSquare*  const c, float freq)
 {
     if (freq < 0.0f) freq = 0.0f;
     
@@ -547,7 +498,7 @@ int     tSquareSetFreq(tSquare*  const c, float freq)
     return 0;
 }
 
-float   tSquareTick(tSquare* const c)
+float   tSquare_tick(tSquare* const c)
 {
     // Phasor increment
     c->phase += c->inc;
@@ -625,24 +576,15 @@ void     tSquareSampleRateChanged (tSquare*  const c)
 {
     c->inc = c->freq * oops.invSampleRate;
 }
-#endif //N_SQUARE
 
-#if N_NOISE
 /* Noise */
-tNoise*    tNoiseInit(NoiseType type)
+void    tNoise_init(tNoise* const n, NoiseType type)
 {
-    // If this returns null, you don't have memory allocated for enough tNoise objects. Check out OOPSMemConfig.h. 
-    if (oops.registryIndex[T_NOISE] >= N_NOISE) return NULL;
-    
-    tNoise* n = &oops.tNoiseRegistry[oops.registryIndex[T_NOISE]++];
-    
     n->type = type;
     n->rand = oops.random;
-    
-    return n;
 }
 
-float   tNoiseTick(tNoise* const n)
+float   tNoise_tick(tNoise* const n)
 {
     float rand = n->rand();
     
@@ -660,4 +602,3 @@ float   tNoiseTick(tNoise* const n)
         return rand;
     }
 }
-#endif //N_NOISE

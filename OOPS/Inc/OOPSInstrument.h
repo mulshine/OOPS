@@ -21,6 +21,7 @@ void        tTalkboxUpdate      (tTalkbox* const);
 void        tTalkboxSuspend     (tTalkbox* const);
 void        tTalkboxLpcDurbin   (float *r, int p, float *k, float *g);
 void        tTalkboxLpc         (float *buf, float *car, int32_t n, int32_t o);
+void		tTalkboxSetQuality  (tTalkbox* const, float quality);
 
 
 

@@ -55,6 +55,8 @@ int                     tRampSetTime(tRamp*  const, float time);
 
 int                     tRampSetDest(tRamp*  const, float dest);
 
+int                     tRampSetVal(tRamp*  const, float val);
+
 /* Envelope Follower */
 tEnvelopeFollower*      tEnvelopeFollowerInit           (float attackThreshold, float decayCoeff);
 float                   tEnvelopeFollowerTick           (tEnvelopeFollower*  const, float x);
@@ -62,7 +64,6 @@ float                   tEnvelopeFollowerTick           (tEnvelopeFollower*  con
 int                     tEnvelopeFollowerDecayCoeff     (tEnvelopeFollower*  const, float decayCoeff);
 
 int                     tEnvelopeFollowerAttackThresh   (tEnvelopeFollower*  const, float attackThresh);
-
 
 /* Stack */
 tStack*     tStack_init                 (void);
@@ -77,7 +78,6 @@ int         tStack_contains             (tStack* const, uint16_t item);
 int         tStack_next                 (tStack* const);
 int         tStack_get                  (tStack* const, int which);
 
-
 /* Polyphonic Handler */
 tPoly*     tPolyInit(void);
 tMidiNote* tPolyGetMidiNote(tPoly* poly, int8_t voiceIndex);
@@ -85,17 +85,30 @@ void tPolyNoteOn(tPoly* poly, int midiNoteNumber, float velocity);
 void tPolyNoteOff(tPoly* poly, int midiNoteNumber);
 
 /* MPoly*/
-tMPoly*     tMPoly_init(void);
+tMPoly*     tMPoly_init(int numVoices);
+
+void        tMPoly_tick(tMPoly* const);
 
 //ADDING A NOTE
-void        tMPoly_noteOn(tMPoly* const, int note, uint8_t vel);
+int        tMPoly_noteOn(tMPoly* const, int note, uint8_t vel);
 
-void        tMPoly_noteOff(tMPoly* const, uint8_t note);
+int         tMPoly_noteOff(tMPoly* const, uint8_t note);
 
 void        tMPoly_orderedAddToStack(tMPoly* const, uint8_t noteVal);
 
-void        tMPoly_pitchBend(tMPoly* const, uint8_t bend);
+void        tMPoly_pitchBend(tMPoly* const, int pitchBend);
 
+void        tMPoly_setNumVoices(tMPoly* const, uint8_t numVoices);
+
+void        tMPoly_setPitchGlideTime(tMPoly* const, float t);
+
+int         tMPoly_getNumVoices(tMPoly* const);
+
+float       tMPoly_getPitch(tMPoly* const, uint8_t voice);
+
+int         tMPoly_getVelocity(tMPoly* const, uint8_t voice);
+
+int         tMPoly_isOn(tMPoly* const, uint8_t voice);
 
 /* tSOLAD : pitch shifting */
 tSOLAD*     tSOLAD_init(void);
@@ -116,19 +129,18 @@ void tSOLAD_setReadLag(tSOLAD *w, float readlag);
 void tSOLAD_resetState(tSOLAD *w);
 
 /* tSNAC: */
-tSNAC *tSNAC_init(int periodarg, int overlaparg);    // constructor
+tSNAC *tSNAC_init(int overlaparg);    // constructor
 
 void tSNAC_ioSamples(tSNAC *s, float *in, float *out, int size);
-void tSNAC_setFramesize(tSNAC *s, int frame);
 void tSNAC_setOverlap(tSNAC *s, int lap);
 void tSNAC_setBias(tSNAC *s, float bias);
 void tSNAC_setMinRMS(tSNAC *s, float rms);
 
 /*To get freq, perform SAMPLE_RATE/snac_getperiod() */
-float tSNAC_getperiod(tSNAC *s);
+float tSNAC_getPeriod(tSNAC *s);
 float tSNAC_getfidelity(tSNAC *s);
 
-/* tAtkDtct */
+/* tAtkDtk */
 tAtkDtk* tAtkDtk_init(int blocksize);
 
 tAtkDtk* tAtkDtk_init_expanded(int blocksize, int atk, int rel);
@@ -152,6 +164,16 @@ void tAtkDtk_setThreshold(tAtkDtk *a, float thres);
 
 // find largest transient in input block, return index of attack
 int tAtkDtk_detect(tAtkDtk *a, float *in);
+
+/* tLockhartWavefolder */
+tLockhartWavefolder* tLockhartWavefolderInit(void);
+float tLockhartWavefolderTick(tLockhartWavefolder* const, float samp);
+
+
+// ENV~ from PD, modified for OOPS
+tEnv* tEnvInit(int windowSize, int hopSize, int blockSize);
+float tEnvTick (tEnv* x);
+void tEnvProcessBlock(tEnv* x, float* in);
 
 #endif  // OOPSUTILITIES_H_INCLUDED
 

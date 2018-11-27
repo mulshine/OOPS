@@ -23,7 +23,6 @@
 
 
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ PRCRev ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
-#if N_PRCREV
 tPRCRev*    tPRCRevInit(float t60)
 {
     tPRCRev* r = &oops.tPRCRevRegistry[oops.registryIndex[T_PRCREV]++];
@@ -116,11 +115,8 @@ void     tPRCRevSampleRateChanged (tPRCRev* const r)
 {
     r->combCoeff = pow(10.0f, (-3.0f * tDelayGetDelay(r->combDelay) * oops.invSampleRate / r->t60 ));
 }
-#endif // N_PRCREV
 
 /* ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ NRev ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ */
-
-#if N_NREV
 tNRev*    tNRevInit(float t60)
 {
     tNRev* r = &oops.tNRevRegistry[oops.registryIndex[T_NREV]++];
@@ -246,4 +242,3 @@ void     tNRevSampleRateChanged (tNRev* const r)
     for (int i=0; i<6; i++)   r->combCoeffs[i] = pow(10.0, (-3.0 * tDelayGetDelay(r->combDelays[i]) * oops.invSampleRate / r->t60 ));
 }
 
-#endif // N_NREV
