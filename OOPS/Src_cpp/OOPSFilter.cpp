@@ -39,6 +39,17 @@ void tButterworth_init(tButterworth* const f, int N, float f1, float f2)
 	}
 }
 
+void tButterworth_free(tButterworth* const f)
+{
+    for(int i = 0; i < f->N/2; ++i)
+    {
+        tSVF_free(&f->low[i]);
+        tSVF_free(&f->high[i]);
+    }
+    
+    oops_free(f);
+}
+
 float tButterworth_tick(tButterworth* const f, float samp)
 {
 	for(int i = 0; i < ((f->N)/2); ++i)
@@ -79,6 +90,11 @@ void    tOneZero_init(tOneZero* const f, float theZero)
     f->lastIn = 0.0f;
     f->lastOut = 0.0f;
     tOneZero_setZero(f, theZero);
+}
+
+void    tOneZero_free(tOneZero* const f)
+{
+    oops_free(f);
 }
 
 float   tOneZero_tick(tOneZero* const f, float input)
@@ -157,6 +173,11 @@ void    tTwoZero_init(tTwoZero* const f)
     f->lastIn[1] = 0.0f;
 }
 
+void    tTwoZero_free(tTwoZero* const f)
+{
+    oops_free(f);
+}
+
 float   tTwoZero_tick(tTwoZero* const f, float input)
 {
     float in = input * f->gain;
@@ -229,6 +250,11 @@ void    tOnePole_init(tOnePole* const f, float thePole)
     f->lastOut = 0.0f;
 }
 
+void    tOnePole_init(tOnePole* const f)
+{
+    oops_free(f);
+}
+
 void    tOnePole_setB0(tOnePole* const f, float b0)
 {
     f->b0 = b0;
@@ -285,6 +311,11 @@ void    tTwoPole_init(tTwoPole* const f)
     
     f->lastOut[0] = 0.0f;
     f->lastOut[1] = 0.0f;
+}
+
+void    tTwoPole_free(tTwoPole* const f)
+{
+    oops_free(f);
 }
 
 float   tTwoPole_tick(tTwoPole* const f, float input)
@@ -373,6 +404,11 @@ void   tPoleZero_init(tPoleZero* const f)
     f->lastOut = 0.0f;
 }
 
+void   tPoleZero_free(tPoleZero* const f)
+{
+    oops_free(f);
+}
+
 void    tPoleZero_setB0(tPoleZero* const pzf, float b0)
 {
     pzf->b0 = b0;
@@ -459,6 +495,11 @@ void    tBiQuad_init(tBiQuad* const f)
     f->lastIn[1] = 0.0f;
     f->lastOut[0] = 0.0f;
     f->lastOut[1] = 0.0f;
+}
+
+void    tBiQuad_free(tBiQuad* const f)
+{
+    oops_free(f);
 }
 
 float   tBiQuad_tick(tBiQuad* const f, float input)
@@ -599,6 +640,11 @@ void    tHighpass_init(tHighpass* const f, float freq)
     f->frequency = freq;
 }
 
+void    tHighpass_init(tHighpass* const f)
+{
+    oops_free(f);
+}
+
 void tHighpassSampleRateChanged(tHighpass* const f)
 {
     f->R = (1.0f-((f->frequency * 2.0f * 3.14f) * oops.invSampleRate));
@@ -643,6 +689,11 @@ void tSVF_init(tSVF* const svf, SVFType type, float freq, float Q)
     svf->a1 = a1;
     svf->a2 = a2;
     svf->a3 = a3;
+}
+
+void tSVF_free(tSVF* const svf)
+{
+    oops_free(svf);
 }
 
 int     tSVF_setFreq(tSVF* const svf, float freq)
@@ -725,7 +776,6 @@ int     tSVFE_setQ(tSVFE* const svf, float Q)
     return 0;
 }
 
-#if HOLY_SHIT
 void tFormantShifter_init(tFormantShifter* const fs)
 {
     fs->ford = FORD;
@@ -737,6 +787,11 @@ void tFormantShifter_init(tFormantShifter* const fs)
     fs->fmute = 1.0f;
     fs->fmutealph = powf(0.001f, 1.0f / (oops.sampleRate));
     fs->cbi = 0;
+}
+
+void tFormantShifter_free(tFormantShifter* const fs)
+{
+    oops_free(fs);
 }
 
 
@@ -913,10 +968,19 @@ void tPitchShifter_init(tPitchShifter* const ps, float* in, float* out, int bufS
     ps->hp = (tHighpass*) oops_alloc(sizeof(tHighpass));
     tHighpass_init(ps->hp, HPFREQ);
     
-    
     tSOLAD_setPitchFactor(ps->sola, DEFPITCHRATIO);
     
     tPitchShifter_setTimeConstant(ps, DEFTIMECONSTANT);
+}
+
+void tPitchShifter_free(tPitchShifter* const ps)
+{
+    tEnv_free(ps->env);
+    tSNAC_free(ps->snac);
+    tSOLAD_free(ps->sola);
+    tHighpass_free(ps->hp);
+    
+    oops_free(ps);
 }
 
 float tPitchShifter_tick(tPitchShifter* ps, float sample)
@@ -972,7 +1036,7 @@ float tPitchShifterToFreq_tick(tPitchShifter* ps, float sample, float freq)
     i = (ps->curBlock*ps->frameSize);
     iLast = (ps->lastBlock*ps->frameSize)+ps->index;
     
-    out = tHighpassTick(ps->hp, ps->outBuffer[iLast]);
+    out = tHighpass_tick(ps->hp, ps->outBuffer[iLast]);
     ps->inBuffer[i+ps->index] = sample;
     
     ps->index++;
@@ -980,7 +1044,7 @@ float tPitchShifterToFreq_tick(tPitchShifter* ps, float sample, float freq)
     {
         ps->index = 0;
         
-        tEnvProcessBlock(ps->env, &(ps->inBuffer[i]));
+        tEnv_processBlock(ps->env, &(ps->inBuffer[i]));
         
         if(pitchshifter_attackdetect(ps) == 1)
         {
@@ -1014,7 +1078,7 @@ float tPitchShifterToFunc_tick(tPitchShifter* ps, float sample, float (*fun)(flo
     i = (ps->curBlock*ps->frameSize);
     iLast = (ps->lastBlock*ps->frameSize)+ps->index;
 
-    out = tHighpassTick(ps->hp, ps->outBuffer[iLast]);
+    out = tHighpass_tick(ps->hp, ps->outBuffer[iLast]);
     ps->inBuffer[i+ps->index] = sample;
 
     ps->index++;
@@ -1052,7 +1116,7 @@ void tPitchShifter_ioSamples(tPitchShifter* ps, float* in, float* out, int size)
 {
     float period;
     
-    tEnvProcessBlock(ps->env, in);
+    tEnv_processBlock(ps->env, in);
     
     if(pitchshifter_attackdetect(ps) == 1)
     {
@@ -1070,7 +1134,7 @@ void tPitchShifter_ioSamples(tPitchShifter* ps, float* in, float* out, int size)
     
     for (int cc = 0; cc < size; ++cc)
     {
-        out[cc] = tHighpassTick(ps->hp, out[cc]);
+        out[cc] = tHighpass_tick(ps->hp, out[cc]);
     }
 }
 
@@ -1078,7 +1142,7 @@ void tPitchShifter_ioSamples_toFreq(tPitchShifter* ps, float* in, float* out, in
 {
     float period;
 
-    tEnvProcessBlock(ps->env, in);
+    tEnv_processBlock(ps->env, in);
 
     if(pitchshifter_attackdetect(ps) == 1)
     {
@@ -1182,7 +1246,7 @@ static int pitchshifter_attackdetect(tPitchShifter* ps)
 {
     float envout;
     
-    envout = tEnvTick(ps->env);
+    envout = tEnv_tick(ps->env);
     
     if (envout >= 1.0f)
     {
@@ -1220,11 +1284,22 @@ void 	tPeriod_init	(tPeriod* const p, float* in, float* out, int bufSize, int fr
 	p->windowSize = DEFWINDOWSIZE;
 	p->fba = FBA;
 
-	p->env = tEnvInit(p->windowSize, p->hopSize, p->frameSize);
-	p->snac = tSNAC_init(DEFOVERLAP);
+    p->env = (tEnv*) oops_alloc(sizeof(tEnv));
+	tEnv_init(p->env, p->windowSize, p->hopSize, p->frameSize);
+    
+    p->snac = (tSNAC*) oops_alloc(sizeof(tSNAC));
+	tSNAC_init(p->snac, DEFOVERLAP);
 
 	p->timeConstant = DEFTIMECONSTANT;
 	p->radius = expf(-1000.0f * p->hopSize * oops.invSampleRate / p->timeConstant);
+}
+
+void tPeriod_free (tPeriod* const p)
+{
+    tEnv_free(p->env);
+    tSNAC_free(p->snac);
+    
+    oops_free(p);
 }
 
 float tPeriod_findPeriod (tPeriod* p, float sample)
@@ -1246,7 +1321,7 @@ float tPeriod_findPeriod (tPeriod* p, float sample)
     {
         p->index = 0;
 
-        tEnvProcessBlock(p->env, &(p->inBuffer[i]));
+        tEnv_processBlock(p->env, &(p->inBuffer[i]));
 
         tSNAC_ioSamples(p->snac, &(p->inBuffer[i]), &(p->outBuffer[i]), p->frameSize);
         p->period = tSNAC_getPeriod(p->snac);
@@ -1257,7 +1332,8 @@ float tPeriod_findPeriod (tPeriod* p, float sample)
 		if (p->lastBlock >= p->framesPerBuffer) p->lastBlock = 0;
     }
 
-    return period;
+    // changed from period to p->period
+    return p->period;
 }
 
 void tPeriod_setHopSize(tPeriod* p, int hs)
@@ -1279,7 +1355,7 @@ static int pitchshift_attackdetect(tPitchShift* ps)
 {
     float envout;
 
-    envout = tEnvTick(ps->p->env);
+    envout = tEnv_tick(ps->p->env);
 
     if (envout >= 1.0f)
     {
@@ -1318,9 +1394,17 @@ void tPitchShift_init (tPitchShift* const ps, tPeriod* p, float* out, int bufSiz
 	tSOLAD_init(ps->sola);
     
     ps->hp = (tHighpass*) oops_alloc(sizeof(tHighpass));
-	tHighpassInit(ps->hp, HPFREQ);
+    tHighpass_init(ps->hp, HPFREQ);
 
 	tSOLAD_setPitchFactor(ps->sola, DEFPITCHRATIO);
+}
+
+void tPitchShift_free(tPitchShift* const ps)
+{
+    tSOLAD_free(ps->sola);
+    tHighpass_free(ps->hp);
+    
+    oops_free(ps);
 }
 
 float tPitchShift_shift (tPitchShift* ps)
@@ -1331,7 +1415,7 @@ float tPitchShift_shift (tPitchShift* ps)
     i = ps->p->i;
     iLast = ps->p->iLast;
 
-    out = tHighpassTick(ps->hp, ps->outBuffer[iLast]);
+    out = tHighpass_tick(ps->hp, ps->outBuffer[iLast]);
 
     if (ps->p->indexstore >= ps->frameSize)
     {
@@ -1360,7 +1444,7 @@ float tPitchShift_shiftToFreq (tPitchShift* ps, float freq)
     i = ps->p->i;
 	iLast = ps->p->iLast;
 
-    out = tHighpassTick(ps->hp, ps->outBuffer[iLast]);
+    out = tHighpass_tick(ps->hp, ps->outBuffer[iLast]);
 
     if (ps->p->indexstore >= ps->frameSize)
     {
@@ -1390,7 +1474,7 @@ float tPitchShift_shiftToFunc (tPitchShift* ps, float (*fun)(float))
     i = ps->p->i;
   	iLast = ps->p->iLast;
 
-    out = tHighpassTick(ps->hp, ps->outBuffer[iLast]);
+    out = tHighpass_tick(ps->hp, ps->outBuffer[iLast]);
 
     if (ps->p->indexstore >= ps->frameSize)
     {
@@ -1417,4 +1501,3 @@ float tPitchShift_shiftToFunc (tPitchShift* ps, float (*fun)(float))
 
     return out;
 }
-#endif // HOLY_SHIT

@@ -85,10 +85,8 @@ float dbtorms(float f)
 }
 
 /* ---------------- env~ - simple envelope follower. ----------------- */
-tEnv* tEnvInit(int ws, int hs, int bs)
+void tEnv_init(tEnv* const x, int ws, int hs, int bs)
 {
-    tEnv* x = &oops.tEnvRegistry[oops.registryIndex[T_ENV]++];
-    
     int period = hs, npoints = ws;
     
     int i;
@@ -125,16 +123,14 @@ tEnv* tEnvInit(int ws, int hs, int bs)
         x->x_realperiod = x->x_period;
     }
     // ~ ~ ~ ~ ~ ~ ~ ~
-    
-    return (x);
 }
 
-float tEnvTick (tEnv* x)
+float tEnv_tick (tEnv* const x)
 {
     return powtodb(x->x_result);
 }
 
-void tEnvProcessBlock(tEnv* x, float* in)
+void tEnv_processBlock(tEnv* const x, float* in)
 {
     int n = x->blockSize;
     
@@ -191,25 +187,21 @@ tCompressor*    tCompressorInit(int tauAttack, int tauRelease)
     return c;
 }
 */
-tCompressor*    tCompressorInit(void)
+void    tCompressor_init(tCompressor* const c)
 {
-    tCompressor* c = &oops.tCompressorRegistry[oops.registryIndex[T_COMPRESSOR]++];
-    
     c->tauAttack = 100;
     c->tauRelease = 100;
 	
-	  c->isActive = OFALSE;
+    c->isActive = OFALSE;
     
     c->T = 0.0f; // Threshold
     c->R = 0.5f; // compression Ratio
     c->M = 3.0f; // decibel Width of knee transition
     c->W = 1.0f; // decibel Make-up gain
-    
-    return c;
 }
 
 int ccount = 0;
-float tCompressorTick(tCompressor* c, float in)
+float tCompressor_tick(tCompressor* const c, float in)
 {
     float slope, overshoot;
     float alphaAtt, alphaRel;
@@ -269,10 +261,8 @@ float tCompressorTick(tCompressor* c, float in)
 }
 
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ Envelope ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
-tEnvelope*    tEnvelopeInit(float attack, float decay, oBool loop)
+void    tEnvelope_init(tEnvelope* const env, float attack, float decay, oBool loop)
 {
-    tEnvelope* env = &oops.tEnvelopeRegistry[oops.registryIndex[T_ENVELOPE]++];
-    
     env->exp_buff = exp_decay;
     env->inc_buff = attack_decay_inc;
     env->buff_size = sizeof(exp_decay);
@@ -307,12 +297,10 @@ tEnvelope*    tEnvelopeInit(float attack, float decay, oBool loop)
     env->attackInc = env->inc_buff[attackIndex];
     env->decayInc = env->inc_buff[decayIndex];
     env->rampInc = env->inc_buff[rampIndex];
-    
-    return env;
-    
+
 }
 
-int     tEnvelopeSetAttack(tEnvelope* const env, float attack)
+int     tEnvelope_setAttack(tEnvelope* const env, float attack)
 {
     int32_t attackIndex;
     
@@ -329,7 +317,7 @@ int     tEnvelopeSetAttack(tEnvelope* const env, float attack)
     return 0;
 }
 
-int     tEnvelopeSetDecay(tEnvelope* const env, float decay)
+int     tEnvelope_setDecay(tEnvelope* const env, float decay)
 {
     int32_t decayIndex;
     
@@ -346,7 +334,7 @@ int     tEnvelopeSetDecay(tEnvelope* const env, float decay)
     return 0;
 }
 
-int     tEnvelopeLoop(tEnvelope* const env, oBool loop)
+int     tEnvelope_loop(tEnvelope* const env, oBool loop)
 {
     env->loop = loop;
     
@@ -354,7 +342,7 @@ int     tEnvelopeLoop(tEnvelope* const env, oBool loop)
 }
 
 
-int     tEnvelopeOn(tEnvelope* const env, float velocity)
+int     tEnvelope_on(tEnvelope* const env, float velocity)
 {
     if (env->inAttack || env->inDecay) // In case envelope retriggered while it is still happening.
     {
@@ -376,7 +364,7 @@ int     tEnvelopeOn(tEnvelope* const env, float velocity)
     return 0;
 }
 
-float   tEnvelopeTick(tEnvelope* const env)
+float   tEnvelope_tick(tEnvelope* const env)
 {
     if (env->inRamp)
     {
@@ -447,10 +435,8 @@ float   tEnvelopeTick(tEnvelope* const env)
 }
 
 /* ADSR */
-tADSR*    tADSRInit(float attack, float decay, float sustain, float release)
+void    tADSR_init(tADSR* const adsr, float attack, float decay, float sustain, float release)
 {
-    tADSR* adsr = &oops.tADSRRegistry[oops.registryIndex[T_ADSR]++];
-    
     adsr->exp_buff = exp_decay;
     adsr->inc_buff = attack_decay_inc;
     adsr->buff_size = sizeof(exp_decay);
@@ -502,11 +488,9 @@ tADSR*    tADSRInit(float attack, float decay, float sustain, float release)
     adsr->releaseInc = adsr->inc_buff[releaseIndex];
     adsr->rampInc = adsr->inc_buff[rampIndex];
     
-    return adsr;
-    
 }
 
-int     tADSRSetAttack(tADSR* const adsr, float attack)
+int     tADSR_setAttack(tADSR* const adsr, float attack)
 {
     int32_t attackIndex;
     
@@ -523,7 +507,7 @@ int     tADSRSetAttack(tADSR* const adsr, float attack)
     return 0;
 }
 
-int     tADSRSetDecay(tADSR* const adsr, float decay)
+int     tADSR_detDecay(tADSR* const adsr, float decay)
 {
     int32_t decayIndex;
     
@@ -540,7 +524,7 @@ int     tADSRSetDecay(tADSR* const adsr, float decay)
     return 0;
 }
 
-int     tADSRSetSustain(tADSR *const adsr, float sustain)
+int     tADSR_setSustain(tADSR *const adsr, float sustain)
 {
     if (sustain > 1.0f)      adsr->sustain = 1.0f;
     else if (sustain < 0.0f) adsr->sustain = 0.0f;
@@ -549,7 +533,7 @@ int     tADSRSetSustain(tADSR *const adsr, float sustain)
     return 0;
 }
 
-int     tADSRSetRelease(tADSR* const adsr, float release)
+int     tADSR_setRelease(tADSR* const adsr, float release)
 {
     int32_t releaseIndex;
     
@@ -566,7 +550,7 @@ int     tADSRSetRelease(tADSR* const adsr, float release)
     return 0;
 }
 
-int tADSROn(tADSR* const adsr, float velocity)
+int tADSR_on(tADSR* const adsr, float velocity)
 {
     if ((adsr->inAttack || adsr->inDecay) || (adsr->inSustain || adsr->inRelease)) // In case ADSR retriggered while it is still happening.
     {
@@ -590,7 +574,7 @@ int tADSROn(tADSR* const adsr, float velocity)
     return 0;
 }
 
-int tADSROff(tADSR* const adsr)
+int tADSR_off(tADSR* const adsr)
 {
     if (adsr->inRelease) return 0;
     
@@ -604,7 +588,7 @@ int tADSROff(tADSR* const adsr)
     return 0;
 }
 
-float   tADSRTick(tADSR* const adsr)
+float   tADSR_tick(tADSR* const adsr)
 {
     if (adsr->inRamp)
     {
@@ -684,19 +668,14 @@ float   tADSRTick(tADSR* const adsr)
 }
 
 /* Envelope Follower */
-tEnvelopeFollower*    tEnvelopeFollowerInit(float attackThreshold, float decayCoeff)
+void    tEnvelopeFollower_init(tEnvelopeFollower* const e, float attackThreshold, float decayCoeff)
 {
-    tEnvelopeFollower* e = &oops.tEnvelopeFollowerRegistry[oops.registryIndex[T_ENVELOPEFOLLOW]++];
-    
     e->y = 0.0f;
     e->a_thresh = attackThreshold;
     e->d_coeff = decayCoeff;
-    
-    return e;
-    
 }
 
-float   tEnvelopeFollowerTick(tEnvelopeFollower* const ef, float x)
+float   tEnvelopeFollower_tick(tEnvelopeFollower* const ef, float x)
 {
     if (x < 0.0f ) x = -x;  /* Absolute value. */
     
@@ -711,44 +690,38 @@ float   tEnvelopeFollowerTick(tEnvelopeFollower* const ef, float x)
     return ef->y;
 }
 
-int     tEnvelopeFollowerDecayCoeff(tEnvelopeFollower* const ef, float decayCoeff)
+int     tEnvelopeFollower_decayCoeff(tEnvelopeFollower* const ef, float decayCoeff)
 {
     return ef->d_coeff = decayCoeff;
 }
 
-int     tEnvelopeFollowerAttackThresh(tEnvelopeFollower* const ef, float attackThresh)
+int     tEnvelopeFollower_attackThresh(tEnvelopeFollower* const ef, float attackThresh)
 {
     return ef->a_thresh = attackThresh;
 }
 
 /* Ramp */
-tRamp*    tRampInit(float time, int samples_per_tick)
+void    tRamp_init(tRamp* const ramp, float time, int samples_per_tick)
 {
-    tRamp* ramp = &oops.tRampRegistry[oops.registryIndex[T_RAMP]];
-    
     ramp->inv_sr_ms = 1.0f/(oops.sampleRate*0.001f);
 	ramp->minimum_time = ramp->inv_sr_ms * samples_per_tick;
     ramp->curr = 0.0f;
     ramp->dest = 0.0f;
-		if (time < ramp->minimum_time)
-		{
-			ramp->time = ramp->minimum_time;
-		}
-		else
-		{
-			ramp->time = time;
-		}
+    
+    if (time < ramp->minimum_time)
+    {
+        ramp->time = ramp->minimum_time;
+    }
+    else
+    {
+        ramp->time = time;
+    }
+    
     ramp->samples_per_tick = samples_per_tick;
     ramp->inc = ((ramp->dest - ramp->curr) / ramp->time * ramp->inv_sr_ms) * (float)ramp->samples_per_tick;
-    
-    ramp->sampleRateChanged = &tRampSampleRateChanged;
-    
-    oops.registryIndex[T_RAMP] += 1;
-    
-    return ramp;
 }
 
-int     tRampSetTime(tRamp* const r, float time)
+int     tRamp_setTime(tRamp* const r, float time)
 {
 	if (time < r->minimum_time)
 	{
@@ -762,21 +735,21 @@ int     tRampSetTime(tRamp* const r, float time)
     return 0;
 }
 
-int     tRampSetDest(tRamp* const r, float dest)
+int     tRamp_setDest(tRamp* const r, float dest)
 {
     r->dest = dest;
     r->inc = ((r->dest-r->curr)/r->time * r->inv_sr_ms) * ((float)r->samples_per_tick);
     return 0;
 }
 
-int     tRampSetVal(tRamp* const r, float val)
+int     tRamp_setVal(tRamp* const r, float val)
 {
     r->curr = val;
     r->inc = ((r->dest-r->curr)/r->time * r->inv_sr_ms) * ((float)r->samples_per_tick);
     return 0;
 }
 
-float   tRampTick(tRamp* const r) {
+float   tRamp_tick(tRamp* const r) {
     
     r->curr += r->inc;
     
@@ -785,7 +758,7 @@ float   tRampTick(tRamp* const r) {
     return r->curr;
 }
 
-float   tRampSample(tRamp* const r) {
+float   tRamp_sample(tRamp* const r) {
   
     return r->curr;
 }
@@ -832,18 +805,15 @@ static void onListInit(tPoly* poly)
     poly->onListFirst = NULL;
 }
 
-tPoly*    tPolyInit()
+void    tPoly_init(tPoly* const poly)
 {
-    tPoly* poly = &oops.tPolyRegistry[oops.registryIndex[T_POLY]++];
     nodeListInit(poly);
     offListInit(poly);
     onListInit(poly);
-    
-    return poly;
 }
 
 
-tMidiNote* tPolyGetMidiNote(tPoly* poly, int8_t voiceIndex)
+tMidiNote* tPoly_getMidiNote(tPoly* const poly, int8_t voiceIndex)
 {
     tMidiNote* midiNote = NULL;
     
@@ -862,7 +832,7 @@ tMidiNote* tPolyGetMidiNote(tPoly* poly, int8_t voiceIndex)
     return midiNote;
 }
 
-static void removeNoteFromOffList(tPoly* poly, int8_t midiNoteNumber)
+static void removeNoteFromOffList(tPoly* const poly, int8_t midiNoteNumber)
 {
     // If this has no prev, this is the first node on the OFF list
     if (poly->midiNodes[midiNoteNumber].prev == NULL)
@@ -892,7 +862,7 @@ static void prependNoteToOnList(tPoly* poly, int midiNoteNumber)
 
 // TODO: Fail gracefully on odd MIDI situations
 //       For example, getting a note off for an already on note and vice-versa
-void tPolyNoteOn(tPoly* poly, int midiNoteNumber, float velocity)
+void tPoly_noteOn(tPoly* const poly, int midiNoteNumber, float velocity)
 {
     removeNoteFromOffList(poly, midiNoteNumber);
     // Set the MIDI note on accordingly
@@ -902,7 +872,7 @@ void tPolyNoteOn(tPoly* poly, int midiNoteNumber, float velocity)
 }
 
 // Unfortunately similar code to removeNoteFromOffList without any clear way of factoring out to a helper function
-static void removeNoteFromOnList(tPoly* poly, int8_t midiNoteNumber)
+static void removeNoteFromOnList(tPoly* const poly, int8_t midiNoteNumber)
 {
     // If this has no prev, this is the first node on the OFF list
     if (poly->midiNodes[midiNoteNumber].prev == NULL)
@@ -920,7 +890,7 @@ static void removeNoteFromOnList(tPoly* poly, int8_t midiNoteNumber)
 }
 
 // Unfortunately similar code to prependNoteToOnList without any clear way of factoring out to a helper function
-static void prependNoteToOffList(tPoly* poly, int midiNoteNumber)
+static void prependNoteToOffList(tPoly* const poly, int midiNoteNumber)
 {
     if (poly->offListFirst != NULL)
     {
@@ -931,7 +901,7 @@ static void prependNoteToOffList(tPoly* poly, int midiNoteNumber)
 }
 
 
-void tPolyNoteOff(tPoly* poly, int midiNoteNumber)
+void tPoly_noteOff(tPoly* const poly, int midiNoteNumber)
 {
     removeNoteFromOnList(poly, midiNoteNumber);
     // Set the MIDI note on accordingly
@@ -1134,24 +1104,18 @@ int tStack_first(tStack* const ns)
     return ns->data[0];
 }
 
-tStack* tStack_init(void)
+void tStack_init(tStack* const ns)
 {
-    tStack* ns = &oops.tStackRegistry[oops.registryIndex[T_STACK]++];
-    
     ns->ordered = OFALSE;
     ns->size = 0;
     ns->pos = 0;
     ns->capacity = STACK_SIZE;
     
     for (int i = 0; i < STACK_SIZE; i++) ns->data[i] = -1;
-    
-    return ns;
 }
 
-tMPoly* tMPoly_init(int numVoices)
+void tMPoly_init(tMPoly* const poly, int numVoices)
 {
-    tMPoly* poly = &oops.tMPolyRegistry[oops.registryIndex[T_MPOLY]++];
-    
     poly->numVoices = numVoices;
     poly->lastVoiceToChange = 0;
     
@@ -1171,7 +1135,10 @@ tMPoly* tMPoly_init(int numVoices)
     {
         poly->voices[i][0] = -1;
         poly->firstReceived[i] = 0;
-        poly->ramp[i] = tRampInit(5.0f, 1);
+        
+        poly->ramp[i] = (tRamp*) oops_alloc(sizeof(tRamp));
+        
+        tRamp_init(poly->ramp[i], 5.0f, 1);
     }
     
     poly->glideTime = 5.0f;
@@ -1179,10 +1146,11 @@ tMPoly* tMPoly_init(int numVoices)
     poly->pitchBend = 64;
     poly->pitchBendAmount = 2.0f;
     
-    poly->stack = tStack_init();
-    poly->orderStack = tStack_init();
+    poly->stack = (tStack*) oops_alloc(sizeof(tStack));
+    tStack_init(poly->stack);
     
-    return poly;
+    poly->orderStack = (tStack*) oops_alloc(sizeof(tStack));
+    tStack_init(poly->orderStack);
 }
 
 // Only needs to be used for pitch glide
@@ -1190,17 +1158,17 @@ void tMPoly_tick(tMPoly* poly)
 {
     for (int i = 0; i < MPOLY_NUM_MAX_VOICES; ++i)
     {
-    	tRampTick(poly->ramp[i]);
+    	tRamp_tick(poly->ramp[i]);
     }
 }
 
 //instead of including in dacsend, should have a separate pitch bend ramp, that is added when the ramps are ticked and sent to DAC
-void tMPoly_pitchBend(tMPoly* poly, int pitchBend)
+void tMPoly_pitchBend(tMPoly* const poly, int pitchBend)
 {
     poly->pitchBend = pitchBend;
 }
 
-int tMPoly_noteOn(tMPoly* poly, int note, uint8_t vel)
+int tMPoly_noteOn(tMPoly* const poly, int note, uint8_t vel)
 {
     // if not in keymap or already on stack, dont do anything. else, add that note.
     if (tStack_contains(poly->stack, note) >= 0) return -1;
@@ -1217,12 +1185,12 @@ int tMPoly_noteOn(tMPoly* poly, int note, uint8_t vel)
             {
                 if (poly->firstReceived[i] == 0)
                 {
-                    tRampSetVal(poly->ramp[i], note); // can't be 1.0f, causes first note to be off pitch
+                    tRamp_setVal(poly->ramp[i], note); // can't be 1.0f, causes first note to be off pitch
                     poly->firstReceived[i] = 1;
                 }
                 else
                 {
-                    tRampSetTime(poly->ramp[i], poly->glideTime);
+                    tRamp_setTime(poly->ramp[i], poly->glideTime);
                 }
 
                 found = OTRUE;
@@ -1233,7 +1201,7 @@ int tMPoly_noteOn(tMPoly* poly, int note, uint8_t vel)
                 poly->notes[note][0] = vel;
                 poly->notes[note][1] = i;
                 
-                tRampSetDest(poly->ramp[i], poly->voices[i][0]);
+                tRamp_setDest(poly->ramp[i], poly->voices[i][0]);
                 
                 alteredVoice = i;
                 break;
@@ -1257,8 +1225,8 @@ int tMPoly_noteOn(tMPoly* poly, int note, uint8_t vel)
 					poly->notes[note][0] = vel;
 					poly->notes[note][1] = whichVoice;
                     
-                    tRampSetTime(poly->ramp[whichVoice], poly->glideTime);
-                    tRampSetDest(poly->ramp[whichVoice], poly->voices[whichVoice][0]);
+                    tRamp_setTime(poly->ramp[whichVoice], poly->glideTime);
+                    tRamp_setDest(poly->ramp[whichVoice], poly->voices[whichVoice][0]);
                     
                     alteredVoice = whichVoice;
 
@@ -1273,7 +1241,7 @@ int tMPoly_noteOn(tMPoly* poly, int note, uint8_t vel)
 
 int16_t noteToTest = -1;
 
-int tMPoly_noteOff(tMPoly* poly, uint8_t note)
+int tMPoly_noteOff(tMPoly* const poly, uint8_t note)
 {
     tStack_remove(poly->stack, note);
     tStack_remove(poly->orderStack, note);
@@ -1313,7 +1281,7 @@ int tMPoly_noteOff(tMPoly* poly, uint8_t note)
             if (poly->notes[noteToTest][1] < 0) //if there is a stolen note waiting (marked inactive but on the stack)
             {
                 poly->voices[deactivatedVoice][0] = noteToTest; //set the newly free voice to use the old stolen note
-                tRampSetDest(poly->ramp[deactivatedVoice], poly->voices[deactivatedVoice][0]);
+                tRamp_setDest(poly->ramp[deactivatedVoice], poly->voices[deactivatedVoice][0]);
                 poly->voices[deactivatedVoice][1] = poly->notes[noteToTest][0]; // set the velocity of the voice to be the velocity of that note
                 poly->notes[noteToTest][1] = deactivatedVoice; //mark that it is no longer stolen and is now active
                 return -1;
@@ -1323,7 +1291,7 @@ int tMPoly_noteOff(tMPoly* poly, uint8_t note)
     return deactivatedVoice;
 }
 
-void tMPoly_orderedAddToStack(tMPoly* poly, uint8_t noteVal)
+void tMPoly_orderedAddToStack(tMPoly* const poly, uint8_t noteVal)
 {
     
     uint8_t j;
@@ -1362,39 +1330,39 @@ void tMPoly_orderedAddToStack(tMPoly* poly, uint8_t noteVal)
     
 }
 
-void tMPoly_setNumVoices(tMPoly* poly, uint8_t numVoices)
+void tMPoly_setNumVoices(tMPoly* const poly, uint8_t numVoices)
 {
     poly->numVoices = (numVoices > MPOLY_NUM_MAX_VOICES) ? MPOLY_NUM_MAX_VOICES : numVoices;
 }
 
-void tMPoly_setPitchGlideTime(tMPoly* poly, float t)
+void tMPoly_setPitchGlideTime(tMPoly* const poly, float t)
 {
 	if (poly->glideTime == t) return;
     poly->glideTime = t;
     for (int i = 0; i < MPOLY_NUM_MAX_VOICES; ++i)
     {
-        tRampSetTime(poly->ramp[i], poly->glideTime);
+        tRamp_setTime(poly->ramp[i], poly->glideTime);
     }
 }
 
-int tMPoly_getNumVoices(tMPoly* poly)
+int tMPoly_getNumVoices(tMPoly* const poly)
 {
     return poly->numVoices;
 }
 
-float tMPoly_getPitch(tMPoly* poly, uint8_t voice)
+float tMPoly_getPitch(tMPoly* const poly, uint8_t voice)
 {
     //float pitchBend = ((float)(poly->pitchBend - 8192) / 8192.0f) * poly->pitchBendAmount;
-    return tRampSample(poly->ramp[voice]);// + pitchBend;
+    return tRamp_sample(poly->ramp[voice]);// + pitchBend;
 	return poly->voices[voice][0];
 }
 
-int tMPoly_getVelocity(tMPoly* poly, uint8_t voice)
+int tMPoly_getVelocity(tMPoly* const poly, uint8_t voice)
 {
     return poly->voices[voice][1];
 }
 
-int tMPoly_isOn(tMPoly* poly, uint8_t voice)
+int tMPoly_isOn(tMPoly* const poly, uint8_t voice)
 {
     return (poly->voices[voice][0] > 0) ? 1 : 0;
 }
@@ -1414,19 +1382,15 @@ static void pitchup(tSOLAD *w, float *out);
 /******************************************************************************/
 
 // init
-tSOLAD*     tSOLAD_init(void)
+void     tSOLAD_init(tSOLAD* const w)
 {
-    tSOLAD *w = &oops.tSOLADRegistry[oops.registryIndex[T_SOLAD]++];
-
     w->pitchfactor = 1.;
     
     solad_init(w);
-    
-    return w;
 }
 
 // send one block of input samples, receive one block of output samples
-void tSOLAD_ioSamples(tSOLAD *w, float* in, float* out, int blocksize)
+void tSOLAD_ioSamples(tSOLAD* const w, float* in, float* out, int blocksize)
 {
     int i = w->timeindex;
     int n = w->blocksize = blocksize;
@@ -1442,14 +1406,14 @@ void tSOLAD_ioSamples(tSOLAD *w, float* in, float* out, int blocksize)
 }
 
 // set periodicity analysis data
-void tSOLAD_setPeriod(tSOLAD *w, float period)
+void tSOLAD_setPeriod(tSOLAD* const w, float period)
 {
     if(period > MAXPERIOD) period = MAXPERIOD;
     if(period > MINPERIOD) w->period = period;  // ignore period when too small
 }
 
 // set pitch factor between 0.25 and 4
-void tSOLAD_setPitchFactor(tSOLAD *w, float pitchfactor)
+void tSOLAD_setPitchFactor(tSOLAD* const w, float pitchfactor)
 {
     if(pitchfactor < 0.25) pitchfactor = 0.25;
     else if(pitchfactor > 4.) pitchfactor = 4.;
@@ -1457,7 +1421,7 @@ void tSOLAD_setPitchFactor(tSOLAD *w, float pitchfactor)
 }
 
 // force readpointer lag
-void tSOLAD_setReadLag(tSOLAD *w, float readlag)
+void tSOLAD_setReadLag(tSOLAD* const w, float readlag)
 {
     if(readlag < 0) readlag = 0;
     if(readlag < w->readlag)               // do not jump backward, only forward
@@ -1470,7 +1434,7 @@ void tSOLAD_setReadLag(tSOLAD *w, float readlag)
 }
 
 // reset state variables
-void tSOLAD_resetState(tSOLAD *w)
+void tSOLAD_resetState(tSOLAD* const w)
 {
     int n = LOOPSIZE + 1;
     float *buf = w->delaybuf;
@@ -1511,7 +1475,7 @@ void tSOLAD_resetState(tSOLAD *w)
  */
 
 
-static void pitchdown(tSOLAD *w, float *out)
+static void pitchdown(tSOLAD* const w, float *out)
 {
     int n = w->blocksize;
     float refindex = (float)(w->timeindex + LOOPSIZE); // no negative values!
@@ -1629,7 +1593,7 @@ static void pitchdown(tSOLAD *w, float *out)
  possibility is done. A previous crossfade must be completed before a forward
  jump is allowed.
  */
-static void pitchup(tSOLAD *w, float *out)
+static void pitchup(tSOLAD* const w, float *out)
 {
     int n = w->blocksize;
     float refindex = (float)(w->timeindex + LOOPSIZE); // no negative values
@@ -1695,7 +1659,7 @@ static void pitchup(tSOLAD *w, float *out)
 }
 
 // read one sample from delay buffer, with linear interpolation
-static inline float read_sample(tSOLAD *w, float floatindex)
+static inline float read_sample(tSOLAD* const w, float floatindex)
 {
     int index = (int)floatindex;
     float fraction = floatindex - (float)index;
@@ -1705,7 +1669,7 @@ static inline float read_sample(tSOLAD *w, float floatindex)
     return (buf[index] + (fraction * (buf[index+1] - buf[index])));
 }
 
-static void solad_init(tSOLAD *w)
+static void solad_init(tSOLAD* const w)
 {
     w->timeindex = 0;
     w->xfadevalue = -1;
@@ -1721,13 +1685,13 @@ static void solad_init(tSOLAD *w)
 #define REALFFT mayer_realfft
 #define REALIFFT mayer_realifft
 
-static void snac_analyzeframe(tSNAC *s);
-static void snac_autocorrelation(tSNAC *s);
-static void snac_normalize(tSNAC *s);
-static void snac_pickpeak(tSNAC *s);
-static void snac_periodandfidelity(tSNAC *s);
-static void snac_biasbuf(tSNAC *s);
-static float snac_spectralpeak(tSNAC *s, float periodlength);
+static void snac_analyzeframe(tSNAC* const s);
+static void snac_autocorrelation(tSNAC* const s);
+static void snac_normalize(tSNAC* const s);
+static void snac_pickpeak(tSNAC* const s);
+static void snac_periodandfidelity(tSNAC* const s);
+static void snac_biasbuf(tSNAC* const s);
+static float snac_spectralpeak(tSNAC* const s, float periodlength);
 
 
 /******************************************************************************/
@@ -1735,11 +1699,8 @@ static float snac_spectralpeak(tSNAC *s, float periodlength);
 /******************************************************************************/
 
 
-tSNAC* tSNAC_init(int overlaparg)
+void tSNAC_init(tSNAC* const s, int overlaparg)
 {
-    
-    tSNAC *s = &oops.tSNACRegistry[oops.registryIndex[T_SNAC]++];
-
     s->biasfactor = DEFBIAS;
     s->timeindex = 0;
     s->periodindex = 0;
@@ -1750,15 +1711,13 @@ tSNAC* tSNAC_init(int overlaparg)
     
     snac_biasbuf(s);
     tSNAC_setOverlap(s, overlaparg);
-    
-    return s;
 }
 /******************************************************************************/
 /************************** public access functions****************************/
 /******************************************************************************/
 
 
-void tSNAC_ioSamples(tSNAC *s, float *in, float *out, int size)
+void tSNAC_ioSamples(tSNAC* const s, float *in, float *out, int size)
 {
     int timeindex = s->timeindex;
     int mask = s->framesize - 1;
@@ -1776,17 +1735,16 @@ void tSNAC_ioSamples(tSNAC *s, float *in, float *out, int size)
         timeindex &= mask;
     }
     s->timeindex = timeindex;
-    return;
 }
 
-void tSNAC_setOverlap(tSNAC *s, int lap)
+void tSNAC_setOverlap(tSNAC* const s, int lap)
 {
     if(!((lap==1)|(lap==2)|(lap==4)|(lap==8))) lap = DEFOVERLAP;
     s->overlap = lap;
 }
 
 
-void tSNAC_setBias(tSNAC *s, float bias)
+void tSNAC_setBias(tSNAC* const s, float bias)
 {
     if(bias > 1.) bias = 1.;
     if(bias < 0.) bias = 0.;
@@ -1796,7 +1754,7 @@ void tSNAC_setBias(tSNAC *s, float bias)
 }
 
 
-void tSNAC_setMinRMS(tSNAC *s, float rms)
+void tSNAC_setMinRMS(tSNAC* const s, float rms)
 {
     if(rms > 1.) rms = 1.;
     if(rms < 0.) rms = 0.;
@@ -1805,13 +1763,13 @@ void tSNAC_setMinRMS(tSNAC *s, float rms)
 }
 
 
-float tSNAC_getPeriod(tSNAC *s)
+float tSNAC_getPeriod(tSNAC* const s)
 {
     return(s->periodlength);
 }
 
 
-float tSNAC_getFidelity(tSNAC *s)
+float tSNAC_getFidelity(tSNAC* const s)
 {
     return(s->fidelity);
 }
@@ -1823,7 +1781,7 @@ float tSNAC_getFidelity(tSNAC *s)
 
 
 // main analysis function
-static void snac_analyzeframe(tSNAC *s)
+static void snac_analyzeframe(tSNAC* const s)
 {
     int n, tindex = s->timeindex;
     int framesize = s->framesize;
@@ -1852,7 +1810,7 @@ static void snac_analyzeframe(tSNAC *s)
 }
 
 
-static void snac_autocorrelation(tSNAC *s)
+static void snac_autocorrelation(tSNAC* const s)
 {
     int n, m;
     int framesize = s->framesize;
@@ -1885,7 +1843,7 @@ static void snac_autocorrelation(tSNAC *s)
 }
 
 
-static void snac_normalize(tSNAC *s)
+static void snac_normalize(tSNAC* const s)
 {
     int framesize = s->framesize;
     int framesizeplustimeindex = s->framesize + s->timeindex;
@@ -1922,7 +1880,7 @@ static void snac_normalize(tSNAC *s)
 }
 
 
-static void snac_periodandfidelity(tSNAC *s)
+static void snac_periodandfidelity(tSNAC* const s)
 {
     float periodlength;
     
@@ -1938,7 +1896,7 @@ static void snac_periodandfidelity(tSNAC *s)
 }
 
 // select the peak which most probably represents period length
-static void snac_pickpeak(tSNAC *s)
+static void snac_pickpeak(tSNAC* const s)
 {
     int n, peakindex=0;
     int seek = s->framesize * SEEK;
@@ -1980,7 +1938,7 @@ static void snac_pickpeak(tSNAC *s)
 // verify period length via frequency domain (up till SR/4)
 // frequency domain is more precise than lag domain for period lengths < 8
 // argument 'periodlength' is initial estimation from autocorrelation
-static float snac_spectralpeak(tSNAC *s, float periodlength)
+static float snac_spectralpeak(tSNAC* const s, float periodlength)
 {
     if(periodlength < 4.) return periodlength;
     
@@ -2024,7 +1982,7 @@ static float snac_spectralpeak(tSNAC *s, float periodlength)
 
 
 // modified logarithmic bias function
-static void snac_biasbuf(tSNAC *s)
+static void snac_biasbuf(tSNAC* const s)
 {
     int n;
     int maxperiod = (int)(s->framesize * (float)SEEK);
@@ -2043,27 +2001,19 @@ static void snac_biasbuf(tSNAC *s)
 }
 
 /********Private function prototypes**********/
-static void atkdtk_init(tAtkDtk *a, int blocksize, int atk, int rel);
-static void atkdtk_envelope(tAtkDtk *a, float *in);
+static void atkdtk_init(tAtkDtk* const a, int blocksize, int atk, int rel);
+static void atkdtk_envelope(tAtkDtk* const a, float *in);
 
 /********Constructor/Destructor***************/
 
-tAtkDtk* tAtkDtk_init(int blocksize)
+void tAtkDtk_init(tAtkDtk* const a, int blocksize)
 {
-    tAtkDtk *a = &oops.tAtkDtkRegistry[oops.registryIndex[T_ATKDTK]++];
-    
     atkdtk_init(a, blocksize, DEFATTACK, DEFRELEASE);
-    return a;
-    
 }
 
-tAtkDtk* tAtkDtk_init_expanded(int blocksize, int atk, int rel)
+void tAtkDtk_init_expanded(tAtkDtk* const a, int blocksize, int atk, int rel)
 {
-    tAtkDtk *a = &oops.tAtkDtkRegistry[oops.registryIndex[T_ATKDTK]++];
-    
     atkdtk_init(a, blocksize, atk, rel);
-    return (a);
-    
 }
 
 void tAtkDtk_free(tAtkDtk *a)
@@ -2074,7 +2024,7 @@ void tAtkDtk_free(tAtkDtk *a)
 /*******Public Functions***********/
 
 
-void tAtkDtk_setBlocksize(tAtkDtk *a, int size)
+void tAtkDtk_setBlocksize(tAtkDtk* const a, int size)
 {
     
     if(!((size==64)|(size==128)|(size==256)|(size==512)|(size==1024)|(size==2048)))
@@ -2085,7 +2035,7 @@ void tAtkDtk_setBlocksize(tAtkDtk *a, int size)
     
 }
 
-void tAtkDtk_setSamplerate(tAtkDtk *a, int inRate)
+void tAtkDtk_setSamplerate(tAtkDtk* const a, int inRate)
 {
     a->samplerate = inRate;
     
@@ -2096,13 +2046,13 @@ void tAtkDtk_setSamplerate(tAtkDtk *a, int inRate)
     return;
 }
 
-void tAtkDtk_setThreshold(tAtkDtk *a, float thres)
+void tAtkDtk_setThreshold(tAtkDtk* const a, float thres)
 {
     a->threshold = thres;
     return;
 }
 
-void tAtkDtk_setAtk(tAtkDtk *a, int inAtk)
+void tAtkDtk_setAtk(tAtkDtk* const a, int inAtk)
 {
     a->atk = inAtk;
     a->atk_coeff = pow(0.01, 1.0/(a->atk * a->samplerate * 0.001));
@@ -2110,7 +2060,7 @@ void tAtkDtk_setAtk(tAtkDtk *a, int inAtk)
     return;
 }
 
-void tAtkDtk_setRel(tAtkDtk *a, int inRel)
+void tAtkDtk_setRel(tAtkDtk* const a, int inRel)
 {
     a->rel = inRel;
     a->rel_coeff = pow(0.01, 1.0/(a->rel * a->samplerate * 0.001));
@@ -2119,7 +2069,7 @@ void tAtkDtk_setRel(tAtkDtk *a, int inRel)
 }
 
 
-int tAtkDtk_detect(tAtkDtk *a, float *in)
+int tAtkDtk_detect(tAtkDtk* const a, float *in)
 {
     int result;
     
@@ -2138,12 +2088,12 @@ int tAtkDtk_detect(tAtkDtk *a, float *in)
 
 /*******Private Functions**********/
 
-static void atkdtk_init(tAtkDtk *a, int blocksize, int atk, int rel)
+static void atkdtk_init(tAtkDtk* const a, int blocksize, int atk, int rel)
 {
     a->env = 0;
     a->blocksize = blocksize;
     a->threshold = DEFTHRESHOLD;
-    a->samplerate = oops.SampleRate;
+    a->samplerate = oops.sampleRate;
     a->prevAmp = 0;
     
     a->env = 0;
@@ -2152,7 +2102,7 @@ static void atkdtk_init(tAtkDtk *a, int blocksize, int atk, int rel)
     tAtkDtk_setRel(a, rel);
 }
 
-static void atkdtk_envelope(tAtkDtk *a, float *in)
+static void atkdtk_envelope(tAtkDtk* const a, float *in)
 {
     int i = 0;
     float tmp;
@@ -2167,15 +2117,11 @@ static void atkdtk_envelope(tAtkDtk *a, float *in)
     
 }
 
-tLockhartWavefolder* tLockhartWavefolderInit(void)
+void tLockhartWavefolderInit(tLockhartWavefolder* const w)
 {
-    tLockhartWavefolder *w = &oops.tLockhartWavefolderRegistry[oops.registryIndex[T_LOCKHARTWAVEFOLDER]++];
-    
     w->Ln1 = 0.0;
     w->Fn1 = 0.0;
     w->xn1 = 0.0;
-    
-    return w;
 }
 
 double tLockhartWavefolderLambert(double x, double ln)
@@ -2266,5 +2212,3 @@ float tLockhartWavefolderTick(tLockhartWavefolder* const w, float samp)
     
     return o;
 }
-
-#endif

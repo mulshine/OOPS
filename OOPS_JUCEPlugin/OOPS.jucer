@@ -27,6 +27,10 @@
           <FILE id="iP9JQv" name="OOPSFilter.cpp" compile="1" resource="0" file="../OOPS/Src_cpp/OOPSFilter.cpp"/>
           <FILE id="bT5fZi" name="OOPSOscillator.cpp" compile="1" resource="0"
                 file="../OOPS/Src_cpp/OOPSOscillator.cpp"/>
+          <FILE id="IDmXPF" name="OOPSDelay.cpp" compile="1" resource="0" file="../OOPS/Src_cpp/OOPSDelay.cpp"/>
+          <FILE id="LL8apT" name="OOPSReverb.cpp" compile="1" resource="0" file="../OOPS/Src_cpp/OOPSReverb.cpp"/>
+          <FILE id="XkZkv4" name="OOPSUtilities.cpp" compile="1" resource="0"
+                file="../OOPS/Src_cpp/OOPSUtilities.cpp"/>
           <FILE id="sh0uRG" name="OOPSWavetables.cpp" compile="1" resource="0"
                 file="../OOPS/Src_cpp/OOPSWavetables.cpp"/>
         </GROUP>
@@ -38,6 +42,9 @@
           <FILE id="CT4xyr" name="OOPSFilter.h" compile="0" resource="0" file="../OOPS/Inc/OOPSFilter.h"/>
           <FILE id="ZFwlq2" name="OOPSOscillator.h" compile="0" resource="0"
                 file="../OOPS/Inc/OOPSOscillator.h"/>
+          <FILE id="XlmKLM" name="OOPSDelay.h" compile="0" resource="0" file="../OOPS/Inc/OOPSDelay.h"/>
+          <FILE id="a2SMU5" name="OOPSReverb.h" compile="0" resource="0" file="../OOPS/Inc/OOPSReverb.h"/>
+          <FILE id="dyWzwa" name="OOPSUtilities.h" compile="0" resource="0" file="../OOPS/Inc/OOPSUtilities.h"/>
           <FILE id="A1qa7l" name="OOPSWavetables.h" compile="0" resource="0"
                 file="../OOPS/Inc/OOPSWavetables.h"/>
         </GROUP>

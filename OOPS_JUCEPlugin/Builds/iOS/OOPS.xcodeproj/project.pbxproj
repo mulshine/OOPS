@@ -105,6 +105,18 @@
 			isa = PBXBuildFile;
 			fileRef = 1B929D657F7C8441F143B7F3;
 		};
+		132756642BC91326824613FB = {
+			isa = PBXBuildFile;
+			fileRef = BF72FC9BC327F7A95DD606E2;
+		};
+		A6A714FD254EB77C5369566A = {
+			isa = PBXBuildFile;
+			fileRef = 34BD65055D6A4EDAF0C9A6B3;
+		};
+		7EA4C130F048E0799716B379 = {
+			isa = PBXBuildFile;
+			fileRef = 082C67AC88B6357BD9F289D9;
+		};
 		BCA8D82FBE6EF7FD2F5E375E = {
 			isa = PBXBuildFile;
 			fileRef = FE54422729D5282705DA0B82;
@@ -220,6 +232,13 @@
 			lastKnownFileType = sourcecode.c.h;
 			name = OOPSTest.h;
 			path = ../../Source/OOPSTest.h;
+			sourceTree = "SOURCE_ROOT";
+		};
+		082C67AC88B6357BD9F289D9 = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			name = OOPSUtilities.cpp;
+			path = "../../../OOPS/Src_cpp/OOPSUtilities.cpp";
 			sourceTree = "SOURCE_ROOT";
 		};
 		090FDDB70F57105FDE661BFC = {
@@ -339,6 +358,13 @@
 			lastKnownFileType = file;
 			name = "juce_graphics";
 			path = "../../../../JUCE/modules/juce_graphics";
+			sourceTree = "SOURCE_ROOT";
+		};
+		34BD65055D6A4EDAF0C9A6B3 = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			name = OOPSReverb.cpp;
+			path = "../../../OOPS/Src_cpp/OOPSReverb.cpp";
 			sourceTree = "SOURCE_ROOT";
 		};
 		37CE5ED9AE70FABA5701E06C = {
@@ -474,6 +500,13 @@
 			path = System/Library/Frameworks/CoreImage.framework;
 			sourceTree = SDKROOT;
 		};
+		74632B007DC3813F10EBBDD5 = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			name = OOPSDelay.h;
+			path = ../../../OOPS/Inc/OOPSDelay.h;
+			sourceTree = "SOURCE_ROOT";
+		};
 		770DC48EAB2B94D1EA448F11 = {
 			isa = PBXFileReference;
 			lastKnownFileType = sourcecode.c.h;
@@ -528,6 +561,13 @@
 			lastKnownFileType = file;
 			name = "juce_audio_devices";
 			path = "../../../../JUCE/modules/juce_audio_devices";
+			sourceTree = "SOURCE_ROOT";
+		};
+		86B1CF21F751F455E1199692 = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			name = OOPSUtilities.h;
+			path = ../../../OOPS/Inc/OOPSUtilities.h;
 			sourceTree = "SOURCE_ROOT";
 		};
 		86EE36EDADDECAA12E7424BD = {
@@ -684,6 +724,13 @@
 			path = System/Library/Frameworks/CoreAudio.framework;
 			sourceTree = SDKROOT;
 		};
+		BF72FC9BC327F7A95DD606E2 = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			name = OOPSDelay.cpp;
+			path = "../../../OOPS/Src_cpp/OOPSDelay.cpp";
+			sourceTree = "SOURCE_ROOT";
+		};
 		C2E5C98A8A6008748FF9630F = {
 			isa = PBXFileReference;
 			lastKnownFileType = sourcecode.cpp.cpp;
@@ -782,6 +829,13 @@
 			path = "../../JuceLibraryCode/include_juce_audio_plugin_client_Standalone.cpp";
 			sourceTree = "SOURCE_ROOT";
 		};
+		FAFFDD6D78CF92B8AEAF899C = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			name = OOPSReverb.h;
+			path = ../../../OOPS/Inc/OOPSReverb.h;
+			sourceTree = "SOURCE_ROOT";
+		};
 		FE54422729D5282705DA0B82 = {
 			isa = PBXFileReference;
 			lastKnownFileType = sourcecode.cpp.cpp;
@@ -807,6 +861,9 @@
 				6C12BCC639D3C78FADF8C940,
 				0086C2959AAF02116DDE4E3C,
 				1B929D657F7C8441F143B7F3,
+				BF72FC9BC327F7A95DD606E2,
+				34BD65055D6A4EDAF0C9A6B3,
+				082C67AC88B6357BD9F289D9,
 				FE54422729D5282705DA0B82,
 			);
 			name = Src;
@@ -821,6 +878,9 @@
 				15569E9B7383829AEFCAEBDD,
 				3266D150E169307EB8A4ED7B,
 				48B466FAA6BD2C1D245FFEB7,
+				74632B007DC3813F10EBBDD5,
+				FAFFDD6D78CF92B8AEAF899C,
+				86B1CF21F751F455E1199692,
 				C4F718BFA5AD28988DC8D2BB,
 			);
 			name = Inc;
@@ -1496,6 +1556,9 @@
 				653CBE7A48AFE1AD156705F4,
 				C6F8F6F4F2CB26CF9387D319,
 				896828AEC7C06456FC0DE593,
+				132756642BC91326824613FB,
+				A6A714FD254EB77C5369566A,
+				7EA4C130F048E0799716B379,
 				BCA8D82FBE6EF7FD2F5E375E,
 				1792EE72C90013D726A025FA,
 				288E7926DB9A3898B459B826,

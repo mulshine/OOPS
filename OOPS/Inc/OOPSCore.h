@@ -232,7 +232,7 @@ typedef struct _tRamp {
 typedef struct _tDelay
 {
     float gain;
-    float buff[DELAY_LENGTH];
+    float* buff;
     
     float lastOut, lastIn;
     
@@ -246,7 +246,7 @@ typedef struct _tDelay
 typedef struct _tDelayL
 {
     float gain;
-    float buff[DELAY_LENGTH];
+    float* buff;
     
     float lastOut, lastIn;
     
@@ -264,7 +264,7 @@ typedef struct _tDelayL
 typedef struct _tDelayA
 {
     float gain;
-    float buff[DELAY_LENGTH];
+    float* buff;
     
     float lastOut, lastIn;
     

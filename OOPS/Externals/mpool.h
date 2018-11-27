@@ -41,7 +41,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-#define MPOOL_POOL_SIZE   2000
+#define MPOOL_POOL_SIZE   1000000
 #define MPOOL_ALIGN_SIZE (8)
 
 //#define size_t unsigned long
@@ -58,9 +58,6 @@ typedef struct mpool_pool_t {
 
 typedef struct mpool_t {
     mpool_pool_t *head;       // memory pool's head
-    //void         *begin;
-    void** begins;      // data for internal conduct
-    int bidx;
     size_t        usize;       // used pool size of current pool
     size_t        msize;       // max pool size of current pool
     mpool_pool_t *mpool;      // memory pool

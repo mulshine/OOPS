@@ -15,24 +15,30 @@
 #include "OOPSCore.h"
 
 /* PRCRev: Reverb, reimplemented from STK (Cook and Scavone). */
-tPRCRev*    tPRCRevInit      (float t60);
-float       tPRCRevTick      (tPRCRev*  const, float input);
+void    tPRCRev_init    (tPRCRev* const, float t60);
+void    tPRCRev_free    (tPRCRev* const);
+
+float   tPRCRev_tick    (tPRCRev* const, float input);
 
 // Set reverb time in seconds.
-void        tPRCRevSetT60    (tPRCRev*  const, float t60);
+void    tPRCRev_setT60  (tPRCRev* const, float t60);
 
 // Set mix between dry input and wet output signal.
-void        tPRCRevSetMix    (tPRCRev*  const, float mix);
+void    tPRCRev_setMix  (tPRCRev* const, float mix);
+
+
 
 /* NRev: Reverb, reimplemented from STK (Cook and Scavone). */
-tNRev*      tNRevInit   (float t60);
-float       tNRevTick   (tNRev*  const, float input);
+void    tNRev_init      (tNRev* const, float t60);
+void    tNRev_free      (tNRev* const);
+
+float   tNRev_tick      (tNRev* const, float input);
 
 // Set reverb time in seconds.
-void        tNRevSetT60 (tNRev*  const, float t60);
+void    tNRev_setT60    (tNRev* const, float t60);
 
 // Set mix between dry input and wet output signal.
-void        tNRevSetMix (tNRev*  const, float mix);
+void    tNRev_setMix    (tNRev*  const, float mix);
 
 
 #endif  // OOPSREVERB_H_INCLUDED

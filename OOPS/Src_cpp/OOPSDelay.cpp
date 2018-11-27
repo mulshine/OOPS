@@ -21,13 +21,13 @@
 #endif
 
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ Delay ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
-void    tDelayInit (tDelay*  const d, uint32_t delay)
+void    tDelay_init (tDelay*  const d, uint32_t maxDelay)
 {
-    d->maxDelay = DELAY_LENGTH;
+    d->maxDelay = maxDelay;
     
-    if (delay < 0.0f)               d->delay = 0.0f;
-    else if (delay > d->maxDelay)   d->delay = d->maxDelay;
-    else                            d->delay = delay;
+    d->buff = (float*) oops_alloc(sizeof(float) * maxDelay);
+    
+    d->delay = 0.0f;
     
     d->inPoint = 0;
     d->outPoint = 0;
@@ -37,10 +37,16 @@ void    tDelayInit (tDelay*  const d, uint32_t delay)
     
     d->gain = 1.0f;
     
-    tDelaySetDelay(d, d->delay);
+    tDelay_setDelay(d, d->delay);
 }
 
-float   tDelayTick (tDelay* const d, float input)
+void tDelay_free(tDelay* const d)
+{
+    oops_free(d->buff);
+    oops_free(d);
+}
+
+float   tDelay_tick (tDelay* const d, float input)
 {
     // Input
     d->lastIn = input;
@@ -55,7 +61,7 @@ float   tDelayTick (tDelay* const d, float input)
 }
 
 
-int     tDelaySetDelay (tDelay* const d, uint32_t delay)
+int     tDelay_setDelay (tDelay* const d, uint32_t delay)
 {
     if (delay >= d->maxDelay)    d->delay = d->maxDelay;
     else                         d->delay = delay;
@@ -67,7 +73,7 @@ int     tDelaySetDelay (tDelay* const d, uint32_t delay)
     return 0;
 }
 
-float tDelayTapOut (tDelay* const d, uint32_t tapDelay)
+float tDelay_tapOut (tDelay* const d, uint32_t tapDelay)
 {
     int32_t tap = d->inPoint - tapDelay - 1;
     
@@ -78,7 +84,7 @@ float tDelayTapOut (tDelay* const d, uint32_t tapDelay)
     
 }
 
-void tDelayTapIn (tDelay* const d, float value, uint32_t tapDelay)
+void tDelay_tapIn (tDelay* const d, float value, uint32_t tapDelay)
 {
     int32_t tap = d->inPoint - tapDelay - 1;
     
@@ -88,7 +94,7 @@ void tDelayTapIn (tDelay* const d, float value, uint32_t tapDelay)
     d->buff[tap] = value;
 }
 
-float tDelayAddTo (tDelay* const d, float value, uint32_t tapDelay)
+float tDelay_addTo (tDelay* const d, float value, uint32_t tapDelay)
 {
     int32_t tap = d->inPoint - tapDelay - 1;
     
@@ -98,40 +104,40 @@ float tDelayAddTo (tDelay* const d, float value, uint32_t tapDelay)
     return (d->buff[tap] += value);
 }
 
-uint32_t   tDelayGetDelay (tDelay* const d)
+uint32_t   tDelay_getDelay (tDelay* const d)
 {
     return d->delay;
 }
 
-float   tDelayGetLastOut (tDelay* const d)
+float   tDelay_getLastOut (tDelay* const d)
 {
     return d->lastOut;
 }
 
-float   tDelayGetLastIn (tDelay* const d)
+float   tDelay_getLastIn (tDelay* const d)
 {
     return d->lastIn;
 }
 
-void tDelaySetGain (tDelay* const d, float gain)
+void tDelay_setGain (tDelay* const d, float gain)
 {
     if (gain < 0.0f)    d->gain = 0.0f;
     else                d->gain = gain;
 }
 
-float tDelayGetGain (tDelay* const d)
+float tDelay_getGain (tDelay* const d)
 {
     return d->gain;
 }
 
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ DelayL ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
-void   tDelayLInit (tDelayL* const d, float delay)
+void   tDelayL_init (tDelayL* const d, float maxDelay)
 {
-    d->maxDelay = DELAY_LENGTH;
+    d->maxDelay = maxDelay;
     
-    if (delay < 0.0f)               d->delay = 0.0f;
-    else if (delay > d->maxDelay)   d->delay = d->maxDelay;
-    else                            d->delay = delay;
+    d->buff = (float*) oops_alloc(sizeof(float) * maxDelay);
+    
+    d->delay = 0.0f;
     
     d->gain = 1.0f;
     
@@ -141,10 +147,16 @@ void   tDelayLInit (tDelayL* const d, float delay)
     d->inPoint = 0;
     d->outPoint = 0;
     
-    tDelayLSetDelay(d, d->delay);
+    tDelayL_setDelay(d, d->delay);
 }
 
-float   tDelayLTick (tDelayL* const d, float input)
+void tDelayL_free(tDelayL* const d)
+{
+    oops_free(d->buff);
+    oops_free(d);
+}
+
+float   tDelayL_tick (tDelayL* const d, float input)
 {
     d->buff[d->inPoint] = input * d->gain;
     
@@ -167,7 +179,7 @@ float   tDelayLTick (tDelayL* const d, float input)
     return d->lastOut;
 }
 
-int     tDelayLSetDelay (tDelayL* const d, float delay)
+int     tDelayL_setDelay (tDelayL* const d, float delay)
 {
     if (delay < 0.0f)               d->delay = 0.0f;
     else if (delay <= d->maxDelay)  d->delay = delay;
@@ -188,7 +200,7 @@ int     tDelayLSetDelay (tDelayL* const d, float delay)
     return 0;
 }
 
-float tDelayLTapOut (tDelayL* const d, uint32_t tapDelay)
+float tDelayL_tapOut (tDelayL* const d, uint32_t tapDelay)
 {
     int32_t tap = d->inPoint - tapDelay - 1;
     
@@ -199,7 +211,7 @@ float tDelayLTapOut (tDelayL* const d, uint32_t tapDelay)
     
 }
 
-void tDelayLTapIn (tDelayL* const d, float value, uint32_t tapDelay)
+void tDelayL_tapIn (tDelayL* const d, float value, uint32_t tapDelay)
 {
     int32_t tap = d->inPoint - tapDelay - 1;
     
@@ -209,7 +221,7 @@ void tDelayLTapIn (tDelayL* const d, float value, uint32_t tapDelay)
     d->buff[tap] = value;
 }
 
-float tDelayLAddTo (tDelayL* const d, float value, uint32_t tapDelay)
+float tDelayL_addTo (tDelayL* const d, float value, uint32_t tapDelay)
 {
     int32_t tap = d->inPoint - tapDelay - 1;
     
@@ -219,40 +231,40 @@ float tDelayLAddTo (tDelayL* const d, float value, uint32_t tapDelay)
     return (d->buff[tap] += value);
 }
 
-float   tDelayLGetDelay (tDelayL *d)
+float   tDelayL_getDelay (tDelayL *d)
 {
     return d->delay;
 }
 
-float   tDelayLGetLastOut (tDelayL* const d)
+float   tDelayL_getLastOut (tDelayL* const d)
 {
     return d->lastOut;
 }
 
-float   tDelayLGetLastIn (tDelayL* const d)
+float   tDelayL_getLastIn (tDelayL* const d)
 {
     return d->lastIn;
 }
 
-void tDelayLSetGain (tDelayL* const d, float gain)
+void tDelayL_setGain (tDelayL* const d, float gain)
 {
     if (gain < 0.0f)    d->gain = 0.0f;
     else                d->gain = gain;
 }
 
-float tDelayLGetGain (tDelayL* const d)
+float tDelayL_getGain (tDelayL* const d)
 {
     return d->gain;
 }
 
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ DelayA ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
-void  tDelayAInit (tDelayA* const d, float delay)
+void  tDelayA_init (tDelayA* const d, float maxDelay)
 {
-    d->maxDelay = DELAY_LENGTH;
+    d->maxDelay = maxDelay;
     
-    if (delay < 0.0f)               d->delay = 0.0f;
-    else if (delay > d->maxDelay)   d->delay = d->maxDelay;
-    else                            d->delay = delay;
+    d->buff = (float*) oops_alloc(sizeof(float) * maxDelay);
+    
+    d->delay = 0.0f;
     
     d->gain = 1.0f;
     
@@ -262,12 +274,18 @@ void  tDelayAInit (tDelayA* const d, float delay)
     d->inPoint = 0;
     d->outPoint = 0;
     
-    tDelayASetDelay(d, d->delay);
+    tDelayA_setDelay(d, d->delay);
     
     d->apInput = 0.0f;
 }
 
-float   tDelayATick (tDelayA* const d, float input)
+void tDelayA_free(tDelayA* const d)
+{
+    oops_free(d->buff);
+    oops_free(d);
+}
+
+float   tDelayA_tick (tDelayA* const d, float input)
 {
     d->buff[d->inPoint] = input * d->gain;
     
@@ -288,7 +306,7 @@ float   tDelayATick (tDelayA* const d, float input)
     return d->lastOut;
 }
 
-int     tDelayASetDelay (tDelayA* const d, float delay)
+int     tDelayA_setDelay (tDelayA* const d, float delay)
 {
     if (delay < 0.5f)               d->delay = 0.5f;
     else if (delay <= d->maxDelay)  d->delay = delay;
@@ -322,7 +340,7 @@ int     tDelayASetDelay (tDelayA* const d, float delay)
     return 0;
 }
 
-float tDelayATapOut (tDelayA* const d, uint32_t tapDelay)
+float tDelayA_tapOut (tDelayA* const d, uint32_t tapDelay)
 {
     int32_t tap = d->inPoint - tapDelay - 1;
     
@@ -333,7 +351,7 @@ float tDelayATapOut (tDelayA* const d, uint32_t tapDelay)
     
 }
 
-void tDelayATapIn (tDelayA* const d, float value, uint32_t tapDelay)
+void tDelayA_tapIn (tDelayA* const d, float value, uint32_t tapDelay)
 {
     int32_t tap = d->inPoint - tapDelay - 1;
     
@@ -343,7 +361,7 @@ void tDelayATapIn (tDelayA* const d, float value, uint32_t tapDelay)
     d->buff[tap] = value;
 }
 
-float tDelayAAddTo (tDelayA* const d, float value, uint32_t tapDelay)
+float tDelayA_addTo (tDelayA* const d, float value, uint32_t tapDelay)
 {
     int32_t tap = d->inPoint - tapDelay - 1;
     
@@ -353,28 +371,28 @@ float tDelayAAddTo (tDelayA* const d, float value, uint32_t tapDelay)
     return (d->buff[tap] += value);
 }
 
-float   tDelayAGetDelay (tDelayA* const d)
+float   tDelayA_getDelay (tDelayA* const d)
 {
     return d->delay;
 }
 
-float   tDelayAGetLastOut (tDelayA* const d)
+float   tDelayA_getLastOut (tDelayA* const d)
 {
     return d->lastOut;
 }
 
-float   tDelayAGetLastIn (tDelayA* const d)
+float   tDelayA_getLastIn (tDelayA* const d)
 {
     return d->lastIn;
 }
 
-void tDelayASetGain (tDelayA* const d, float gain)
+void tDelayA_getGain (tDelayA* const d, float gain)
 {
     if (gain < 0.0f)    d->gain = 0.0f;
     else                d->gain = gain;
 }
 
-float tDelayAGetGain (tDelayA* const d)
+float tDelayA_getGain (tDelayA* const d)
 {
     return d->gain;
 }

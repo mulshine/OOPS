@@ -16,35 +16,51 @@ static void oops_pool_report(void);
 static void oops_pool_dump(void);
 static void run_pool_test(void);
 
-#define NUM 8
+
+tDelay delay;
+
+tNRev rev;
 
 void    OOPSTest_init            (float sampleRate, int blockSize)
 {
     OOPSInit(sampleRate, blockSize, &randomNumberGenerator);
-
+    
+    tDelay_init(&delay, oops.sampleRate);
+    tDelay_setDelay(&delay, oops.sampleRate * 0.1);
+    
+    tNRev_init(&rev, 40.0);
+    tNRev_setT60(&rev, 40.0);
+    
+    oops_pool_report();
 }
 
 int timer = 0;
+
+float prev = 0.0;
 
 float   OOPSTest_tick            (float input)
 {
     float sample = 0.0f;
     
     timer++;
-    if (timer == oops.sampleRate)
+    if (timer == (2*oops.sampleRate))
     {
         timer = 0;
         sample = 1.0f;
     }
+
+    sample += tDelay_tick(&delay, sample + prev * 0.5);
     
+    prev = sample;
     
+    sample = tNRev_tick(&rev, sample);
     
     return sample;
+     
 }
 
 void    OOPSTest_block           (void)
 {
-    float val = getSliderValue("centroid");
 }
 
 void    OOPSTest_controllerInput (int cnum, float cval)

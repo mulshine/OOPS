@@ -57,6 +57,13 @@ void    tNeuron_init(tNeuron* const n)
     n->rate[2] = n->gL/n->C;
 }
 
+void    tNeuron_free(tNeuron* const n)
+{
+    tPoleZero_free(n->f);
+    
+    oops_free(n);
+}
+
 void   tNeuron_reset(tNeuron* const n)
 {
     
@@ -220,6 +227,11 @@ void    tCycle_init(tCycle* const c)
     c->phase    =  0.0f;
 }
 
+void    tCycle_free(tCycle* const c)
+{
+    oops_free(c);
+}
+
 int     tCycle_setFreq(tCycle* const c, float freq)
 {
     if (freq < 0.0f) freq = 0.0f;
@@ -282,10 +294,20 @@ void    tPhasor_init(tPhasor* const p)
     p->inc = 0.0f;
 }
 
+void    tPhasor_free(tPhasor* const p)
+{
+    oops_free(p);
+}
+
 void    tSawtooth_init(tSawtooth* const c)
 {
     c->inc      = 0.0f;
     c->phase    = 0.0f;
+}
+
+void    tSawtooth_free(tSawtooth* const c)
+{
+    oops_free(c);
 }
 
 int     tSawtooth_setFreq(tSawtooth* const c, float freq)
@@ -390,6 +412,10 @@ void   tTriangle_init(tTriangle* const c)
     c->phase    =  0.0f;
 }
 
+void   tTriangle_free(tTriangle* const c)
+{
+    oops_free(c);}
+
 int tTriangle_setFreq(tTriangle* const c, float freq)
 {
     if (freq < 0.0f) freq = 0.0f;
@@ -488,6 +514,11 @@ void   tSquare_init(tSquare* const c)
     c->phase    =  0.0f;
 }
 
+void   tSquare_free(tSquare* const c)
+{
+    oops_free(c);
+}
+
 int     tSquare_setFreq(tSquare*  const c, float freq)
 {
     if (freq < 0.0f) freq = 0.0f;
@@ -582,6 +613,11 @@ void    tNoise_init(tNoise* const n, NoiseType type)
 {
     n->type = type;
     n->rand = oops.random;
+}
+
+void    tNoise_init(tNoise* const n)
+{
+    oops_free(n);
 }
 
 float   tNoise_tick(tNoise* const n)

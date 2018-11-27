@@ -23,10 +23,8 @@
 
 
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ PRCRev ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
-tPRCRev*    tPRCRevInit(float t60)
+void    tPRCRev_init(tPRCRev* const r, float t60)
 {
-    tPRCRev* r = &oops.tPRCRevRegistry[oops.registryIndex[T_PRCREV]++];
-    
     if (t60 <= 0.0f) t60 = 0.001f;
     
     r->inv_441 = 1.0f/44100.0f;
@@ -49,58 +47,67 @@ tPRCRev*    tPRCRevInit(float t60)
         }
     }
     
-    r->allpassDelays[0] = tDelayInit(lengths[0]);
-    r->allpassDelays[1] = tDelayInit(lengths[1]);
-    r->combDelay = tDelayInit(lengths[2]);
+    r->allpassDelays[0] = (tDelay*) oops_alloc(sizeof(tDelay));
+    tDelay_init(r->allpassDelays[0], lengths[0]);
     
-    tPRCRevSetT60(r, t60);
+    r->allpassDelays[1] = (tDelay*) oops_alloc(sizeof(tDelay));
+    tDelay_init(r->allpassDelays[1], lengths[1]);
+    
+    r->combDelay = (tDelay*) oops_alloc(sizeof(tDelay));
+    tDelay_init(r->combDelay, lengths[2]);
+    
+    tPRCRev_setT60(r, t60);
     
     r->allpassCoeff = 0.7f;
     r->mix = 0.5f;
-    
-    r->sampleRateChanged = &tPRCRevSampleRateChanged;
-    
-    return r;
-    
 }
 
-void    tPRCRevSetT60(tPRCRev* const r, float t60)
+void    tPRCRev_free(tPRCRev* const r)
+{
+    tDelay_free(r->combDelay);
+    tDelay_free(r->allpassDelays[0]);
+    tDelay_free(r->allpassDelays[1]);
+    
+    oops_free(r);
+}
+
+void    tPRCRev_setT60(tPRCRev* const r, float t60)
 {
     if ( t60 <= 0.0f ) t60 = 0.001f;
     
     r->t60 = t60;
     
-    r->combCoeff = pow(10.0f, (-3.0f * tDelayGetDelay(r->combDelay) * oops.invSampleRate / t60 ));
+    r->combCoeff = pow(10.0f, (-3.0f * tDelay_getDelay(r->combDelay) * oops.invSampleRate / t60 ));
     
 }
 
-void    tPRCRevSetMix(tPRCRev* const r, float mix)
+void    tPRCRev_setMix(tPRCRev* const r, float mix)
 {
     r->mix = mix;
 }
 
-float   tPRCRevTick(tPRCRev* const r, float input)
+float   tPRCRev_tick(tPRCRev* const r, float input)
 {
     float temp, temp0, temp1, temp2;
     float out;
     
     r->lastIn = input;
     
-    temp = tDelayGetLastOut(r->allpassDelays[0]);
+    temp = tDelay_getLastOut(r->allpassDelays[0]);
     temp0 = r->allpassCoeff * temp;
     temp0 += input;
-    tDelayTick(r->allpassDelays[0], temp0);
+    tDelay_tick(r->allpassDelays[0], temp0);
     temp0 = -( r->allpassCoeff * temp0) + temp;
     
-    temp = tDelayGetLastOut(r->allpassDelays[1]);
+    temp = tDelay_getLastOut(r->allpassDelays[1]);
     temp1 = r->allpassCoeff * temp;
     temp1 += temp0;
-    tDelayTick(r->allpassDelays[1], temp1);
+    tDelay_tick(r->allpassDelays[1], temp1);
     temp1 = -(r->allpassCoeff * temp1) + temp;
     
-    temp2 = temp1 + ( r->combCoeff * tDelayGetLastOut(r->combDelay));
+    temp2 = temp1 + ( r->combCoeff * tDelay_getLastOut(r->combDelay));
     
-    out = r->mix * tDelayTick(r->combDelay, temp2);
+    out = r->mix * tDelay_tick(r->combDelay, temp2);
     
     temp = (1.0f - r->mix) * input;
     
@@ -113,14 +120,12 @@ float   tPRCRevTick(tPRCRev* const r, float input)
 
 void     tPRCRevSampleRateChanged (tPRCRev* const r)
 {
-    r->combCoeff = pow(10.0f, (-3.0f * tDelayGetDelay(r->combDelay) * oops.invSampleRate / r->t60 ));
+    r->combCoeff = pow(10.0f, (-3.0f * tDelay_getDelay(r->combDelay) * oops.invSampleRate / r->t60 ));
 }
 
 /* ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ NRev ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ */
-tNRev*    tNRevInit(float t60)
+void    tNRev_init(tNRev* const r, float t60)
 {
-    tNRev* r = &oops.tNRevRegistry[oops.registryIndex[T_NREV]++];
-    
     if (t60 <= 0.0f) t60 = 0.001f;
     
     r->inv_441 = 1.0f/44100.0f;
@@ -142,46 +147,59 @@ tNRev*    tNRevInit(float t60)
     
     for ( i=0; i<6; i++ )
     {
-        r->combDelays[i] = tDelayInit(lengths[i]);
+        r->combDelays[i] = (tDelay*) oops_alloc(sizeof(tDelay));
+        tDelay_init(r->combDelays[i], lengths[i]);
         r->combCoeffs[i] = pow(10.0, (-3 * lengths[i] * oops.invSampleRate / t60));
     }
     
     for ( i=0; i<8; i++ )
-        r->allpassDelays[i] = tDelayInit(lengths[i+6]);
+    {
+        r->allpassDelays[i] = (tDelay*) oops_alloc(sizeof(tDelay));
+        tDelay_init(r->allpassDelays[i], lengths[i+6]);
+    }
     
     for ( i=0; i<2; i++ )
     {
-        tDelaySetDelay(r->allpassDelays[i], lengths[i]);
-        tDelaySetDelay(r->combDelays[i], lengths[i+2]);
+        tDelay_setDelay(r->allpassDelays[i], lengths[i]);
+        tDelay_setDelay(r->combDelays[i], lengths[i+2]);
     }
     
-    tNRevSetT60(r, t60);
+    tNRev_setT60(r, t60);
     r->allpassCoeff = 0.7f;
     r->mix = 0.3f;
-    
-    r->sampleRateChanged = &tNRevSampleRateChanged;
-    
-    return r;
-    
 }
 
+void    tNRev_free(tNRev* const r)
+{
+    for (int i = 0; i < 6; i++)
+    {
+        tDelay_free(r->combDelays[i]);
+    }
+    
+    for (int i = 0; i < 8; i++)
+    {
+        tDelay_free(r->allpassDelays[i]);
+    }
+    
+    oops_free(r);
+}
 
-void    tNRevSetT60(tNRev* const r, float t60)
+void    tNRev_setT60(tNRev* const r, float t60)
 {
     if (t60 <= 0.0f)           t60 = 0.001f;
     
     r->t60 = t60;
     
-    for (int i=0; i<6; i++)   r->combCoeffs[i] = pow(10.0, (-3.0 * tDelayGetDelay(r->combDelays[i]) * oops.invSampleRate / t60 ));
+    for (int i=0; i<6; i++)   r->combCoeffs[i] = pow(10.0, (-3.0 * tDelay_getDelay(r->combDelays[i]) * oops.invSampleRate / t60 ));
     
 }
 
-void    tNRevSetMix(tNRev* const r, float mix)
+void    tNRev_setMix(tNRev* const r, float mix)
 {
     r->mix = mix;
 }
 
-float   tNRevTick(tNRev* const r, float input)
+float   tNRev_tick(tNRev* const r, float input)
 {
     r->lastIn = input;
     
@@ -191,31 +209,31 @@ float   tNRevTick(tNRev* const r, float input)
     temp0 = 0.0;
     for ( i=0; i<6; i++ )
     {
-        temp = input + (r->combCoeffs[i] * tDelayGetLastOut(r->combDelays[i]));
-        temp0 += tDelayTick(r->combDelays[i],temp);
+        temp = input + (r->combCoeffs[i] * tDelay_getLastOut(r->combDelays[i]));
+        temp0 += tDelay_tick(r->combDelays[i],temp);
     }
     
     for ( i=0; i<3; i++ )
     {
-        temp = tDelayGetLastOut(r->allpassDelays[i]);
+        temp = tDelay_getLastOut(r->allpassDelays[i]);
         temp1 = r->allpassCoeff * temp;
         temp1 += temp0;
-        tDelayTick(r->allpassDelays[i], temp1);
+        tDelay_tick(r->allpassDelays[i], temp1);
         temp0 = -(r->allpassCoeff * temp1) + temp;
     }
     
     // One-pole lowpass filter.
     r->lowpassState = 0.7f * r->lowpassState + 0.3f * temp0;
-    temp = tDelayGetLastOut(r->allpassDelays[3]);
+    temp = tDelay_getLastOut(r->allpassDelays[3]);
     temp1 = r->allpassCoeff * temp;
     temp1 += r->lowpassState;
-    tDelayTick(r->allpassDelays[3], temp1 );
+    tDelay_tick(r->allpassDelays[3], temp1 );
     temp1 = -(r->allpassCoeff * temp1) + temp;
     
-    temp = tDelayGetLastOut(r->allpassDelays[4]);
+    temp = tDelay_getLastOut(r->allpassDelays[4]);
     temp2 = r->allpassCoeff * temp;
     temp2 += temp1;
-    tDelayTick(r->allpassDelays[4], temp2 );
+    tDelay_tick(r->allpassDelays[4], temp2 );
     out = r->mix * ( -( r->allpassCoeff * temp2 ) + temp );
     
     /*
@@ -239,6 +257,6 @@ float   tNRevTick(tNRev* const r, float input)
 
 void     tNRevSampleRateChanged (tNRev* const r)
 {
-    for (int i=0; i<6; i++)   r->combCoeffs[i] = pow(10.0, (-3.0 * tDelayGetDelay(r->combDelays[i]) * oops.invSampleRate / r->t60 ));
+    for (int i=0; i<6; i++)   r->combCoeffs[i] = pow(10.0, (-3.0 * tDelay_getDelay(r->combDelays[i]) * oops.invSampleRate / r->t60 ));
 }
 
