@@ -371,39 +371,6 @@ typedef struct _tEnvelopeFollower
 
 
 
-// PRCRev: Reverb based on Perry Cook algorithm.
-typedef struct _tPRCRev
-{
-    float mix, t60;
-    
-    float inv_441;
-    
-    tDelay* allpassDelays[2];
-    tDelay* combDelay;
-    float allpassCoeff;
-    float combCoeff;
-    
-    float lastIn, lastOut;
-    
-} tPRCRev;
-
-// NRev: Reverb
-typedef struct _tNRev
-{
-    float mix, t60;
-    
-    float inv_sr, inv_441;
-    
-    tDelay* allpassDelays[8];
-    tDelay* combDelays[6];
-    float allpassCoeff;
-    float combCoeffs[6];
-    float lowpassState;
-    
-    float lastIn, lastOut;
-    
-} tNRev;
-
 typedef enum NeuronMode
 {
     NeuronNormal = 0,

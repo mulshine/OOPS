@@ -125,6 +125,11 @@ void tEnv_init(tEnv* const x, int ws, int hs, int bs)
     // ~ ~ ~ ~ ~ ~ ~ ~
 }
 
+void tEnv_free (tEnv* const x)
+{
+    oops_free(x);
+}
+
 float tEnv_tick (tEnv* const x)
 {
     return powtodb(x->x_result);
@@ -1389,6 +1394,11 @@ void     tSOLAD_init(tSOLAD* const w)
     solad_init(w);
 }
 
+void tSOLAD_free(tSOLAD* const w)
+{
+    oops_free(w);
+}
+
 // send one block of input samples, receive one block of output samples
 void tSOLAD_ioSamples(tSOLAD* const w, float* in, float* out, int blocksize)
 {
@@ -1712,6 +1722,11 @@ void tSNAC_init(tSNAC* const s, int overlaparg)
     snac_biasbuf(s);
     tSNAC_setOverlap(s, overlaparg);
 }
+
+void tSNAC_free(tSNAC* const s)
+{
+    oops_free(s);
+}
 /******************************************************************************/
 /************************** public access functions****************************/
 /******************************************************************************/
@@ -2018,7 +2033,7 @@ void tAtkDtk_init_expanded(tAtkDtk* const a, int blocksize, int atk, int rel)
 
 void tAtkDtk_free(tAtkDtk *a)
 {
-    free(a);
+    oops_free(a);
 }
 
 /*******Public Functions***********/

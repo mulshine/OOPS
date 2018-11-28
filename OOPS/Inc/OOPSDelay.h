@@ -15,7 +15,7 @@
 #include "OOPSCore.h"
 
 /* Non-interpolating delay, reimplemented from STK (Cook and Scavone). */
-void        tDelay_init         (tDelay*  const, uint32_t delay);
+void        tDelay_init         (tDelay*  const, uint32_t delay, uint32_t maxDelay);
 void        tDelay_free         (tDelay* const);
 
 int         tDelay_setDelay     (tDelay*  const, uint32_t delay);
@@ -29,7 +29,7 @@ float       tDelay_getLastIn    (tDelay*  const);
 
 
 /* Linearly-interpolating delay, reimplemented from STK (Cook and Scavone). */
-void        tDelayL_init        (tDelayL*  const, float delay);
+void        tDelayL_init        (tDelayL*  const, float delay, uint32_t maxDelay);
 void        tDelayL_free        (tDelayL* const);
 
 int         tDelayL_setDelay    (tDelayL*  const, float delay);
@@ -42,7 +42,7 @@ float       tDelayL_getLastOut  (tDelayL*  const);
 float       tDelayL_getLastIn   (tDelayL*  const);
 
 /* Allpass-interpolating delay, reimplemented from STK (Cook and Scavone). */
-void        tDelayA_init        (tDelayA*  const, float delay);
+void        tDelayA_init        (tDelayA*  const, float delay, uint32_t maxDelay);
 void        tDelayA_free        (tDelayA* const);
 int         tDelayA_setDelay    (tDelayA*  const, float delay);
 float       tDelayA_getDelay    (tDelayA*  const);

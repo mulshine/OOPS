@@ -48,13 +48,13 @@ void    tPRCRev_init(tPRCRev* const r, float t60)
     }
     
     r->allpassDelays[0] = (tDelay*) oops_alloc(sizeof(tDelay));
-    tDelay_init(r->allpassDelays[0], lengths[0]);
+    tDelay_init(r->allpassDelays[0], lengths[0], lengths[0] * 2);
     
     r->allpassDelays[1] = (tDelay*) oops_alloc(sizeof(tDelay));
-    tDelay_init(r->allpassDelays[1], lengths[1]);
+    tDelay_init(r->allpassDelays[1], lengths[1], lengths[1] * 2);
     
     r->combDelay = (tDelay*) oops_alloc(sizeof(tDelay));
-    tDelay_init(r->combDelay, lengths[2]);
+    tDelay_init(r->combDelay, lengths[2], lengths[2] * 2);
     
     tPRCRev_setT60(r, t60);
     
@@ -62,12 +62,11 @@ void    tPRCRev_init(tPRCRev* const r, float t60)
     r->mix = 0.5f;
 }
 
-void    tPRCRev_free(tPRCRev* const r)
+void tPRCRev_free(tPRCRev* const r)
 {
-    tDelay_free(r->combDelay);
     tDelay_free(r->allpassDelays[0]);
     tDelay_free(r->allpassDelays[1]);
-    
+    tDelay_free(r->combDelay);
     oops_free(r);
 }
 
@@ -148,14 +147,14 @@ void    tNRev_init(tNRev* const r, float t60)
     for ( i=0; i<6; i++ )
     {
         r->combDelays[i] = (tDelay*) oops_alloc(sizeof(tDelay));
-        tDelay_init(r->combDelays[i], lengths[i]);
+        tDelay_init(r->combDelays[i], lengths[i], lengths[i] * 2.0f);
         r->combCoeffs[i] = pow(10.0, (-3 * lengths[i] * oops.invSampleRate / t60));
     }
     
     for ( i=0; i<8; i++ )
     {
         r->allpassDelays[i] = (tDelay*) oops_alloc(sizeof(tDelay));
-        tDelay_init(r->allpassDelays[i], lengths[i+6]);
+        tDelay_init(r->allpassDelays[i], lengths[i+6], lengths[i+6] * 2.0f);
     }
     
     for ( i=0; i<2; i++ )

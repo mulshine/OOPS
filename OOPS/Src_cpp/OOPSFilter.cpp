@@ -640,7 +640,7 @@ void    tHighpass_init(tHighpass* const f, float freq)
     f->frequency = freq;
 }
 
-void    tHighpass_init(tHighpass* const f)
+void    tHighpass_free(tHighpass* const f)
 {
     oops_free(f);
 }

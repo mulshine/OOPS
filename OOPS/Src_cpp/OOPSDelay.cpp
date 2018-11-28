@@ -21,9 +21,11 @@
 #endif
 
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ Delay ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
-void    tDelay_init (tDelay*  const d, uint32_t maxDelay)
+void    tDelay_init (tDelay*  const d, uint32_t delay, uint32_t maxDelay)
 {
     d->maxDelay = maxDelay;
+    
+    d->delay = delay;
     
     d->buff = (float*) oops_alloc(sizeof(float) * maxDelay);
     
@@ -131,9 +133,13 @@ float tDelay_getGain (tDelay* const d)
 }
 
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ DelayL ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
-void   tDelayL_init (tDelayL* const d, float maxDelay)
+void   tDelayL_init (tDelayL* const d, float delay, float maxDelay)
 {
     d->maxDelay = maxDelay;
+
+    if (delay > maxDelay)   d->delay = maxDelay;
+    else if (delay < 0.0f)  d->delay = 0.0f;
+    else                    d->delay = delay;
     
     d->buff = (float*) oops_alloc(sizeof(float) * maxDelay);
     
@@ -258,9 +264,13 @@ float tDelayL_getGain (tDelayL* const d)
 }
 
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ DelayA ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
-void  tDelayA_init (tDelayA* const d, float maxDelay)
+void  tDelayA_init (tDelayA* const d, float delay, float maxDelay)
 {
     d->maxDelay = maxDelay;
+    
+    if (delay > maxDelay)   d->delay = maxDelay;
+    else if (delay < 0.0f)  d->delay = 0.0f;
+    else                    d->delay = delay;
     
     d->buff = (float*) oops_alloc(sizeof(float) * maxDelay);
     
