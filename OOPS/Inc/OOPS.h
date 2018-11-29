@@ -24,6 +24,6 @@ float       OOPSGetSampleRate   (void);
 #include "OOPSFilter.h"
 #include "OOPSOscillator.h"
 #include "OOPSReverb.h"
-//#include "OOPSInstrument.h"
+#include "OOPSInstrument.h"
 
 #endif  // OOPSCORE_H_INCLUDED

@@ -44,6 +44,7 @@ float       tDelayL_getLastIn   (tDelayL*  const);
 /* Allpass-interpolating delay, reimplemented from STK (Cook and Scavone). */
 void        tDelayA_init        (tDelayA*  const, float delay, uint32_t maxDelay);
 void        tDelayA_free        (tDelayA* const);
+
 int         tDelayA_setDelay    (tDelayA*  const, float delay);
 float       tDelayA_getDelay    (tDelayA*  const);
 void        tDelayA_tapIn       (tDelayA*  const, float in, uint32_t tapDelay);

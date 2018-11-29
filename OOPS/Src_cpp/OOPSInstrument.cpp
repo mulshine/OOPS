@@ -28,17 +28,22 @@
  *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-void tTalkboxInit(tTalkbox* const v)
+void tTalkbox_init(tTalkbox* const v)
 {
     v->param[0] = 0.5f;  //wet
     v->param[1] = 0.0f;  //dry
     v->param[2] = 0; // Swap
     v->param[3] = 1.0f;  //quality
     
-    tTalkboxUpdate(v);
+    tTalkbox_update(v);
 }
 
-void tTalkboxUpdate(tTalkbox* const v) ///update internal parameters...
+void tTalkbox_free(tTalkbox* const v)
+{
+    oops_free(v);
+}
+
+void tTalkbox_update(tTalkbox* const v) ///update internal parameters...
 {
     float fs = oops.sampleRate;
     if(fs <  8000.0f) fs =  8000.0f;
@@ -65,7 +70,7 @@ void tTalkboxUpdate(tTalkbox* const v) ///update internal parameters...
     v->dry = 2.0f * v->param[1] * v->param[1];
 }
 
-void tTalkboxSuspend(tTalkbox* const v) ///clear any buffers...
+void tTalkbox_suspend(tTalkbox* const v) ///clear any buffers...
 {
     v->pos = v->K = 0;
     v->emphasis = 0.0f;
@@ -85,7 +90,7 @@ void tTalkboxSuspend(tTalkbox* const v) ///clear any buffers...
 
 
 #define ORD_MAX           100 // Was 50. Increasing this gets rid of glitchiness, lowering it breaks it; not sure how it affects performance
-void tTalkboxLpc(float *buf, float *car, int32_t n, int32_t o)
+void tTalkbox_lpc(float *buf, float *car, int32_t n, int32_t o)
 {
     float z[ORD_MAX], r[ORD_MAX], k[ORD_MAX], G, x;
     int32_t i, j, nn=n;
@@ -100,7 +105,7 @@ void tTalkboxLpc(float *buf, float *car, int32_t n, int32_t o)
     float min = 0.00001f;
     if(r[0] < min) { for(i=0; i<n; i++) buf[i] = 0.0f; return; }
     
-    tTalkboxLpcDurbin(r, o, k, &G);  //calc reflection coeffs
+    tTalkbox_lpcDurbin(r, o, k, &G);  //calc reflection coeffs
     
     for(i=0; i<=o; i++)
     {
@@ -120,7 +125,7 @@ void tTalkboxLpc(float *buf, float *car, int32_t n, int32_t o)
 }
 
 
-void tTalkboxLpcDurbin(float *r, int p, float *k, float *g)
+void tTalkbox_lpcDurbin(float *r, int p, float *k, float *g)
 {
     int i, j;
     float a[ORD_MAX], at[ORD_MAX], e=r[0];
@@ -149,7 +154,7 @@ void tTalkboxLpcDurbin(float *r, int p, float *k, float *g)
     *g = sqrtf(e);
 }
 
-float tTalkboxTick(tTalkbox* const v, float synth, float voice)
+float tTalkbox_tick(tTalkbox* const v, float synth, float voice)
 {
 
     int32_t  p0=v->pos, p1 = (v->pos + v->N/2) % v->N;
@@ -175,10 +180,10 @@ float tTalkboxTick(tTalkbox* const v, float synth, float voice)
         x = o - e;  e = o;  //6dB/oct pre-emphasis
         
         w = v->window[p0]; fx = v->buf0[p0] * w;  v->buf0[p0] = x * w;  //50% overlapping hanning windows
-        if(++p0 >= v->N) { tTalkboxLpc(v->buf0, v->car0, v->N, v->O);  p0 = 0; }
+        if(++p0 >= v->N) { tTalkbox_lpc(v->buf0, v->car0, v->N, v->O);  p0 = 0; }
         
         w = 1.0f - w;  fx += v->buf1[p1] * w;  v->buf1[p1] = x * w;
-        if(++p1 >= v->N) { tTalkboxLpc(v->buf1, v->car1, v->N, v->O);  p1 = 0; }
+        if(++p1 >= v->N) { tTalkbox_lpc(v->buf1, v->car1, v->N, v->O);  p1 = 0; }
     }
     
     p = v->u0 + h0 * fx; v->u0 = v->u1;  v->u1 = fx - h0 * p;
@@ -204,17 +209,15 @@ float tTalkboxTick(tTalkbox* const v, float synth, float voice)
     return o;
 }
 
-void tTalkboxSetQuality(tTalkbox* const v, float quality)
+void tTalkbox_setQuality(tTalkbox* const v, float quality)
 {
 	v->param[3] = quality;
 	v->O = (int32_t)((0.0001f + 0.0004f * v->param[3]) * oops.sampleRate);
 }
 
 
-tVocoder*   tVocoderInit        (void)
+void   tVocoder_init        (tVocoder* const v)
 {
-    tVocoder* v = &oops.tVocoderRegistry[oops.registryIndex[T_VOCODER]++];
-    
     v->param[0] = 0.33f;  //input select
     v->param[1] = 0.50f;  //output dB
     v->param[2] = 0.40f;  //hi thru
@@ -224,12 +227,10 @@ tVocoder*   tVocoderInit        (void)
     v->param[6] = 0.6667f;//freq range
     v->param[7] = 0.33f;  //num bands
     
-    tVocoderUpdate(v);
-    
-    return v;
+    tVocoder_update(v);
 }
 
-void        tVocoderUpdate      (tVocoder* const v)
+void        tVocoder_update      (tVocoder* const v)
 {
     float tpofs = 6.2831853f * oops.invSampleRate;
     
@@ -311,7 +312,7 @@ void        tVocoderUpdate      (tVocoder* const v)
     }
 }
 
-float       tVocoderTick        (tVocoder* const v, float synth, float voice)
+float       tVocoder_tick        (tVocoder* const v, float synth, float voice)
 {
     float a, b, o=0.0f, aa, bb, oo = v->kout, g = v->gain, ht = v->thru, hh = v->high, tmp;
     uint32_t i, k = v->kval, nb = v->nbnd;
@@ -368,13 +369,13 @@ float       tVocoderTick        (tVocoder* const v, float synth, float voice)
         if(fabs(v->f[i][3])<1.0e-10 || fabs(v->f[i][7])<1.0e-10)
             for(k=3; k<12; k++) v->f[i][k] = 0.0f; //catch reson & envelope denormals
     
-    if(fabs(o)>10.0f) tVocoderSuspend(v); //catch instability
+    if(fabs(o)>10.0f) tVocoder_suspend(v); //catch instability
     
     return o;
     
 }
 
-void        tVocoderSuspend     (tVocoder* const v)
+void        tVocoder_suspend     (tVocoder* const v)
 {
     int32_t i, j;
     
@@ -385,60 +386,59 @@ void        tVocoderSuspend     (tVocoder* const v)
 
 
 /* ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ tPluck ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ */
-tPluck*    tPluckInit         (float lowestFrequency,  float delayBuff[DELAY_LENGTH])
+void    tPluck_init         (tPluck* const p, float lowestFrequency)
 {
-    tPluck* p = &oops.tPluckRegistry[oops.registryIndex[T_PLUCK]++];
-    
     if ( lowestFrequency <= 0.0f )  lowestFrequency = 10.0f;
     
-    p->noise = tNoiseInit(WhiteNoise);
-    p->pickFilter = tOnePoleInit(0.0f);
-    p->loopFilter = tOneZeroInit(0.0f);
+    p->noise = (tNoise*)oops_alloc(sizeof(tNoise));
+    tNoise_init(p->noise, WhiteNoise);
     
+
+    p->pickFilter = (tOnePole*) oops_alloc(sizeof(tOnePole));
+    tOnePole_init(p->pickFilter, 0.0f);
     
-    p->delayLine = tDelayAInit(0.0f);
+    p->loopFilter = (tOneZero*) oops_alloc(sizeof(tOneZero));
+    tOneZero_init(p->loopFilter, 0.0f);
     
-    tPluckSetFrequency(p, 220.0f);
+    p->delayLine = (tDelayA*) oops_alloc(sizeof(tDelayA));
+    tDelayA_init(p->delayLine, 0.0f, oops.sampleRate * 2);
     
-    p->sampleRateChanged = &tPluckSampleRateChanged;
-    
-    return p;
-    
+    tPluck_setFrequency(p, 220.0f);
 }
 
-float   tPluckGetLastOut    (tPluck *p)
+float   tPluck_getLastOut    (tPluck *p)
 {
     return p->lastOut;
 }
 
-float   tPluckTick          (tPluck *p)
+float   tPluck_tick          (tPluck *p)
 {
-    return (p->lastOut = 3.0f * tDelayATick(p->delayLine, tOneZeroTick(p->loopFilter, tDelayAGetLastOut(p->delayLine) * p->loopGain ) ));
+    return (p->lastOut = 3.0f * tDelayA_tick(p->delayLine, tOneZero_tick(p->loopFilter, tDelayA_getLastOut(p->delayLine) * p->loopGain ) ));
 }
 
-void    tPluckPluck         (tPluck* const p, float amplitude)
+void    tPluck_pluck         (tPluck* const p, float amplitude)
 {
     if ( amplitude < 0.0f)      amplitude = 0.0f;
     else if (amplitude > 1.0f)  amplitude = 1.0f;
     
-    tOnePoleSetPole(p->pickFilter, 0.999f - (amplitude * 0.15f));
-    tOnePoleSetGain(p->pickFilter, amplitude * 0.5f );
+    tOnePole_setPole(p->pickFilter, 0.999f - (amplitude * 0.15f));
+    tOnePole_setGain(p->pickFilter, amplitude * 0.5f );
     
     // Fill delay with noise additively with current contents.
-    for ( uint32_t i = 0; i < (uint32_t)tDelayAGetDelay(p->delayLine); i++ )
-        tDelayATick(p->delayLine, 0.6f * tDelayAGetLastOut(p->delayLine) + tOnePoleTick(p->pickFilter, tNoiseTick(p->noise) ) );
+    for ( uint32_t i = 0; i < (uint32_t)tDelayA_getDelay(p->delayLine); i++ )
+        tDelayA_tick(p->delayLine, 0.6f * tDelayA_getLastOut(p->delayLine) + tOnePole_tick(p->pickFilter, tNoise_tick(p->noise) ) );
 }
 
 // Start a note with the given frequency and amplitude.;
-void    tPluckNoteOn        (tPluck* const p, float frequency, float amplitude )
+void    tPluck_noteOn        (tPluck* const p, float frequency, float amplitude )
 {
     p->lastFreq = frequency;
-    tPluckSetFrequency( p, frequency );
-    tPluckPluck( p, amplitude );
+    tPluck_setFrequency( p, frequency );
+    tPluck_pluck( p, amplitude );
 }
 
 // Stop a note with the given amplitude (speed of decay).
-void    tPluckNoteOff       (tPluck* const p, float amplitude )
+void    tPluck_noteOff       (tPluck* const p, float amplitude )
 {
     if ( amplitude < 0.0f)      amplitude = 0.0f;
     else if (amplitude > 1.0f)  amplitude = 1.0f;
@@ -447,14 +447,14 @@ void    tPluckNoteOff       (tPluck* const p, float amplitude )
 }
 
 // Set instrument parameters for a particular frequency.
-void    tPluckSetFrequency  (tPluck* const p, float frequency )
+void    tPluck_setFrequency  (tPluck* const p, float frequency )
 {
     if ( frequency <= 0.0f )   frequency = 0.001f;
     
     // Delay = length - filter delay.
-    float delay = ( oops.sampleRate / frequency ) - tOneZeroGetPhaseDelay(p->loopFilter, frequency );
+    float delay = ( oops.sampleRate / frequency ) - tOneZero_getPhaseDelay(p->loopFilter, frequency );
     
-    tDelayASetDelay(p->delayLine, delay );
+    tDelayA_setDelay(p->delayLine, delay );
     
     p->loopGain = 0.99f + (frequency * 0.000005f);
     
@@ -463,7 +463,7 @@ void    tPluckSetFrequency  (tPluck* const p, float frequency )
 }
 
 // Perform the control change specified by \e number and \e value (0.0 - 128.0).
-void    tPluckControlChange (tPluck* const p, int number, float value)
+void    tPluck_controlChange (tPluck* const p, int number, float value)
 {
     return;
 }
@@ -474,22 +474,28 @@ void tPluckSampleRateChanged(tPluck* const p)
 }
 
 /* ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ tStifKarp ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ */
-tStifKarp*    tStifKarpInit          (float lowestFrequency, float delayBuff[2][DELAY_LENGTH])
+void    tStifKarp_init          (tStifKarp* const p, float lowestFrequency)
 {
-    tStifKarp* p = &oops.tStifKarpRegistry[oops.registryIndex[T_STIFKARP]++];
-    
     if ( lowestFrequency <= 0.0f )  lowestFrequency = 8.0f;
     
-    p->delayLine = tDelayAInit(0.0f);
-    p->combDelay = tDelayLInit(0.0f);
+    p->delayLine = (tDelayA*) oops_alloc(sizeof(tDelayA));
+    tDelayA_init(p->delayLine, 0.0f, oops.sampleRate * 2);
     
-    p->filter = tOneZeroInit(0.0f);
+    p->combDelay = (tDelayL*) oops_alloc(sizeof(tDelayL));
+    tDelayL_init(p->combDelay, 0.0f, oops.sampleRate * 2);
     
-    p->noise = tNoiseInit(WhiteNoise);
+    p->filter = (tOneZero*) oops_alloc(sizeof(tOneZero));
+    tOneZero_init(p->filter, 0.0f);
+    
+    p->noise = (tNoise*) oops_alloc(sizeof(tNoise));
+    tNoise_init(p->noise, WhiteNoise);
     
     for (int i = 0; i < 4; i++)
-        p->biquad[i] = tBiQuadInit();
-    
+    {
+        p->biquad[i] = (tBiQuad*) oops_alloc(sizeof(tBiQuad));
+        tBiQuad_init(p->biquad[i]);
+    }
+
     p->pluckAmplitude = 0.3f;
     p->pickupPosition = 0.4f;
     
@@ -497,60 +503,71 @@ tStifKarp*    tStifKarpInit          (float lowestFrequency, float delayBuff[2][
     p->baseLoopGain = 0.995f;
     p->loopGain = 0.999f;
     
-    tStifKarpSetFrequency( p, 220.0f );
-    
-    p->sampleRateChanged = &tStifKarpSampleRateChanged;
-    
-    return p;
-    
+    tStifKarp_setFrequency( p, 220.0f );
+
 }
 
-float   tStifKarpGetLastOut    (tStifKarp* const p)
+void tStifKarp_free (tStifKarp* const p)
+{
+    tDelayA_free(p->delayLine);
+    tDelayL_free(p->combDelay);
+    tOneZero_free(p->filter);
+    tNoise_free(p->noise);
+
+    for (int i = 0; i < 4; i++)
+    {
+        tBiQuad_free(p->biquad[i]);
+    }
+    
+    oops_free(p);
+}
+
+float   tStifKarp_getLastOut    (tStifKarp* const p)
 {
     return p->lastOut;
 }
 
-float   tStifKarpTick          (tStifKarp* const p)
+float   tStifKarp_tick          (tStifKarp* const p)
 {
-    float temp = tDelayAGetLastOut(p->delayLine) * p->loopGain;
+    float temp = tDelayA_getLastOut(p->delayLine) * p->loopGain;
     
     // Calculate allpass stretching.
-    for (int i=0; i<4; i++)     temp = tBiQuadTick(p->biquad[i],temp);
+    for (int i=0; i<4; i++)     temp = tBiQuad_tick(p->biquad[i],temp);
     
     // Moving average filter.
-    temp = tOneZeroTick(p->filter, temp);
+    temp = tOneZero_tick(p->filter, temp);
     
-    float out = tDelayATick(p->delayLine, temp);
-    out = out - tDelayLTick(p->combDelay, out);
+    float out = tDelayA_tick(p->delayLine, temp);
+    out = out - tDelayL_tick(p->combDelay, out);
     p->lastOut = out;
     
     return p->lastOut;
 }
 
-void    tStifKarpPluck         (tStifKarp* const p, float amplitude)
+void    tStifKarp_pluck         (tStifKarp* const p, float amplitude)
 {
     if ( amplitude < 0.0f)      amplitude = 0.0f;
     else if (amplitude > 1.0f)  amplitude = 1.0f;
     
     p->pluckAmplitude = amplitude;
     
-    for ( uint32_t i=0; i < (uint32_t)tDelayAGetDelay(p->delayLine); i++ )
+    for ( uint32_t i=0; i < (uint32_t)tDelayA_getDelay(p->delayLine); i++ )
     {
         // Fill delay with noise additively with current contents.
-        tDelayATick(p->delayLine, (tDelayAGetLastOut(p->delayLine) * 0.6f) + 0.4f * tNoiseTick(p->noise) * p->pluckAmplitude );
+        tDelayA_tick(p->delayLine, (tDelayA_getLastOut(p->delayLine) * 0.6f) + 0.4f * tNoise_tick(p->noise) * p->pluckAmplitude );
         //delayLine_.tick( combDelay_.tick((delayLine_.lastOut() * 0.6) + 0.4 * noise->tick() * pluckAmplitude_) );
     }
 }
 
 // Start a note with the given frequency and amplitude.;
-void    tStifKarpNoteOn        (tStifKarp* const p, float frequency, float amplitude )
+void    tStifKarp_noteOn        (tStifKarp* const p, float frequency, float amplitude )
 {
-    tStifKarpSetFrequency( p, frequency );
-    tStifKarpPluck( p, amplitude );
+    tStifKarp_setFrequency( p, frequency );
+    tStifKarp_pluck( p, amplitude );
 }
 
 // Stop a note with the given amplitude (speed of decay).
-void    tStifKarpNoteOff       (tStifKarp* const p, float amplitude )
+void    tStifKarp_noteOff       (tStifKarp* const p, float amplitude )
 {
     if ( amplitude < 0.0f)      amplitude = 0.0f;
     else if (amplitude > 1.0f)  amplitude = 1.0f;
@@ -559,27 +576,27 @@ void    tStifKarpNoteOff       (tStifKarp* const p, float amplitude )
 }
 
 // Set instrument parameters for a particular frequency.
-void    tStifKarpSetFrequency  (tStifKarp* const p, float frequency )
+void    tStifKarp_setFrequency  (tStifKarp* const p, float frequency )
 {
     if ( frequency <= 0.0f )   frequency = 0.001f;
     
     p->lastFrequency = frequency;
     p->lastLength = oops.sampleRate / p->lastFrequency;
     float delay = p->lastLength - 0.5f;
-    tDelayASetDelay(p->delayLine, delay );
+    tDelayA_setDelay(p->delayLine, delay );
     
     // MAYBE MODIFY LOOP GAINS
     p->loopGain = p->baseLoopGain + (frequency * 0.000005f);
     if (p->loopGain >= 1.0f) p->loopGain = 0.99999f;
     
-    tStifKarpSetStretch(p, p->stretching);
+    tStifKarp_setStretch(p, p->stretching);
     
-    tDelayLSetDelay(p->combDelay, 0.5f * p->pickupPosition * p->lastLength );
+    tDelayL_setDelay(p->combDelay, 0.5f * p->pickupPosition * p->lastLength );
     
 }
 
 // Set the stretch "factor" of the string (0.0 - 1.0).
-void    tStifKarpSetStretch         (tStifKarp* const p, float stretch )
+void    tStifKarp_setStretch         (tStifKarp* const p, float stretch )
 {
     p->stretching = stretch;
     float coefficient;
@@ -591,30 +608,30 @@ void    tStifKarpSetStretch         (tStifKarp* const p, float stretch )
     for ( int i=0; i<4; i++ )
     {
         coefficient = temp * temp;
-        tBiQuadSetA2(p->biquad[i], coefficient);
-        tBiQuadSetB0(p->biquad[i], coefficient);
-        tBiQuadSetB2(p->biquad[i], 1.0f);
+        tBiQuad_setA2(p->biquad[i], coefficient);
+        tBiQuad_setB0(p->biquad[i], coefficient);
+        tBiQuad_setB2(p->biquad[i], 1.0f);
         
         coefficient = -2.0f * temp * cos(TWO_PI * freq / oops.sampleRate);
-        tBiQuadSetA1(p->biquad[i], coefficient);
-        tBiQuadSetB1(p->biquad[i], coefficient);
+        tBiQuad_setA1(p->biquad[i], coefficient);
+        tBiQuad_setB1(p->biquad[i], coefficient);
         
         freq += dFreq;
     }
 }
 
 // Set the pluck or "excitation" position along the string (0.0 - 1.0).
-void    tStifKarpSetPickupPosition  (tStifKarp* const p, float position )
+void    tStifKarp_setPickupPosition  (tStifKarp* const p, float position )
 {
     if (position < 0.0f)        p->pickupPosition = 0.0f;
     else if (position <= 1.0f)  p->pickupPosition = position;
     else                        p->pickupPosition = 1.0f;
     
-    tDelayLSetDelay(p->combDelay, 0.5f * p->pickupPosition * p->lastLength);
+    tDelayL_setDelay(p->combDelay, 0.5f * p->pickupPosition * p->lastLength);
 }
 
 // Set the base loop gain.
-void    tStifKarpSetBaseLoopGain    (tStifKarp* const p, float aGain )
+void    tStifKarp_setBaseLoopGain    (tStifKarp* const p, float aGain )
 {
     p->baseLoopGain = aGain;
     p->loopGain = p->baseLoopGain + (p->lastFrequency * 0.000005f);
@@ -622,7 +639,7 @@ void    tStifKarpSetBaseLoopGain    (tStifKarp* const p, float aGain )
 }
 
 // Perform the control change specified by \e number and \e value (0.0 - 128.0).
-void    tStifKarpControlChange (tStifKarp* const p, SKControlType type, float value)
+void    tStifKarp_controlChange (tStifKarp* const p, SKControlType type, float value)
 {
     if ( value < 0.0f )         value = 0.0f;
     else if (value > 128.0f)   value = 128.0f;
@@ -630,310 +647,319 @@ void    tStifKarpControlChange (tStifKarp* const p, SKControlType type, float va
     float normalizedValue = value * INV_128;
     
     if (type == SKPickPosition) // 4
-        tStifKarpSetPickupPosition( p, normalizedValue );
+        tStifKarp_setPickupPosition( p, normalizedValue );
     else if (type == SKStringDamping) // 11
-        tStifKarpSetBaseLoopGain( p, 0.97f + (normalizedValue * 0.03f) );
+        tStifKarp_setBaseLoopGain( p, 0.97f + (normalizedValue * 0.03f) );
     else if (type == SKDetune) // 1
-        tStifKarpSetStretch( p, 0.91f + (0.09f * (1.0f - normalizedValue)) );
+        tStifKarp_setStretch( p, 0.91f + (0.09f * (1.0f - normalizedValue)) );
     
 }
 
 void    tStifKarpSampleRateChanged (tStifKarp* const c)
 {
-    tStifKarpSetFrequency(c, c->lastFrequency);
-    tStifKarpSetStretch(c, c->stretching);
+    tStifKarp_setFrequency(c, c->lastFrequency);
+    tStifKarp_setStretch(c, c->stretching);
 }
 
 #define USE_STICK 0
-void t808CowbellOn(t808Cowbell* const cowbell, float vel)
+void t808Cowbell_on(t808Cowbell* const cowbell, float vel)
 {
     
-    tEnvelopeOn(cowbell->envGain, vel);
+    tEnvelope_on(&cowbell->envGain, vel);
     
 #if USE_STICK
-    tEnvelopeOn(cowbell->envStick,vel);
+    tEnvelope_on(&cowbell->envStick,vel);
 #endif
     
 }
 
-float t808CowbellTick(t808Cowbell* const cowbell) {
+float t808Cowbell_tick(t808Cowbell* const cowbell) {
     
     float sample = 0.0f;
     
     // Mix oscillators.
-    sample = (cowbell->oscMix * tSquareTick(cowbell->p[0])) + ((1.0f-cowbell->oscMix) * tSquareTick(cowbell->p[1]));
+    sample = (cowbell->oscMix * tSquare_tick(&cowbell->p[0])) + ((1.0f-cowbell->oscMix) * tSquare_tick(&cowbell->p[1]));
     
     // Filter dive and filter.
-    tSVFSetFreq(cowbell->bandpassOsc, cowbell->filterCutoff + 1000.0f * tEnvelopeTick(cowbell->envFilter));
-    sample = tSVFTick(cowbell->bandpassOsc,sample);
+    tSVF_setFreq(&cowbell->bandpassOsc, cowbell->filterCutoff + 1000.0f * tEnvelope_tick(&cowbell->envFilter));
+    sample = tSVF_tick(&cowbell->bandpassOsc,sample);
     
-    sample *= (0.9f * tEnvelopeTick(cowbell->envGain));
+    sample *= (0.9f * tEnvelope_tick(&cowbell->envGain));
     
 #if USE_STICK
-    sample += (0.1f * tEnvelopeTick(cowbell->envStick) * tSVFTick(cowbell->bandpassStick, tNoiseTick(cowbell->stick)));
+    sample += (0.1f * tEnvelope_tick(&cowbell->envStick) * tSVF_tick(&cowbell->bandpassStick, tNoise_tick(&cowbell->stick)));
 #endif
     
-    sample = tHighpassTick(cowbell->highpass, sample);
+    sample = tHighpass_tick(&cowbell->highpass, sample);
     
     return sample;
 }
 
-void t808CowbellSetDecay(t808Cowbell* const cowbell, float decay)
+void t808Cowbell_setDecay(t808Cowbell* const cowbell, float decay)
 {
-    tEnvelopeSetDecay(cowbell->envGain,decay);
+    tEnvelope_setDecay(&cowbell->envGain,decay);
 }
 
-void t808CowbellSetHighpassFreq(t808Cowbell *cowbell, float freq)
+void t808Cowbell_setHighpassFreq(t808Cowbell *cowbell, float freq)
 {
-    tHighpassSetFreq(cowbell->highpass,freq);
+    tHighpass_setFreq(&cowbell->highpass,freq);
 }
 
-void t808CowbellSetBandpassFreq(t808Cowbell* const cowbell, float freq)
+void t808Cowbell_setBandpassFreq(t808Cowbell* const cowbell, float freq)
 {
     cowbell->filterCutoff = freq;
 }
 
-void t808CowbellSetFreq(t808Cowbell* const cowbell, float freq)
+void t808Cowbell_setFreq(t808Cowbell* const cowbell, float freq)
 {
     
-    tSquareSetFreq(cowbell->p[0],freq);
-    tSquareSetFreq(cowbell->p[1],1.48148f*freq);
+    tSquare_setFreq(&cowbell->p[0],freq);
+    tSquare_setFreq(&cowbell->p[1],1.48148f*freq);
 }
 
-void t808CowbellSetOscMix(t808Cowbell* const cowbell, float oscMix)
+void t808Cowbell_setOscMix(t808Cowbell* const cowbell, float oscMix)
 {
     cowbell->oscMix = oscMix;
 }
 
-t808Cowbell* t808CowbellInit(void) {
+void t808Cowbell_init(t808Cowbell* const cowbell) {
     
-    t808Cowbell* cowbell = &oops.t808CowbellRegistry[oops.registryIndex[T_808COWBELL]++];
+    tSquare_init(&cowbell->p[0]);
+    tSquare_setFreq(&cowbell->p[0], 540.0f);
     
-    cowbell->p[0] = tSquareInit();
-    cowbell->p[1] = tSquareInit();
-    
-    tSquareSetFreq(cowbell->p[0], 540.0f);
-    tSquareSetFreq(cowbell->p[1], 1.48148f * 540.0f);
+    tSquare_init(&cowbell->p[1]);
+    tSquare_setFreq(&cowbell->p[1], 1.48148f * 540.0f);
     
     cowbell->oscMix = 0.5f;
     
-    cowbell->bandpassOsc = tSVFInit(SVFTypeBandpass, 2500, 1.0f);
+    tSVF_init(&cowbell->bandpassOsc, SVFTypeBandpass, 2500, 1.0f);
     
-    cowbell->bandpassStick = tSVFInit(SVFTypeBandpass, 1800, 1.0f);
+    tSVF_init(&cowbell->bandpassStick, SVFTypeBandpass, 1800, 1.0f);
     
-    cowbell->envGain = tEnvelopeInit(5.0f, 100.0f, OFALSE);
+    tEnvelope_init(&cowbell->envGain, 5.0f, 100.0f, OFALSE);
     
-    cowbell->envFilter = tEnvelopeInit(5.0, 100.0f, OFALSE);
+    tEnvelope_init(&cowbell->envFilter, 5.0, 100.0f, OFALSE);
     
-    cowbell->highpass = tHighpassInit(1000.0f);
+    tHighpass_init(&cowbell->highpass, 1000.0f);
     
 #if USE_STICK
-    cowbell->stick = tNoiseInit(NoiseTypeWhite);
-    cowbell->envStick = tEnvelopeInit(5.0f, 5.0f, 0);
+    tNoise_init(&cowbell->stick, NoiseTypeWhite);
+    tEnvelope_init(&cowbell->envStick, 5.0f, 5.0f, 0);
 #endif
-    
-    return cowbell;
 }
 
-void t808HihatOn(t808Hihat* const hihat, float vel) {
+void t808Hihat_on(t808Hihat* const hihat, float vel) {
     
-    tEnvelopeOn(hihat->envGain, vel);
-    tEnvelopeOn(hihat->envStick, vel);
+    tEnvelope_on(&hihat->envGain, vel);
+    tEnvelope_on(&hihat->envStick, vel);
     
 }
 
-void t808HihatSetOscNoiseMix(t808Hihat* const hihat, float oscNoiseMix) {
+void t808Hihat_setOscNoiseMix(t808Hihat* const hihat, float oscNoiseMix) {
     
     hihat->oscNoiseMix = oscNoiseMix;
     
 }
 
-float t808HihatTick(t808Hihat* const hihat) {
+float t808Hihat_tick(t808Hihat* const hihat) {
     
     float sample = 0.0f;
     float gainScale = 0.1666f;
     
     for (int i = 0; i < 6; i++)
     {
-        sample += tSquareTick(hihat->p[i]);
+        sample += tSquare_tick(&hihat->p[i]);
     }
     
     sample *= gainScale;
     
-    sample = (hihat->oscNoiseMix * sample) + ((1.0f-hihat->oscNoiseMix) * (0.8f * tNoiseTick(hihat->n)));
+    sample = (hihat->oscNoiseMix * sample) + ((1.0f-hihat->oscNoiseMix) * (0.8f * tNoise_tick(&hihat->n)));
     
-    sample = tSVFTick(hihat->bandpassOsc, sample);
+    sample = tSVF_tick(&hihat->bandpassOsc, sample);
     
-    sample *= tEnvelopeTick(hihat->envGain);
+    sample *= tEnvelope_tick(&hihat->envGain);
     
-    sample = 0.85f * OOPS_clip(0.0f, tHighpassTick(hihat->highpass, sample), 1.0f);
+    sample = 0.85f * OOPS_clip(0.0f, tHighpass_tick(&hihat->highpass, sample), 1.0f);
     
-    sample += 0.15f * tEnvelopeTick(hihat->envStick) * tSVFTick(hihat->bandpassStick, tNoiseTick(hihat->stick));
+    sample += 0.15f * tEnvelope_tick(&hihat->envStick) * tSVF_tick(&hihat->bandpassStick, tNoise_tick(&hihat->stick));
     
     return sample;
 }
 
-void t808HihatSetDecay(t808Hihat* const hihat, float decay)
+void t808Hihat_setDecay(t808Hihat* const hihat, float decay)
 {
-    tEnvelopeSetDecay(hihat->envGain,decay);
+    tEnvelope_setDecay(&hihat->envGain,decay);
 }
 
-void t808HihatSetHighpassFreq(t808Hihat* const hihat, float freq)
+void t808Hihat_setHighpassFreq(t808Hihat* const hihat, float freq)
 {
-    tHighpassSetFreq(hihat->highpass,freq);
+    tHighpass_setFreq(&hihat->highpass,freq);
 }
 
-void t808HihatSetOscBandpassFreq(t808Hihat* const hihat, float freq)
+void t808Hihat_setOscBandpassFreq(t808Hihat* const hihat, float freq)
 {
-    tSVFSetFreq(hihat->bandpassOsc,freq);
+    tSVF_setFreq(&hihat->bandpassOsc,freq);
 }
 
 
-void t808HihatSetOscFreq(t808Hihat* const hihat, float freq)
+void t808Hihat_setOscFreq(t808Hihat* const hihat, float freq)
 {
-    tSquareSetFreq(hihat->p[0], 2.0f * freq);
-    tSquareSetFreq(hihat->p[1], 3.00f * freq);
-    tSquareSetFreq(hihat->p[2], 4.16f * freq);
-    tSquareSetFreq(hihat->p[3], 5.43f * freq);
-    tSquareSetFreq(hihat->p[4], 6.79f * freq);
-    tSquareSetFreq(hihat->p[5], 8.21f * freq);
+    tSquare_setFreq(&hihat->p[0], 2.0f * freq);
+    tSquare_setFreq(&hihat->p[1], 3.00f * freq);
+    tSquare_setFreq(&hihat->p[2], 4.16f * freq);
+    tSquare_setFreq(&hihat->p[3], 5.43f * freq);
+    tSquare_setFreq(&hihat->p[4], 6.79f * freq);
+    tSquare_setFreq(&hihat->p[5], 8.21f * freq);
     
 }
 
-t808Hihat* t808HihatInit(void)
+void t808Hihat_init(t808Hihat* const hihat)
 {
-    t808Hihat* hihat = &oops.t808HihatRegistry[oops.registryIndex[T_808HIHAT]++];
-    
     for (int i = 0; i < 6; i++)
     {
-        hihat->p[i] = tSquareInit();
+        tSquare_init(&hihat->p[i]);
     }
     
-    hihat->stick = tNoiseInit(WhiteNoise);
-    hihat->n = tNoiseInit(WhiteNoise);
+    tNoise_init(&hihat->stick, WhiteNoise);
+    tNoise_init(&hihat->n, WhiteNoise);
     
     // need to fix SVF to be generic
-    hihat->bandpassStick = tSVFInit(SVFTypeBandpass,2500.0,1.5f);
-    hihat->bandpassOsc = tSVFInit(SVFTypeBandpass,3500,0.5f);
+    tSVF_init(&hihat->bandpassStick, SVFTypeBandpass,2500.0,1.5f);
+    tSVF_init(&hihat->bandpassOsc, SVFTypeBandpass,3500,0.5f);
     
-    hihat->envGain = tEnvelopeInit(5.0f, 50.0f, OFALSE);
-    hihat->envStick = tEnvelopeInit(5.0f, 15.0f, OFALSE);
+    tEnvelope_init(&hihat->envGain, 5.0f, 50.0f, OFALSE);
+    tEnvelope_init(&hihat->envStick, 5.0f, 15.0f, OFALSE);
     
-    hihat->highpass = tHighpassInit(7000.0f);
+    tHighpass_init(&hihat->highpass, 7000.0f);
     
     float freq = 40.0f;
     
-    tSquareSetFreq(hihat->p[0], 2.0f * freq);
-    tSquareSetFreq(hihat->p[1], 3.00f * freq);
-    tSquareSetFreq(hihat->p[2], 4.16f * freq);
-    tSquareSetFreq(hihat->p[3], 5.43f * freq);
-    tSquareSetFreq(hihat->p[4], 6.79f * freq);
-    tSquareSetFreq(hihat->p[5], 8.21f * freq);
-    
-    return hihat;
+    tSquare_setFreq(&hihat->p[0], 2.0f * freq);
+    tSquare_setFreq(&hihat->p[1], 3.00f * freq);
+    tSquare_setFreq(&hihat->p[2], 4.16f * freq);
+    tSquare_setFreq(&hihat->p[3], 5.43f * freq);
+    tSquare_setFreq(&hihat->p[4], 6.79f * freq);
+    tSquare_setFreq(&hihat->p[5], 8.21f * freq);
 }
-#endif
 
-void t808SnareOn(t808Snare* const snare, float vel)
+void t808Snare_on(t808Snare* const snare, float vel)
 {
     for (int i = 0; i < 2; i++)
     {
-        tEnvelopeOn(snare->toneEnvOsc[i], vel);
-        tEnvelopeOn(snare->toneEnvGain[i], vel);
-        tEnvelopeOn(snare->toneEnvFilter[i], vel);
+        tEnvelope_on(&snare->toneEnvOsc[i], vel);
+        tEnvelope_on(&snare->toneEnvGain[i], vel);
+        tEnvelope_on(&snare->toneEnvFilter[i], vel);
     }
     
-    tEnvelopeOn(snare->noiseEnvGain, vel);
-    tEnvelopeOn(snare->noiseEnvFilter, vel);
+    tEnvelope_on(&snare->noiseEnvGain, vel);
+    tEnvelope_on(&snare->noiseEnvFilter, vel);
 }
 
-void t808SnareSetTone1Freq(t808Snare* const snare, float freq)
+void t808Snare_setTone1Freq(t808Snare* const snare, float freq)
 {
     snare->tone1Freq = freq;
-    tTriangleSetFreq(snare->tone[0], freq);
+    tTriangle_setFreq(&snare->tone[0], freq);
     
 }
 
-void t808SnareSetTone2Freq(t808Snare* const snare, float freq)
+void t808Snare_setTone2Freq(t808Snare* const snare, float freq)
 {
     snare->tone2Freq = freq;
-    tTriangleSetFreq(snare->tone[1],freq);
+    tTriangle_setFreq(&snare->tone[1],freq);
 }
 
-void t808SnareSetTone1Decay(t808Snare* const snare, float decay)
+void t808Snare_setTone1Decay(t808Snare* const snare, float decay)
 {
-    tEnvelopeSetDecay(snare->toneEnvGain[0],decay);
+    tEnvelope_setDecay(&snare->toneEnvGain[0],decay);
 }
 
-void t808SnareSetTone2Decay(t808Snare* const snare, float decay)
+void t808Snare_setTone2Decay(t808Snare* const snare, float decay)
 {
-    tEnvelopeSetDecay(snare->toneEnvGain[1],decay);
+    tEnvelope_setDecay(&snare->toneEnvGain[1],decay);
 }
 
-void t808SnareSetNoiseDecay(t808Snare* const snare, float decay)
+void t808Snare_setNoiseDecay(t808Snare* const snare, float decay)
 {
-    tEnvelopeSetDecay(snare->noiseEnvGain,decay);
+    tEnvelope_setDecay(&snare->noiseEnvGain,decay);
 }
 
-void t808SnareSetToneNoiseMix(t808Snare* const snare, float toneNoiseMix)
+void t808Snare_setToneNoiseMix(t808Snare* const snare, float toneNoiseMix)
 {
     snare->toneNoiseMix = toneNoiseMix;
 }
 
-void t808SnareSetNoiseFilterFreq(t808Snare* const snare, float noiseFilterFreq)
+void t808Snare_setNoiseFilterFreq(t808Snare* const snare, float noiseFilterFreq)
 {
     snare->noiseFilterFreq = noiseFilterFreq;
 }
 
-void t808SnareSetNoiseFilterQ(t808Snare* const snare, float noiseFilterQ)
+void t808Snare_setNoiseFilterQ(t808Snare* const snare, float noiseFilterQ)
 {
-    tSVFSetQ(snare->noiseLowpass, noiseFilterQ);
+    tSVF_setQ(&snare->noiseLowpass, noiseFilterQ);
 }
 
 
 static float tone[2];
 
-float t808SnareTick(t808Snare* const snare)
+float t808Snare_tick(t808Snare* const snare)
 {
     for (int i = 0; i < 2; i++)
     {
-        tTriangleSetFreq(snare->tone[i], snare->tone1Freq + (50.0f * tEnvelopeTick(snare->toneEnvOsc[i])));
-        tone[i] = tTriangleTick(snare->tone[i]);
+        tTriangle_setFreq(&snare->tone[i], snare->tone1Freq + (50.0f * tEnvelope_tick(&snare->toneEnvOsc[i])));
+        tone[i] = tTriangle_tick(&snare->tone[i]);
         
-        tSVFSetFreq(snare->toneLowpass[i], 2000 + (500 * tEnvelopeTick(snare->toneEnvFilter[i])));
-        tone[i] = tSVFTick(snare->toneLowpass[i], tone[i]) * tEnvelopeTick(snare->toneEnvGain[i]);
+        tSVF_setFreq(&snare->toneLowpass[i], 2000 + (500 * tEnvelope_tick(&snare->toneEnvFilter[i])));
+        tone[i] = tSVF_tick(&snare->toneLowpass[i], tone[i]) * tEnvelope_tick(&snare->toneEnvGain[i]);
     }
     
-    float noise = tNoiseTick(snare->noiseOsc);
-    tSVFSetFreq(snare->noiseLowpass, snare->noiseFilterFreq +(500 * tEnvelopeTick(snare->noiseEnvFilter)));
-    noise = tSVFTick(snare->noiseLowpass, noise) * tEnvelopeTick(snare->noiseEnvGain);
+    float noise = tNoise_tick(&snare->noiseOsc);
+    tSVF_setFreq(&snare->noiseLowpass, snare->noiseFilterFreq +(500 * tEnvelope_tick(&snare->noiseEnvFilter)));
+    noise = tSVF_tick(&snare->noiseLowpass, noise) * tEnvelope_tick(&snare->noiseEnvGain);
     
     float sample = (snare->toneNoiseMix)*(tone[0] * snare->toneGain[0] + tone[1] * snare->toneGain[1]) + (1.0f-snare->toneNoiseMix) * (noise * snare->noiseGain);
     
     return sample;
 }
 
-t808Snare* t808SnareInit(void)
+void t808Snare_init(t808Snare* const snare)
 {
-    t808Snare* snare = &oops.t808SnareRegistry[oops.registryIndex[T_808SNARE]++];
-    
+    float ratio[2] = {1.0, 1.5};
     for (int i = 0; i < 2; i++)
     {
-        snare->tone[i] = tTriangleInit();
-        snare->toneLowpass[i] = tSVFInit(SVFTypeLowpass, 2000, 1.0f);
-        snare->toneEnvOsc[i] = tEnvelopeInit(3.0f, 20.0f, OFALSE);
-        snare->toneEnvGain[i] = tEnvelopeInit(10.0f, 200.0f, OFALSE);
-        snare->toneEnvFilter[i] = tEnvelopeInit(3.0f, 200.0f, OFALSE);
+        tTriangle_init(&snare->tone[i]);
+        tTriangle_setFreq(&snare->tone[i], ratio[i] * 400.0f);
+        tSVF_init(&snare->toneLowpass[i], SVFTypeLowpass, 2000, 1.0f);
+        tEnvelope_init(&snare->toneEnvOsc[i], 3.0f, 20.0f, OFALSE);
+        tEnvelope_init(&snare->toneEnvGain[i], 10.0f, 200.0f, OFALSE);
+        tEnvelope_init(&snare->toneEnvFilter[i], 3.0f, 200.0f, OFALSE);
+        
         snare->toneGain[i] = 0.5f;
     }
     
     
-    snare->noiseOsc = tNoiseInit(WhiteNoise);
-    snare->noiseLowpass = tSVFInit(SVFTypeLowpass, 2000, 3.0f);
-    snare->noiseEnvGain = tEnvelopeInit(10.0f, 125.0f, OFALSE);
-    snare->noiseEnvFilter = tEnvelopeInit(3.0f, 100.0f, OFALSE);
-    snare->noiseGain = 0.25f;
-    
-    
-    return snare;
+    tNoise_init(&snare->noiseOsc, WhiteNoise);
+    tSVF_init(&snare->noiseLowpass, SVFTypeLowpass, 2000, 3.0f);
+    tEnvelope_init(&snare->noiseEnvGain, 10.0f, 125.0f, OFALSE);
+    tEnvelope_init(&snare->noiseEnvFilter, 3.0f, 100.0f, OFALSE);
+    snare->noiseGain = 0.3f;
 }
+
+void        t808Snare_free                  (t808Snare* const snare)
+{
+    for (int i = 0; i < 2; i++)
+    {
+        tTriangle_free(&snare->tone[i]);
+        tSVF_free(&snare->toneLowpass[i]);
+        tEnvelope_free(&snare->toneEnvOsc[i]);
+        tEnvelope_free(&snare->toneEnvGain[i]);
+        tEnvelope_free(&snare->toneEnvFilter[i]);
+    }
+    
+    
+    tNoise_free(&snare->noiseOsc);
+    tSVF_free(&snare->noiseLowpass);
+    tEnvelope_free(&snare->noiseEnvGain);
+    tEnvelope_free(&snare->noiseEnvFilter);
+}
+
+

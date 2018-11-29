@@ -347,6 +347,8 @@ typedef struct _tStifKarp
     tNoise*   noise;
     tBiQuad*  biquad[4];
     
+    
+    
     uint32_t length;
     float loopGain;
     float baseLoopGain;
@@ -463,14 +465,14 @@ typedef struct _tPoly
 
 typedef struct _t808Cowbell {
     
-    tSquare* p[2];
-    tNoise* stick;
-    tSVF* bandpassOsc;
-    tSVF* bandpassStick;
-    tEnvelope* envGain;
-    tEnvelope* envStick;
-    tEnvelope* envFilter;
-    tHighpass* highpass;
+    tSquare p[2];
+    tNoise stick;
+    tSVF bandpassOsc;
+    tSVF bandpassStick;
+    tEnvelope envGain;
+    tEnvelope envStick;
+    tEnvelope envFilter;
+    tHighpass highpass;
     float oscMix;
     float filterCutoff;
     
@@ -479,14 +481,14 @@ typedef struct _t808Cowbell {
 typedef struct _t808Hihat {
     
     // 6 Square waves
-    tSquare* p[6];
-    tNoise* n;
-    tSVF* bandpassOsc;
-    tSVF* bandpassStick;
-    tEnvelope* envGain;
-    tEnvelope* envStick;
-    tHighpass* highpass;
-    tNoise* stick;
+    tSquare p[6];
+    tNoise n;
+    tSVF bandpassOsc;
+    tSVF bandpassStick;
+    tEnvelope envGain;
+    tEnvelope envStick;
+    tHighpass highpass;
+    tNoise stick;
     
     float oscNoiseMix;
     
@@ -496,15 +498,15 @@ typedef struct _t808Hihat {
 typedef struct _t808Snare {
     
     // Tone 1, Tone 2, Noise
-    tTriangle* tone[2]; // Tri (not yet antialiased or wavetabled)
-    tNoise* noiseOsc;
-    tSVF* toneLowpass[2];
-    tSVF* noiseLowpass; // Lowpass from SVF filter
-    tEnvelope* toneEnvOsc[2];
-    tEnvelope* toneEnvGain[2];
-    tEnvelope* noiseEnvGain;
-    tEnvelope* toneEnvFilter[2];
-    tEnvelope* noiseEnvFilter;
+    tTriangle tone[2]; // Tri (not yet antialiased or wavetabled)
+    tNoise noiseOsc;
+    tSVF toneLowpass[2];
+    tSVF noiseLowpass; // Lowpass from SVF filter
+    tEnvelope toneEnvOsc[2];
+    tEnvelope toneEnvGain[2];
+    tEnvelope noiseEnvGain;
+    tEnvelope toneEnvFilter[2];
+    tEnvelope noiseEnvFilter;
     
     float toneGain[2];
     float noiseGain;

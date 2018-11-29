@@ -305,6 +305,11 @@ void    tEnvelope_init(tEnvelope* const env, float attack, float decay, oBool lo
 
 }
 
+void tEnvelope_free(tEnvelope* const env)
+{
+    oops_free(env);
+}
+
 int     tEnvelope_setAttack(tEnvelope* const env, float attack)
 {
     int32_t attackIndex;

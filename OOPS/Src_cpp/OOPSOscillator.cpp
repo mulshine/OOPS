@@ -615,7 +615,7 @@ void    tNoise_init(tNoise* const n, NoiseType type)
     n->rand = oops.random;
 }
 
-void    tNoise_init(tNoise* const n)
+void    tNoise_free(tNoise* const n)
 {
     oops_free(n);
 }

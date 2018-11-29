@@ -16,30 +16,13 @@ static void oops_pool_report(void);
 static void oops_pool_dump(void);
 static void run_pool_test(void);
 
-
-tDelay delay;
-
-tNRev rev;
-
-float mix;
-
-tSawtooth saw;
-
-tEnvelope env;
+t808Snare snare;
 
 void    OOPSTest_init            (float sampleRate, int blockSize)
 {
     OOPSInit(sampleRate, blockSize, &randomNumberGenerator);
     
-    tDelay_init(&delay, oops.sampleRate, oops.sampleRate * 2.0f);
-    tDelay_setDelay(&delay, oops.sampleRate * 0.1);
-    
-    tNRev_init(&rev, 2.0);
-    
-    tSawtooth_init(&saw);
-    tSawtooth_setFreq(&saw, 220.0f);
-    
-    tEnvelope_init(&env, 5.0f, 500.0f, OFALSE);
+    t808Snare_init(&snare);
     
     oops_pool_report();
 }
@@ -52,24 +35,14 @@ float   OOPSTest_tick            (float input)
 {
     float sample = 0.0f;
     
-    
     timer++;
-    if (timer == (2*oops.sampleRate))
+    if (timer == (1 * oops.sampleRate))
     {
         timer = 0;
-        //sample = 1.0f;
-        tEnvelope_on(&env, 1.0f);
+        t808Snare_on(&snare, 1.0);
     }
 
-    //sample += tDelay_tick(&delay, sample + prev * 0.5);
-    //prev = sample;
-    
-    
-    sample = tSawtooth_tick(&saw);
-    
-    sample *= tEnvelope_tick(&env);
-    
-    sample = tNRev_tick(&rev, sample);
+    sample = t808Snare_tick(&snare);
     
     return sample;
      

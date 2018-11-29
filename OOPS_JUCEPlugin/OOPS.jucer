@@ -31,6 +31,8 @@
           <FILE id="LL8apT" name="OOPSReverb.cpp" compile="1" resource="0" file="../OOPS/Src_cpp/OOPSReverb.cpp"/>
           <FILE id="XkZkv4" name="OOPSUtilities.cpp" compile="1" resource="0"
                 file="../OOPS/Src_cpp/OOPSUtilities.cpp"/>
+          <FILE id="yuPE6E" name="OOPSInstrument.cpp" compile="1" resource="0"
+                file="../OOPS/Src_cpp/OOPSInstrument.cpp"/>
           <FILE id="sh0uRG" name="OOPSWavetables.cpp" compile="1" resource="0"
                 file="../OOPS/Src_cpp/OOPSWavetables.cpp"/>
         </GROUP>
@@ -45,6 +47,8 @@
           <FILE id="XlmKLM" name="OOPSDelay.h" compile="0" resource="0" file="../OOPS/Inc/OOPSDelay.h"/>
           <FILE id="a2SMU5" name="OOPSReverb.h" compile="0" resource="0" file="../OOPS/Inc/OOPSReverb.h"/>
           <FILE id="dyWzwa" name="OOPSUtilities.h" compile="0" resource="0" file="../OOPS/Inc/OOPSUtilities.h"/>
+          <FILE id="o5V2xI" name="OOPSInstrument.h" compile="0" resource="0"
+                file="../OOPS/Inc/OOPSInstrument.h"/>
           <FILE id="A1qa7l" name="OOPSWavetables.h" compile="0" resource="0"
                 file="../OOPS/Inc/OOPSWavetables.h"/>
         </GROUP>

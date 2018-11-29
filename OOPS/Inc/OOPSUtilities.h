@@ -15,14 +15,16 @@
 /* Compressor */
 
 void    tCompressor_init    (tCompressor* const);
+void    tCompressor_free    (tCompressor* const);
 float   tCompressor_tick    (tCompressor* const, float input);
 
 
 /* Attack-Decay envelope */
 void    tEnvelope_init      (tEnvelope* const, float attack, float decay, oBool loop);
-float   tEnvelope_tick      (tEnvelope* const);
+void    tEnvelope_free      (tEnvelope* const);
 
-int     tEnvelope_etAttack (tEnvelope*  const, float attack);
+float   tEnvelope_tick      (tEnvelope* const);
+int     tEnvelope_setAttack (tEnvelope*  const, float attack);
 int     tEnvelope_setDecay  (tEnvelope*  const, float decay);
 int     tEnvelope_loop      (tEnvelope*  const, oBool loop);
 int     tEnvelope_on        (tEnvelope*  const, float velocity);

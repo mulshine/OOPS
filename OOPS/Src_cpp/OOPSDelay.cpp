@@ -133,7 +133,7 @@ float tDelay_getGain (tDelay* const d)
 }
 
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ DelayL ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
-void   tDelayL_init (tDelayL* const d, float delay, float maxDelay)
+void   tDelayL_init (tDelayL* const d, float delay, uint32_t maxDelay)
 {
     d->maxDelay = maxDelay;
 
@@ -264,7 +264,7 @@ float tDelayL_getGain (tDelayL* const d)
 }
 
 // ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ DelayA ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ //
-void  tDelayA_init (tDelayA* const d, float delay, float maxDelay)
+void  tDelayA_init (tDelayA* const d, float delay, uint32_t maxDelay)
 {
     d->maxDelay = maxDelay;
     

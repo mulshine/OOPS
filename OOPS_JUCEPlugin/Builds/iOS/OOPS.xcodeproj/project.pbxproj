@@ -117,6 +117,10 @@
 			isa = PBXBuildFile;
 			fileRef = 082C67AC88B6357BD9F289D9;
 		};
+		F0D81C846AEDF74DBF389639 = {
+			isa = PBXBuildFile;
+			fileRef = D7782331F3E72EB9D1DF4070;
+		};
 		BCA8D82FBE6EF7FD2F5E375E = {
 			isa = PBXBuildFile;
 			fileRef = FE54422729D5282705DA0B82;
@@ -584,6 +588,13 @@
 			path = System/Library/Frameworks/Foundation.framework;
 			sourceTree = SDKROOT;
 		};
+		8ADC0FE880E91EFC26EA0DBE = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			name = OOPSInstrument.h;
+			path = ../../../OOPS/Inc/OOPSInstrument.h;
+			sourceTree = "SOURCE_ROOT";
+		};
 		8B9613C966CC375CEE8C1ED5 = {
 			isa = PBXFileReference;
 			lastKnownFileType = sourcecode.cpp.objcpp;
@@ -780,6 +791,13 @@
 			path = System/Library/Frameworks/AudioToolbox.framework;
 			sourceTree = SDKROOT;
 		};
+		D7782331F3E72EB9D1DF4070 = {
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			name = OOPSInstrument.cpp;
+			path = "../../../OOPS/Src_cpp/OOPSInstrument.cpp";
+			sourceTree = "SOURCE_ROOT";
+		};
 		DA3DA1C24F3340A218B27E6E = {
 			isa = PBXFileReference;
 			lastKnownFileType = sourcecode.c.h;
@@ -864,6 +882,7 @@
 				BF72FC9BC327F7A95DD606E2,
 				34BD65055D6A4EDAF0C9A6B3,
 				082C67AC88B6357BD9F289D9,
+				D7782331F3E72EB9D1DF4070,
 				FE54422729D5282705DA0B82,
 			);
 			name = Src;
@@ -881,6 +900,7 @@
 				74632B007DC3813F10EBBDD5,
 				FAFFDD6D78CF92B8AEAF899C,
 				86B1CF21F751F455E1199692,
+				8ADC0FE880E91EFC26EA0DBE,
 				C4F718BFA5AD28988DC8D2BB,
 			);
 			name = Inc;
@@ -1559,6 +1579,7 @@
 				132756642BC91326824613FB,
 				A6A714FD254EB77C5369566A,
 				7EA4C130F048E0799716B379,
+				F0D81C846AEDF74DBF389639,
 				BCA8D82FBE6EF7FD2F5E375E,
 				1792EE72C90013D726A025FA,
 				288E7926DB9A3898B459B826,
