@@ -1,4 +1,6 @@
 # OOPS
+OOPS has passed and reincarnated in the form of [LEAF](https://github.com/spiricom/LEAF/). Check it out! 
+
 A C library for Audio synthesis and processing, written using semi-OOP style, created by Mike Mulshine and Jeff Snyder. 
 
 The library consists of a set of high-level audio synthesis components (Oscillators, Filters, Envelopes, Delays, Reverbs, and other Utilities) and a central registry system, the OOPS Core, which manages components and provides access to important system-wide audio settings like the sample rate. Components are all statically allocated (1) at compile-time as part of the OOPS core. 
